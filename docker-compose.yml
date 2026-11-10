@@ -1,0 +1,69 @@
+# Local development stack. Start with `make up`, stop with `make down`.
+# All config comes from .env (copied from .env.example by `make up` if missing).
+
+# Shared settings for api + worker (YAML anchor, merged in below with <<).
+x-backend: &backend
+  build:
+    context: ./backend
+    args:
+      INSTALL_DEV: "true"   # include pytest/ruff so `make test`/`make lint` run in the container
+  image: invoice-intelligence-backend:dev
+  env_file: .env
+  volumes:
+    - uploads:/data/uploads
+  depends_on:
+    postgres:
+      condition: service_healthy   # wait until pg_isready succeeds, not just "container started"
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *backend
+    # Apply DB migrations, then start the web server. (No migrations exist yet: a no-op.)
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "127.0.0.1:8000:8000"   # bind to localhost only, not to every network interface
+    healthcheck:
+      # The slim image has no curl, so use Python's standard library to call /health.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    <<: *backend
+    command: python -m app.worker
+
+  postgres:
+    # Official Postgres + the pgvector extension (needed later for semantic search).
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # data survives `docker compose down`
+    healthcheck:
+      # $$ escapes $ so the variable is expanded inside the container, not by compose.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    # No `ports:` on purpose: only other containers need the database.
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:

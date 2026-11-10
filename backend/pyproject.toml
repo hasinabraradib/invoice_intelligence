@@ -1,0 +1,41 @@
+[project]
+name = "invoice-intelligence"
+version = "0.1.0"
+description = "AI-powered document intelligence for invoices (backend)"
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies. Lower bounds only; the Docker image is the reproducible build.
+dependencies = [
+    "fastapi>=0.115",            # web framework (async, OpenAPI docs for free)
+    "uvicorn[standard]>=0.30",   # ASGI server that runs FastAPI
+    "pydantic-settings>=2.4",    # typed settings loaded from environment variables
+    "sqlalchemy[asyncio]>=2.0.30", # ORM / query builder, async flavour
+    "asyncpg>=0.29",             # fast async PostgreSQL driver used by SQLAlchemy
+    "alembic>=1.13",             # database migrations
+    "redis>=5.0",                # Redis client (includes redis.asyncio)
+]
+
+[project.optional-dependencies]
+# Tools needed only for development / CI, not in production.
+dev = [
+    "pytest>=8.2",
+    "httpx>=0.27",   # required by FastAPI's TestClient
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+# E/F = pycodestyle + pyflakes basics, I = import sorting, B = bugbear (likely bugs),
+# UP = modern syntax, S = bandit security checks, ASYNC = async pitfalls, SIM = simplifications.
+select = ["E", "F", "I", "B", "UP", "S", "ASYNC", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# `assert` is how pytest works, so the "no assert" security rule does not apply to tests.
+"tests/**" = ["S101"]
