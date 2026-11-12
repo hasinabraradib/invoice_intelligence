@@ -9,7 +9,7 @@ from redis.asyncio import Redis
 
 from app.api import documents, health
 from app.config import get_settings
-from app.db import create_engine
+from app.db import create_engine, create_sessionmaker
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Neither call opens a connection yet; connections are made lazily on first use.
     settings = get_settings()
     app.state.engine = create_engine(settings.database_url)
+    app.state.sessionmaker = create_sessionmaker(app.state.engine)
     app.state.redis = Redis.from_url(settings.redis_url)
     try:
         yield

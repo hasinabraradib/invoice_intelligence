@@ -4,6 +4,7 @@ Why pydantic-settings: values are type-checked at startup, so a typo such as
 MAX_UPLOAD_MB=abc crashes immediately with a clear error instead of failing later.
 """
 
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -29,6 +30,11 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_attempts: int = Field(default=4, ge=1, le=10)
     llm_chunk_tokens: int = Field(default=6000, ge=500)
+
+    # Validation: amounts may differ by this much (rounding); fields below this
+    # confidence (0-1) are flagged for human review.
+    money_tolerance: Decimal = Field(default=Decimal("0.01"), ge=0)
+    review_confidence: float = Field(default=0.6, ge=0, le=1)
 
     @field_validator("llm_model", "llm_api_key", mode="before")
     @classmethod

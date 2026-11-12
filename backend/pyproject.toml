@@ -24,6 +24,7 @@ dependencies = [
     "numpy>=2.0",                # pixel arrays shared by OpenCV, Pillow and pdfium
     "pytesseract>=0.3.13",       # thin wrapper that runs the tesseract binary
     "httpx>=0.27",               # HTTP client for the LLM providers' REST APIs
+    "pgvector>=0.3",             # SQLAlchemy type for pgvector's vector column
 ]
 
 [project.optional-dependencies]
