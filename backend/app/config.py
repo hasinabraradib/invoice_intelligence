@@ -28,6 +28,11 @@ class Settings(BaseSettings):
 
     max_upload_mb: int = Field(default=20, gt=0, le=200)
     upload_dir: Path = Path("/data/uploads")
+    # Safety caps so a single hostile or huge document cannot exhaust memory/CPU.
+    max_files_per_request: int = Field(default=20, gt=0, le=100)
+    max_pdf_pages: int = Field(default=2000, gt=0)
+    max_sheet_rows: int = Field(default=10_000, gt=0)
+    max_sheet_columns: int = Field(default=200, gt=0)
 
     @field_validator("database_url")
     @classmethod
