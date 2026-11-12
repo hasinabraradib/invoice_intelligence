@@ -134,3 +134,57 @@ def semicolon_csv_with_bom(path: Path) -> Path:
     )
     path.write_bytes(text.encode("utf-8-sig"))  # utf-8-sig = UTF-8 with a BOM
     return path
+
+
+# ---------------------------------------------------------------- OCR images
+
+OCR_LINES = [
+    "ACME Supplies Ltd",
+    "Invoice No: INV-2041",
+    "Invoice Date: 15 March 2024",
+    "Office chairs      4 x 300.00      1,200.00",
+    "Delivery                             120.00",
+    "Total: 1,320.00",
+]
+
+
+def invoice_image(lines: list[str] | None = None, font_size: int = 36) -> Image.Image:
+    """A clean, invoice-like page drawn with Pillow's bundled scalable font."""
+    from PIL import ImageDraw, ImageFont
+
+    page = Image.new("L", (1700, 900), 255)
+    draw = ImageDraw.Draw(page)
+    font = ImageFont.load_default(size=font_size)
+    for i, line in enumerate(lines or OCR_LINES):
+        draw.text((100, 100 + i * int(font_size * 1.9)), line, fill=0, font=font)
+    return page
+
+
+def noisy(page: Image.Image, sigma: float, seed: int = 0) -> Image.Image:
+    """Add Gaussian noise (like a poor scan). Seeded, so tests are repeatable."""
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    pixels = np.asarray(page, dtype=np.float32) + rng.normal(0, sigma, (page.height, page.width))
+    return Image.fromarray(np.clip(pixels, 0, 255).astype("uint8"))
+
+
+def rotated(page: Image.Image, degrees: float) -> Image.Image:
+    return page.rotate(degrees, expand=True, fillcolor=255, resample=Image.Resampling.BICUBIC)
+
+
+def scanned_pdf_mixed(path: Path) -> Path:
+    """Page 1: real text layer. Page 2: only a picture of an invoice (a 'scan')."""
+    c = canvas.Canvas(str(path), pagesize=A4)
+    for i, line in enumerate(INVOICE_LINES):
+        c.drawString(50, 800 - 20 * i, line)
+    c.showPage()
+    buffer = io.BytesIO()
+    invoice_image().save(buffer, format="PNG")
+    width, height = A4
+    c.drawImage(
+        ImageReader(buffer), 20, height - 380, width=width - 40, height=(width - 40) * 9 / 17
+    )
+    c.showPage()
+    c.save()
+    return path
