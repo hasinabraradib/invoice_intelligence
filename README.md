@@ -63,6 +63,17 @@ warning.
 make ocr-sample FILE=samples/scanned-invoice.jpg LANGS=eng+ben
 ```
 
+### AI extraction (try it on a sample)
+
+Set `LLM_PROVIDER=gemini` or `groq` and `LLM_API_KEY` in `.env`, then:
+
+```bash
+make extract-sample FILE=samples/text-invoice.pdf   # prints fields, status, evidence, confidence
+```
+
+This sends the document's text to that provider, so only use invoices you may share.
+Tests never call a real provider.
+
 ### Run tests locally (optional, without Docker)
 
 ```bash

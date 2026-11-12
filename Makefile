@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs ocr-sample
+.PHONY: up down test lint env logs ocr-sample extract-sample
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -27,3 +27,8 @@ logs:
 ocr-sample: env
 	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/samples:/samples:ro" api \
 		python scripts/ocr_sample.py "/samples/$(notdir $(FILE))" --langs "$(or $(LANGS),eng)"
+
+# Usage: make extract-sample FILE=samples/invoice.pdf  (needs LLM_PROVIDER + LLM_API_KEY in .env)
+extract-sample: env
+	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/samples:/samples:ro" api \
+		python scripts/extract_sample.py "/samples/$(notdir $(FILE))"
