@@ -36,6 +36,29 @@ make down
 `/health` returns HTTP 200 when everything is reachable and HTTP 503 (`"status": "degraded"`)
 when Postgres or Redis is down.
 
+### Upload and parse documents
+
+```bash
+# One or more files per request (PDF, PNG, JPEG, TIFF, XLSX, XLS, CSV)
+curl -s -X POST http://localhost:8000/documents \
+  -F "files=@samples/text-invoice.pdf" \
+  -F "files=@samples/invoice.xlsx" | python3 -m json.tool
+```
+
+Each file gets its own result (`status_code` 200, or 415 unsupported type, 413 too large,
+422 corrupt/empty/password-protected), so one bad file never fails the others.
+The file type is detected from the file's content, not its name.
+See [samples/README.md](samples/README.md) for trying it with your own invoices.
+
+### Run tests locally (optional, without Docker)
+
+```bash
+cd backend
+uv venv --python 3.12 .venv && uv pip install -e '.[dev]'
+.venv/bin/pytest            # fast tests
+.venv/bin/pytest -m slow    # 1000-page PDF memory test
+```
+
 ## API
 
 _To be written._

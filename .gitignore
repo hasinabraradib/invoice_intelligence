@@ -29,3 +29,7 @@ build/
 .vscode/
 .idea/
 .DS_Store
+
+# Real sample invoices: keep only the README
+samples/*
+!samples/README.md
