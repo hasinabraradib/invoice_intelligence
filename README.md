@@ -6,7 +6,8 @@ _To be written._
 
 ## Architecture
 
-_To be written._
+_Full write-up to come._ Database tables and the reason for each are documented in
+[docs/schema.md](docs/schema.md).
 
 ## Quick start
 
@@ -74,12 +75,18 @@ make extract-sample FILE=samples/text-invoice.pdf   # prints fields, status, evi
 This sends the document's text to that provider, so only use invoices you may share.
 Tests never call a real provider.
 
+### Database
+
+`make up` applies the Alembic migrations automatically (`alembic upgrade head`). Uploading
+the same file twice stores it once: the response returns the existing `document_id` with
+`"duplicate": true`.
+
 ### Run tests locally (optional, without Docker)
 
 ```bash
 cd backend
 uv venv --python 3.12 .venv && uv pip install -e '.[dev]'
-.venv/bin/pytest            # fast tests (OCR tests skip if tesseract is missing)
+.venv/bin/pytest            # fast tests (OCR and database tests skip without tesseract/Postgres)
 .venv/bin/pytest -m slow    # slow tests: 1000-page PDF memory, very noisy OCR
 ```
 
