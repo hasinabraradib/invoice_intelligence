@@ -23,13 +23,13 @@ dependencies = [
     "opencv-python-headless>=4.10",  # image cleanup before OCR ("headless" = no GUI libs)
     "numpy>=2.0",                # pixel arrays shared by OpenCV, Pillow and pdfium
     "pytesseract>=0.3.13",       # thin wrapper that runs the tesseract binary
+    "httpx>=0.27",               # HTTP client for the LLM providers' REST APIs
 ]
 
 [project.optional-dependencies]
 # Tools needed only for development / CI, not in production.
 dev = [
     "pytest>=8.2",
-    "httpx>=0.27",   # required by FastAPI's TestClient
     "ruff>=0.6",
     "reportlab>=4.2",  # generates PDF fixtures in tests (no binary fixtures committed)
     "xlwt>=1.3",       # writes legacy .xls fixtures in tests (unmaintained, test-only)
