@@ -1,24 +1,36 @@
-"""POST /documents: upload one or more files, store them safely, and parse them.
-
-Each file gets its own result with its own status code, so one bad file never fails the
-batch. The overall response is 200 whenever the request itself was valid.
-"""
+"""Document endpoints: upload, list, detail, status, result, reprocess."""
 
 import logging
 import uuid
+from datetime import date
 from typing import Annotated
 
 import anyio
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
-from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_queue
+from app.api.errors import ERRORS, ApiError, not_found
+from app.api.schemas import (
+    DocumentDetail,
+    DocumentStatusView,
+    DocumentSummary,
+    FileError,
+    InvoiceResult,
+    JobAccepted,
+    JobView,
+    Page,
+    UploadResponse,
+    UploadResult,
+)
+from app.api.views import document_summary, invoice_result
 from app.config import Settings, get_settings
 from app.db import get_session
-from app.ocr.engine import OcrOptions
-from app.parsing.dispatch import parse_document
+from app.filters import DocumentFilters
+from app.jobs import JobQueue
+from app.models import Document, DocumentStatus, Invoice, JobStatus
 from app.parsing.errors import (
     CorruptFile,
     DocumentError,
@@ -27,12 +39,17 @@ from app.parsing.errors import (
     PasswordProtected,
     UnsupportedFileType,
 )
-from app.parsing.models import FileKind, ParseLimits
+from app.parsing.file_types import detect_file_kind, extension_warning
+from app.parsing.models import FileKind
 from app.repository import Repository
 from app.storage import StoredFile, sanitize_filename, save_upload
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["documents"])
+router = APIRouter(prefix="/documents", tags=["documents"])
+
+Session = Annotated[AsyncSession, Depends(get_session)]
+Queue = Annotated[JobQueue, Depends(get_queue)]
+AppSettings = Annotated[Settings, Depends(get_settings)]
 
 # Error type -> HTTP status, decided here in the API layer (parsing knows nothing of HTTP).
 ERROR_STATUS: dict[type[DocumentError], int] = {
@@ -55,175 +72,242 @@ MIME_TYPES = {
 KIND_BY_MIME = {mime: kind for kind, mime in MIME_TYPES.items()}
 
 
-class FileError(BaseModel):
-    code: str
-    message: str
+# ---------------------------------------------------------------- upload
 
 
-class FileResult(BaseModel):
-    original_filename: str  # sanitised for display; never used as a path
-    status_code: int
-    document_id: uuid.UUID | None = None
-    duplicate: bool = False  # True: same bytes were uploaded before; nothing new stored
-    detected_kind: FileKind | None = None
-    sha256: str | None = None
-    size: int | None = None
-    page_count: int = 0
-    pages_needing_ocr: int = 0  # still without text (OCR disabled or failed)
-    pages_ocr: int = 0  # pages whose text came from OCR
-    mean_ocr_confidence: float | None = None
-    sheet_count: int = 0
-    warnings: list[str] = Field(default_factory=list)
-    error: FileError | None = None
-
-
-class UploadResponse(BaseModel):
-    results: list[FileResult]
-
-
-def _check_request_size(request: Request, settings: Settings) -> None:
-    # Cheap early rejection based on the declared body size. Starlette buffers the body
-    # before our handler runs, so save_upload's streaming limit is the per-file guarantee;
-    # this check stops obviously oversized requests before most of that work.
+@router.post(
+    "",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=UploadResponse,
+    summary="Upload invoices (processed in the background)",
+)
+async def upload_documents(
+    request: Request,
+    files: Annotated[list[UploadFile], File(description="One or more invoice files")],
+    settings: AppSettings,
+    session: Session,
+    queue: Queue,
+) -> UploadResponse:
+    """Stores each file, creates a queued job and returns at once (202). Poll
+    `GET /documents/{id}/status` for progress. Each file has its own `status_code`, so one
+    bad file never fails the others. The same bytes uploaded again are not stored twice."""
     declared = request.headers.get("content-length")
     limit = settings.max_upload_bytes * settings.max_files_per_request + MULTIPART_OVERHEAD_BYTES
     if declared and declared.isdigit() and int(declared) > limit:
         raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "Request body is too large.")
-
-
-@router.post("/documents", response_model=UploadResponse)
-async def upload_documents(
-    request: Request,
-    # Annotated[...] is FastAPI's recommended style: the type and its source in one place.
-    files: Annotated[list[UploadFile], File(description="One or more invoice files")],
-    settings: Annotated[Settings, Depends(get_settings)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-) -> UploadResponse:
-    _check_request_size(request, settings)
     if len(files) > settings.max_files_per_request:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             f"Too many files: at most {settings.max_files_per_request} per request.",
         )
-    limits = ParseLimits(
-        max_pdf_pages=settings.max_pdf_pages,
-        max_sheet_rows=settings.max_sheet_rows,
-        max_sheet_columns=settings.max_sheet_columns,
-    )
-    ocr = OcrOptions(
-        langs=settings.ocr_langs,
-        min_confidence=settings.ocr_min_confidence,
-        page_timeout_seconds=settings.ocr_page_timeout_seconds,
-        dpi=settings.ocr_dpi,
-    )
     repo = Repository(session)
-    results = [await _process_one(upload, settings, limits, ocr, repo) for upload in files]
-    return UploadResponse(results=results)
+    return UploadResponse(results=[await _accept(f, settings, repo, queue) for f in files])
 
 
-async def _process_one(
-    upload: UploadFile,
-    settings: Settings,
-    limits: ParseLimits,
-    ocr: OcrOptions,
-    repo: Repository,
-) -> FileResult:
-    display_name = sanitize_filename(upload.filename)
+async def _accept(
+    upload: UploadFile, settings: Settings, repo: Repository, queue: JobQueue
+) -> UploadResult:
+    name = sanitize_filename(upload.filename)
     stored: StoredFile | None = None
     try:
         stored = await save_upload(upload, settings.upload_dir, settings.max_upload_bytes)
         # The hash was computed while streaming; same bytes seen before -> keep one copy.
         if existing := await repo.get_document_by_sha256(stored.sha256):
             await anyio.Path(stored.stored_path).unlink(missing_ok=True)
-            return _duplicate_result(display_name, existing)
-        # TODO(step 4b): enqueue a background job instead of parsing inside the request.
-        # Parsing is CPU-bound and synchronous, so it runs in a thread to keep the
-        # event loop free for other requests meanwhile.
-        doc = await run_in_threadpool(
-            lambda: parse_document(
-                stored.stored_path, display_name, limits, ocr, run_ocr=settings.ocr_enabled
-            )
-        )
+            return await _duplicate(name, existing, repo)
+        # Only the cheap magic-byte check here; full parsing happens in the worker.
+        kind = await anyio.to_thread.run_sync(detect_file_kind, stored.stored_path)
     except DocumentError as exc:
-        if stored is not None:  # do not keep files we could not use
+        if stored is not None:
             await anyio.Path(stored.stored_path).unlink(missing_ok=True)
-        logger.info("upload rejected: code=%s size=%s", exc.code, stored.size if stored else None)
-        return FileResult(
-            original_filename=display_name,
+        logger.info("upload rejected: code=%s", exc.code)
+        return UploadResult(
+            original_filename=name,
+            error=FileError(code=exc.code, message=exc.message),
             status_code=ERROR_STATUS.get(type(exc), status.HTTP_422_UNPROCESSABLE_CONTENT),
             sha256=stored.sha256 if stored else None,
             size=stored.size if stored else None,
-            error=FileError(code=exc.code, message=exc.message),
-        )
-    except Exception:
-        # A bug in a parser must not fail the other files. Log the traceback (no content).
-        logger.exception("unexpected error while processing an upload")
-        if stored is not None:
-            await anyio.Path(stored.stored_path).unlink(missing_ok=True)
-        return FileResult(
-            original_filename=display_name,
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            error=FileError(code="internal_error", message="Unexpected error; please retry."),
         )
     finally:
         await upload.close()
 
     try:
         document = await repo.create_document(
-            filename=display_name,
+            filename=name,
             sha256=stored.sha256,
-            mime_type=MIME_TYPES[doc.file_kind],
+            mime_type=MIME_TYPES[kind],
             size_bytes=stored.size,
             storage_path=str(stored.stored_path),
-            page_count=doc.page_count,
         )
-        await repo.session.commit()
+        job = await repo.create_job(document.id)
+        await repo.session.commit()  # commit BEFORE enqueueing so the worker finds the rows
     except IntegrityError:
         # Two identical uploads at the same moment: the unique sha256 lets only one win.
         await repo.session.rollback()
         await anyio.Path(stored.stored_path).unlink(missing_ok=True)
-        return _duplicate_result(display_name, await repo.get_document_by_sha256(stored.sha256))
+        return await _duplicate(name, await repo.get_document_by_sha256(stored.sha256), repo)
 
-    logger.info(
-        "upload parsed: sha256=%s kind=%s size=%d pages=%d sheets=%d",
-        stored.sha256[:12],
-        doc.file_kind,
-        stored.size,
-        doc.page_count,
-        len(doc.sheets),
-    )
-    return FileResult(
-        original_filename=display_name,
-        status_code=status.HTTP_200_OK,
+    result = UploadResult(
+        original_filename=name,
+        status_code=status.HTTP_202_ACCEPTED,
         document_id=document.id,
-        detected_kind=doc.file_kind,
+        job_id=job.id,
+        detected_kind=kind,
         sha256=stored.sha256,
         size=stored.size,
-        page_count=doc.page_count,
-        pages_needing_ocr=doc.pages_needing_ocr,
-        pages_ocr=doc.pages_ocr,
-        mean_ocr_confidence=_mean_confidence(doc),
-        sheet_count=len(doc.sheets),
-        warnings=doc.warnings + [w for sheet in doc.sheets for w in sheet.warnings],
-        error=None,
+        warnings=[w for w in [extension_warning(kind, name)] if w],
     )
+    await _enqueue_or_mark_failed(repo, queue, job.id, document.id, result)
+    logger.info("upload accepted: document=%s kind=%s size=%d", document.id, kind, stored.size)
+    return result
 
 
-def _mean_confidence(doc) -> float | None:
-    values = [p.ocr_confidence for p in doc.pages if p.ocr_confidence is not None]
-    return round(sum(values) / len(values), 1) if values else None
+async def _enqueue_or_mark_failed(repo, queue, job_id, document_id, result=None) -> bool:
+    try:
+        await queue.enqueue(job_id)
+        return True
+    except Exception as exc:  # Redis down: keep the file, let POST /jobs/retry-failed resume
+        logger.warning("enqueue failed for job %s: %s", job_id, type(exc).__name__)
+        await repo.finish_job(job_id, error="queue unavailable; use POST /jobs/retry-failed")
+        await repo.set_document_status(
+            document_id, DocumentStatus.FAILED, error="queue unavailable"
+        )
+        await repo.session.commit()
+        if result is not None:
+            result.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            result.error = FileError(
+                code="queue_unavailable", message="Stored, but could not be queued; retry later."
+            )
+        return False
 
 
-def _duplicate_result(display_name: str, existing) -> FileResult:
-    logger.info("duplicate upload: document=%s", existing.id)
-    return FileResult(
-        original_filename=display_name,
+async def _duplicate(name: str, existing: Document, repo: Repository) -> UploadResult:
+    job = await repo.latest_job(existing.id)
+    return UploadResult(
+        original_filename=name,
         status_code=status.HTTP_200_OK,
         document_id=existing.id,
+        job_id=job.id if job else None,
         duplicate=True,
         detected_kind=KIND_BY_MIME.get(existing.mime_type),
         sha256=existing.sha256,
         size=existing.size_bytes,
-        page_count=existing.page_count,
         warnings=["This file was already uploaded; returning the existing document."],
     )
+
+
+# ---------------------------------------------------------------- reading
+
+
+@router.get("", response_model=Page[DocumentSummary], summary="List documents")
+async def list_documents(
+    session: Session,
+    status_: Annotated[DocumentStatus | None, Query(alias="status")] = None,
+    needs_review: bool | None = None,
+    supplier: Annotated[str | None, Query(max_length=200)] = None,
+    date_from: Annotated[date | None, Query(description="Invoice date from (inclusive)")] = None,
+    date_to: Annotated[date | None, Query(description="Invoice date to (inclusive)")] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> Page[DocumentSummary]:
+    """Newest first. Invoice filters (supplier, dates, needs_review) only match documents
+    that already have an extracted invoice."""
+    filters = DocumentFilters(status_, needs_review, supplier, date_from, date_to)
+    base = filters.apply(
+        select(Document, Invoice).outerjoin(Invoice, Invoice.document_id == Document.id)
+    )
+    total = await session.scalar(select(func.count()).select_from(base.subquery()))
+    rows = await session.execute(
+        base.order_by(Document.created_at.desc(), Document.id).limit(limit).offset(offset)
+    )
+    items = [document_summary(doc, invoice) for doc, invoice in rows]
+    return Page[DocumentSummary](items=items, total=total or 0, limit=limit, offset=offset)
+
+
+async def _get_document(session: AsyncSession, document_id: uuid.UUID) -> Document:
+    document = await session.get(Document, document_id)
+    if document is None:
+        raise not_found("document")
+    return document
+
+
+@router.get(
+    "/{document_id}",
+    response_model=DocumentDetail,
+    responses=ERRORS,
+    summary="Document metadata and latest job",
+)
+async def get_document(document_id: uuid.UUID, session: Session) -> DocumentDetail:
+    repo = Repository(session)
+    document = await _get_document(session, document_id)
+    invoice = await repo.get_invoice_by_document(document_id)
+    job = await repo.latest_job(document_id)
+    detail = DocumentDetail.model_validate(document)
+    detail.invoice = document_summary(document, invoice).invoice
+    detail.latest_job = JobView.model_validate(job) if job else None
+    return detail
+
+
+@router.get(
+    "/{document_id}/status",
+    response_model=DocumentStatusView,
+    responses=ERRORS,
+    summary="Processing progress (for polling)",
+)
+async def get_status(document_id: uuid.UUID, session: Session) -> DocumentStatusView:
+    document = await _get_document(session, document_id)
+    job = await Repository(session).latest_job(document_id)
+    view = DocumentStatusView(document_id=document.id, status=document.status, error=document.error)
+    if job:
+        view.job_id, view.job_status, view.stage = job.id, job.status, job.stage
+        view.pages_done, view.pages_total, view.attempts = (
+            job.pages_done,
+            job.pages_total,
+            job.attempts,
+        )
+        view.error = view.error or job.error
+    return view
+
+
+@router.get(
+    "/{document_id}/result",
+    response_model=InvoiceResult,
+    responses=ERRORS,
+    summary="Extracted invoice with evidence, issues and duplicates",
+)
+async def get_result(document_id: uuid.UUID, session: Session) -> InvoiceResult:
+    repo = Repository(session)
+    await _get_document(session, document_id)
+    invoice = await repo.get_invoice_by_document(document_id)
+    if invoice is None:
+        raise ApiError(404, "result_not_ready", "No extraction result for this document yet.")
+    return invoice_result(
+        invoice, await repo.get_line_items(invoice.id), await repo.get_issues(invoice.id)
+    )
+
+
+# ---------------------------------------------------------------- reprocessing
+
+
+@router.post(
+    "/{document_id}/reprocess",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=JobAccepted,
+    responses={
+        **ERRORS,
+        409: {"model": ERRORS[404]["model"], "description": "A job is already queued or running"},
+    },
+    summary="Process a document again",
+)
+async def reprocess(document_id: uuid.UUID, session: Session, queue: Queue) -> JobAccepted:
+    """Safe to call any time: processing is idempotent and human corrections are kept."""
+    repo = Repository(session)
+    await _get_document(session, document_id)
+    if await repo.has_active_job(document_id):
+        raise ApiError(
+            409, "job_in_progress", "A job for this document is already queued or running."
+        )
+    job = await repo.create_job(document_id)
+    await session.commit()
+    await _enqueue_or_mark_failed(repo, queue, job.id, document_id)
+    return JobAccepted(document_id=document_id, job_id=job.id, status=JobStatus.QUEUED)

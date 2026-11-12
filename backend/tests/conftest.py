@@ -12,14 +12,20 @@ import uuid
 os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost:5432/test")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 
+import httpx  # noqa: E402
 import pytest  # noqa: E402  (env vars must be set before the app is imported)
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import text  # noqa: E402
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import NullPool  # noqa: E402
 
 from alembic import command  # noqa: E402
+from app.api.deps import get_queue  # noqa: E402
 from app.config import Settings, get_settings  # noqa: E402
 from app.db import get_session  # noqa: E402
 from app.main import create_app  # noqa: E402
@@ -116,3 +122,65 @@ def client(settings, database_url):
     with TestClient(app) as test_client:
         yield test_client
     asyncio.run(_truncate(database_url))
+
+
+# ---------------------------------------------------------------- API + worker
+
+
+class FakeQueue:
+    """Stands in for Redis/arq: records which jobs were enqueued."""
+
+    def __init__(self) -> None:
+        self.job_ids: list = []
+
+    async def enqueue(self, job_id, defer_seconds: float = 0) -> None:
+        self.job_ids.append(job_id)
+
+
+@pytest.fixture
+def queue():
+    return FakeQueue()
+
+
+@pytest.fixture
+async def api(settings, database_url, queue):
+    """httpx AsyncClient talking to the app in-process, on the test database."""
+    app = create_app()
+    engine = create_async_engine(database_url, poolclass=NullPool)
+
+    async def test_session():
+        async with AsyncSession(engine, expire_on_commit=False) as session:
+            yield session
+
+    app.dependency_overrides[get_settings] = lambda: settings
+    app.dependency_overrides[get_session] = test_session
+    app.dependency_overrides[get_queue] = lambda: queue
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+    await engine.dispose()
+    await _truncate(database_url)
+
+
+@pytest.fixture
+async def run_job(settings, database_url):
+    """Run the worker's job function directly (no Redis, no arq process)."""
+    from app.worker import process_job
+
+    engine = create_async_engine(database_url, poolclass=NullPool)
+
+    async def run(job_id, llm):
+        def factory():
+            if isinstance(llm, Exception):
+                raise llm  # e.g. ValueError: LLM not configured
+            return llm
+
+        ctx = {
+            "settings": settings,
+            "llm_factory": factory,
+            "sessionmaker": async_sessionmaker(engine, expire_on_commit=False),
+        }
+        return await process_job(ctx, str(job_id))
+
+    yield run
+    await engine.dispose()
