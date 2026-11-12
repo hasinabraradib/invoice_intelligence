@@ -13,6 +13,7 @@ from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from app.config import Settings, get_settings
+from app.ocr.engine import OcrOptions
 from app.parsing.dispatch import parse_document
 from app.parsing.errors import (
     CorruptFile,
@@ -51,7 +52,9 @@ class FileResult(BaseModel):
     sha256: str | None = None
     size: int | None = None
     page_count: int = 0
-    pages_needing_ocr: int = 0
+    pages_needing_ocr: int = 0  # still without text (OCR disabled or failed)
+    pages_ocr: int = 0  # pages whose text came from OCR
+    mean_ocr_confidence: float | None = None
     sheet_count: int = 0
     warnings: list[str] = Field(default_factory=list)
     error: FileError | None = None
@@ -89,11 +92,19 @@ async def upload_documents(
         max_sheet_rows=settings.max_sheet_rows,
         max_sheet_columns=settings.max_sheet_columns,
     )
-    results = [await _process_one(upload, settings, limits) for upload in files]
+    ocr = OcrOptions(
+        langs=settings.ocr_langs,
+        min_confidence=settings.ocr_min_confidence,
+        page_timeout_seconds=settings.ocr_page_timeout_seconds,
+        dpi=settings.ocr_dpi,
+    )
+    results = [await _process_one(upload, settings, limits, ocr) for upload in files]
     return UploadResponse(results=results)
 
 
-async def _process_one(upload: UploadFile, settings: Settings, limits: ParseLimits) -> FileResult:
+async def _process_one(
+    upload: UploadFile, settings: Settings, limits: ParseLimits, ocr: OcrOptions
+) -> FileResult:
     display_name = sanitize_filename(upload.filename)
     stored: StoredFile | None = None
     try:
@@ -101,7 +112,11 @@ async def _process_one(upload: UploadFile, settings: Settings, limits: ParseLimi
         # TODO(step 4): enqueue a background job instead of parsing inside the request.
         # Parsing is CPU-bound and synchronous, so it runs in a thread to keep the
         # event loop free for other requests meanwhile.
-        doc = await run_in_threadpool(parse_document, stored.stored_path, display_name, limits)
+        doc = await run_in_threadpool(
+            lambda: parse_document(
+                stored.stored_path, display_name, limits, ocr, run_ocr=settings.ocr_enabled
+            )
+        )
     except DocumentError as exc:
         if stored is not None:  # do not keep files we could not use
             await anyio.Path(stored.stored_path).unlink(missing_ok=True)
@@ -142,7 +157,14 @@ async def _process_one(upload: UploadFile, settings: Settings, limits: ParseLimi
         size=stored.size,
         page_count=doc.page_count,
         pages_needing_ocr=doc.pages_needing_ocr,
+        pages_ocr=doc.pages_ocr,
+        mean_ocr_confidence=_mean_confidence(doc),
         sheet_count=len(doc.sheets),
         warnings=doc.warnings + [w for sheet in doc.sheets for w in sheet.warnings],
         error=None,
     )
+
+
+def _mean_confidence(doc) -> float | None:
+    values = [p.ocr_confidence for p in doc.pages if p.ocr_confidence is not None]
+    return round(sum(values) / len(values), 1) if values else None

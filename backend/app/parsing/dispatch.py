@@ -4,6 +4,8 @@ from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
+from app.ocr.engine import OcrOptions
+from app.ocr.pipeline import ocr_document
 from app.parsing.errors import CorruptFile, FileTooLarge
 from app.parsing.file_types import detect_file_kind, extension_warning
 from app.parsing.models import FileKind, PageText, ParsedDocument, ParseLimits
@@ -18,8 +20,17 @@ MAX_IMAGE_FRAMES = 500
 
 
 def parse_document(
-    path: Path, original_filename: str | None = None, limits: ParseLimits | None = None
+    path: Path,
+    original_filename: str | None = None,
+    limits: ParseLimits | None = None,
+    ocr_options: OcrOptions | None = None,
+    *,
+    run_ocr: bool = True,
 ) -> ParsedDocument:
+    """Detect, parse, then (optionally) OCR the pages that have no usable text.
+
+    Parsers stay pure (bytes -> structure, no OCR); OCR is a separate step applied here.
+    """
     limits = limits or ParseLimits()
     kind = detect_file_kind(path)
 
@@ -33,6 +44,9 @@ def parse_document(
         doc = parse_csv(path, limits)
     else:
         doc = parse_image(path, kind)
+
+    if run_ocr and doc.pages_needing_ocr:
+        doc = ocr_document(path, doc, ocr_options)
 
     if warning := extension_warning(kind, original_filename):
         doc.warnings.insert(0, warning)

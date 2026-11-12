@@ -29,9 +29,13 @@ class PageText(BaseModel):
     page_number: int = Field(ge=1)  # 1-based, as humans count pages
     text: str = ""
     char_count: int = 0  # non-whitespace characters, so a page of blanks counts as 0
-    # "text_layer" = text embedded in a digital PDF. OCR will add "ocr" in a later step.
-    source: Literal["text_layer", "none"] = "text_layer"
+    # "text_layer" = text embedded in a digital PDF, "ocr" = recognised from pixels,
+    # "none" = no text obtained yet.
+    source: Literal["text_layer", "ocr", "none"] = "text_layer"
     needs_ocr: bool = False
+    ocr_confidence: float | None = None  # 0-100, mean over words; only for source="ocr"
+    ocr_seconds: float | None = None  # time spent on OCR, kept for evaluation
+    warnings: list[str] = Field(default_factory=list)
     error: str | None = None
 
 
@@ -59,6 +63,10 @@ class ParsedDocument(BaseModel):
     @property
     def pages_needing_ocr(self) -> int:
         return sum(1 for page in self.pages if page.needs_ocr)
+
+    @property
+    def pages_ocr(self) -> int:
+        return sum(1 for page in self.pages if page.source == "ocr")
 
 
 class ParseLimits(BaseModel):

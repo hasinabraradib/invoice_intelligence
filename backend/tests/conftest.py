@@ -30,7 +30,10 @@ def upload_dir(tmp_path):
 @pytest.fixture
 def settings(upload_dir):
     # Small limits so the "too large" test only needs a ~1 MB file.
-    return Settings(upload_dir=upload_dir, max_upload_mb=1, max_files_per_request=10)
+    # OCR off: API tests check upload/parse behaviour; OCR has its own tests.
+    return Settings(
+        upload_dir=upload_dir, max_upload_mb=1, max_files_per_request=10, ocr_enabled=False
+    )
 
 
 @pytest.fixture

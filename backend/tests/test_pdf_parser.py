@@ -30,7 +30,7 @@ def test_image_only_page_needs_ocr(tmp_path):
     assert [p.needs_ocr for p in doc.pages] == [False, True]
     assert doc.pages[1].char_count == 0
     assert doc.pages_needing_ocr == 1
-    assert any("need OCR" in w for w in doc.warnings)
+    assert any("no usable text layer" in w for w in doc.warnings)
 
 
 def test_encrypted_pdf_raises_password_protected(tmp_path):

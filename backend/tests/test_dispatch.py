@@ -9,7 +9,9 @@ from tests import factories
 
 
 def test_multi_frame_tiff_has_one_ocr_page_per_frame(tmp_path):
-    doc = parse_document(factories.image(tmp_path / "scan.tiff", "TIFF", frames=3), "scan.tiff")
+    doc = parse_document(
+        factories.image(tmp_path / "scan.tiff", "TIFF", frames=3), "scan.tiff", run_ocr=False
+    )
 
     assert doc.file_kind is FileKind.TIFF
     assert doc.page_count == 3
@@ -19,7 +21,7 @@ def test_multi_frame_tiff_has_one_ocr_page_per_frame(tmp_path):
 
 
 def test_png_renamed_to_pdf_is_parsed_as_image_with_warning(tmp_path):
-    doc = parse_document(factories.image(tmp_path / "upload", "PNG"), "invoice.pdf")
+    doc = parse_document(factories.image(tmp_path / "upload", "PNG"), "invoice.pdf", run_ocr=False)
 
     assert doc.file_kind is FileKind.PNG
     assert doc.page_count == 1 and doc.pages_needing_ocr == 1
@@ -37,7 +39,7 @@ def test_png_renamed_to_pdf_is_parsed_as_image_with_warning(tmp_path):
     ],
 )
 def test_dispatches_each_kind(tmp_path, builder, kind):
-    assert parse_document(builder(tmp_path)).file_kind is kind
+    assert parse_document(builder(tmp_path), run_ocr=False).file_kind is kind
 
 
 def test_truncated_png_is_corrupt(tmp_path):

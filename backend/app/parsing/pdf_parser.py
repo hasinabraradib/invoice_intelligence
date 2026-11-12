@@ -59,8 +59,8 @@ def parse_pdf(path: Path, *, max_pages: int = 2000) -> ParsedDocument:
 
     if doc.pages_needing_ocr:
         doc.warnings.append(
-            f"{doc.pages_needing_ocr} of {pages_to_read} page(s) have little or no text "
-            "and need OCR."
+            f"{doc.pages_needing_ocr} of {pages_to_read} page(s) have no usable text layer "
+            "(likely scanned)."
         )
     return doc
 
