@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from redis.asyncio import Redis
 
-from app.api import health
+from app.api import documents, health
 from app.config import get_settings
 from app.db import create_engine
 
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     # A factory makes it easy for tests to build a fresh app instance.
     app = FastAPI(title="Invoice Intelligence API", version="0.1.0", lifespan=lifespan)
     app.include_router(health.router)
+    app.include_router(documents.router)
     return app
 
 
