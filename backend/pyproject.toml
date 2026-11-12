@@ -12,6 +12,14 @@ dependencies = [
     "asyncpg>=0.29",             # fast async PostgreSQL driver used by SQLAlchemy
     "alembic>=1.13",             # database migrations
     "redis>=5.0",                # Redis client (includes redis.asyncio)
+    "python-multipart>=0.0.9",   # lets FastAPI parse multipart/form-data file uploads
+    "pypdfium2>=4.30",           # PDFium (Chrome's PDF engine): robust open, page count, encryption
+    "pdfplumber>=0.11",          # per-page text extraction from the PDF text layer
+    "pandas>=2.2",               # reads every sheet of xlsx/xls workbooks
+    "openpyxl>=3.1",             # pandas engine for .xlsx
+    "xlrd>=2.0",                 # pandas engine for legacy .xls (2.x reads ONLY .xls, by design)
+    "charset-normalizer>=3.3",   # guesses the text encoding of CSV files
+    "pillow>=10.4",              # opens images to count frames (multi-page TIFF)
 ]
 
 [project.optional-dependencies]
@@ -20,11 +28,22 @@ dev = [
     "pytest>=8.2",
     "httpx>=0.27",   # required by FastAPI's TestClient
     "ruff>=0.6",
+    "reportlab>=4.2",  # generates PDF fixtures in tests (no binary fixtures committed)
+    "xlwt>=1.3",       # writes legacy .xls fixtures in tests (unmaintained, test-only)
 ]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+# Only `app` is our importable package; `alembic/` and `tests/` are not part of it.
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not slow'"
+markers = ["slow: long-running tests (run with: pytest -m slow)"]
 
 [tool.ruff]
 line-length = 100
