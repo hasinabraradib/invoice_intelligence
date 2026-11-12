@@ -44,13 +44,14 @@ class SourcePage:
     text: str
     label: str = ""  # e.g. 'sheet "Invoice"' for spreadsheets
     ocr_confidence: float | None = None
+    source: str = "text_layer"  # text_layer | ocr | sheet
 
 
 def source_pages(parsed: ParsedDocument) -> list[SourcePage]:
     """Turn a ParsedDocument into numbered text pages. Sheets get the numbers after
     the pages, so evidence from a spreadsheet can be cited with a page number too."""
     pages = [
-        SourcePage(p.page_number, p.text, ocr_confidence=p.ocr_confidence)
+        SourcePage(p.page_number, p.text, ocr_confidence=p.ocr_confidence, source=p.source)
         for p in parsed.pages
         if p.text.strip()
     ]
@@ -59,7 +60,9 @@ def source_pages(parsed: ParsedDocument) -> list[SourcePage]:
         lines = [" | ".join(row) for row in sheet.preamble_rows]
         lines.append("\t".join(sheet.columns))
         lines += ["\t".join(row.get(c, "") for c in sheet.columns) for row in sheet.rows]
-        pages.append(SourcePage(offset + index, "\n".join(lines), label=f'sheet "{sheet.name}"'))
+        pages.append(
+            SourcePage(offset + index, "\n".join(lines), f'sheet "{sheet.name}"', source="sheet")
+        )
     return pages
 
 
@@ -109,7 +112,10 @@ def _split_page(page: SourcePage, max_tokens: int) -> list[SourcePage]:
             lines = []
         lines.append(line[: max_tokens * 4])  # a single absurdly long line is truncated
     parts.append(lines)
-    return [SourcePage(page.number, "\n".join(p), page.label, page.ocr_confidence) for p in parts]
+    return [
+        SourcePage(page.number, "\n".join(p), page.label, page.ocr_confidence, page.source)
+        for p in parts
+    ]
 
 
 def render_document(pages: list[SourcePage]) -> str:
