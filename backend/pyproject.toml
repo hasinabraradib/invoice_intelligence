@@ -20,6 +20,9 @@ dependencies = [
     "xlrd>=2.0",                 # pandas engine for legacy .xls (2.x reads ONLY .xls, by design)
     "charset-normalizer>=3.3",   # guesses the text encoding of CSV files
     "pillow>=10.4",              # opens images to count frames (multi-page TIFF)
+    "opencv-python-headless>=4.10",  # image cleanup before OCR ("headless" = no GUI libs)
+    "numpy>=2.0",                # pixel arrays shared by OpenCV, Pillow and pdfium
+    "pytesseract>=0.3.13",       # thin wrapper that runs the tesseract binary
 ]
 
 [project.optional-dependencies]

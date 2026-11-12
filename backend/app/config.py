@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     max_sheet_rows: int = Field(default=10_000, gt=0)
     max_sheet_columns: int = Field(default=200, gt=0)
 
+    # OCR. OCR_LANGS uses Tesseract's syntax: "eng", "ben" or "eng+ben". The pattern also
+    # stops anything except language codes from reaching the tesseract command line.
+    ocr_enabled: bool = True
+    ocr_langs: str = Field(default="eng", pattern=r"^[a-z_]{3,}(\+[a-z_]{3,})*$")
+    ocr_min_confidence: float = Field(default=60, ge=0, le=100)
+    ocr_page_timeout_seconds: int = Field(default=60, gt=0)
+    ocr_dpi: int = Field(default=300, ge=72, le=600)
+
     @field_validator("database_url")
     @classmethod
     def _require_async_driver(cls, value: str) -> str:

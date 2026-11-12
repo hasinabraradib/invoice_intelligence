@@ -10,6 +10,16 @@ COPY --from=ghcr.io/astral-sh/uv:0.8.22 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
+# Tesseract OCR engine + English and Bengali language data. --no-install-recommends and
+# removing the apt lists keep the image small (no docs, no extra fonts or GUI packages).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        tesseract-ocr tesseract-ocr-eng tesseract-ocr-ben \
+    && rm -rf /var/lib/apt/lists/*
+# One thread per Tesseract process: we OCR page by page, and Tesseract's internal
+# multithreading makes small pages slower in containers (CPU oversubscription).
+ENV OMP_THREAD_LIMIT=1
+
 # Install dependencies BEFORE copying source code: this layer is cached and only
 # rebuilt when pyproject.toml changes, not on every code edit.
 # INSTALL_DEV=true also installs pytest/ruff (used by `make test` / `make lint`).
