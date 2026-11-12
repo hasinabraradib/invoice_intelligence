@@ -5,14 +5,18 @@ batch. The overall response is 200 whenever the request itself was valid.
 """
 
 import logging
+import uuid
 from typing import Annotated
 
 import anyio
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
+from app.db import get_session
 from app.ocr.engine import OcrOptions
 from app.parsing.dispatch import parse_document
 from app.parsing.errors import (
@@ -24,6 +28,7 @@ from app.parsing.errors import (
     UnsupportedFileType,
 )
 from app.parsing.models import FileKind, ParseLimits
+from app.repository import Repository
 from app.storage import StoredFile, sanitize_filename, save_upload
 
 logger = logging.getLogger(__name__)
@@ -38,6 +43,16 @@ ERROR_STATUS: dict[type[DocumentError], int] = {
     EmptyFile: status.HTTP_422_UNPROCESSABLE_CONTENT,
 }
 MULTIPART_OVERHEAD_BYTES = 1024 * 1024
+MIME_TYPES = {
+    FileKind.PDF: "application/pdf",
+    FileKind.PNG: "image/png",
+    FileKind.JPEG: "image/jpeg",
+    FileKind.TIFF: "image/tiff",
+    FileKind.CSV: "text/csv",
+    FileKind.XLSX: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    FileKind.XLS: "application/vnd.ms-excel",
+}
+KIND_BY_MIME = {mime: kind for kind, mime in MIME_TYPES.items()}
 
 
 class FileError(BaseModel):
@@ -48,6 +63,8 @@ class FileError(BaseModel):
 class FileResult(BaseModel):
     original_filename: str  # sanitised for display; never used as a path
     status_code: int
+    document_id: uuid.UUID | None = None
+    duplicate: bool = False  # True: same bytes were uploaded before; nothing new stored
     detected_kind: FileKind | None = None
     sha256: str | None = None
     size: int | None = None
@@ -80,6 +97,7 @@ async def upload_documents(
     # Annotated[...] is FastAPI's recommended style: the type and its source in one place.
     files: Annotated[list[UploadFile], File(description="One or more invoice files")],
     settings: Annotated[Settings, Depends(get_settings)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> UploadResponse:
     _check_request_size(request, settings)
     if len(files) > settings.max_files_per_request:
@@ -98,18 +116,27 @@ async def upload_documents(
         page_timeout_seconds=settings.ocr_page_timeout_seconds,
         dpi=settings.ocr_dpi,
     )
-    results = [await _process_one(upload, settings, limits, ocr) for upload in files]
+    repo = Repository(session)
+    results = [await _process_one(upload, settings, limits, ocr, repo) for upload in files]
     return UploadResponse(results=results)
 
 
 async def _process_one(
-    upload: UploadFile, settings: Settings, limits: ParseLimits, ocr: OcrOptions
+    upload: UploadFile,
+    settings: Settings,
+    limits: ParseLimits,
+    ocr: OcrOptions,
+    repo: Repository,
 ) -> FileResult:
     display_name = sanitize_filename(upload.filename)
     stored: StoredFile | None = None
     try:
         stored = await save_upload(upload, settings.upload_dir, settings.max_upload_bytes)
-        # TODO(step 4): enqueue a background job instead of parsing inside the request.
+        # The hash was computed while streaming; same bytes seen before -> keep one copy.
+        if existing := await repo.get_document_by_sha256(stored.sha256):
+            await anyio.Path(stored.stored_path).unlink(missing_ok=True)
+            return _duplicate_result(display_name, existing)
+        # TODO(step 4b): enqueue a background job instead of parsing inside the request.
         # Parsing is CPU-bound and synchronous, so it runs in a thread to keep the
         # event loop free for other requests meanwhile.
         doc = await run_in_threadpool(
@@ -141,6 +168,22 @@ async def _process_one(
     finally:
         await upload.close()
 
+    try:
+        document = await repo.create_document(
+            filename=display_name,
+            sha256=stored.sha256,
+            mime_type=MIME_TYPES[doc.file_kind],
+            size_bytes=stored.size,
+            storage_path=str(stored.stored_path),
+            page_count=doc.page_count,
+        )
+        await repo.session.commit()
+    except IntegrityError:
+        # Two identical uploads at the same moment: the unique sha256 lets only one win.
+        await repo.session.rollback()
+        await anyio.Path(stored.stored_path).unlink(missing_ok=True)
+        return _duplicate_result(display_name, await repo.get_document_by_sha256(stored.sha256))
+
     logger.info(
         "upload parsed: sha256=%s kind=%s size=%d pages=%d sheets=%d",
         stored.sha256[:12],
@@ -152,6 +195,7 @@ async def _process_one(
     return FileResult(
         original_filename=display_name,
         status_code=status.HTTP_200_OK,
+        document_id=document.id,
         detected_kind=doc.file_kind,
         sha256=stored.sha256,
         size=stored.size,
@@ -168,3 +212,18 @@ async def _process_one(
 def _mean_confidence(doc) -> float | None:
     values = [p.ocr_confidence for p in doc.pages if p.ocr_confidence is not None]
     return round(sum(values) / len(values), 1) if values else None
+
+
+def _duplicate_result(display_name: str, existing) -> FileResult:
+    logger.info("duplicate upload: document=%s", existing.id)
+    return FileResult(
+        original_filename=display_name,
+        status_code=status.HTTP_200_OK,
+        document_id=existing.id,
+        duplicate=True,
+        detected_kind=KIND_BY_MIME.get(existing.mime_type),
+        sha256=existing.sha256,
+        size=existing.size_bytes,
+        page_count=existing.page_count,
+        warnings=["This file was already uploaded; returning the existing document."],
+    )

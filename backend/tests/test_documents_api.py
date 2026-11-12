@@ -101,3 +101,23 @@ def test_too_many_files_is_rejected(client):
 
 def test_no_files_is_a_validation_error(client):
     assert client.post("/documents").status_code == 422
+
+
+def test_same_file_twice_is_stored_once(client, tmp_path, upload_dir):
+    pdf = factories.text_pdf(tmp_path / "a.pdf").read_bytes()
+
+    first = _upload(client, [("invoice.pdf", pdf)]).json()["results"][0]
+    second = _upload(client, [("copy-of-invoice.pdf", pdf)]).json()["results"][0]
+
+    assert first["duplicate"] is False and first["document_id"]
+    assert second["duplicate"] is True
+    assert second["document_id"] == first["document_id"]
+    assert second["sha256"] == first["sha256"] and second["detected_kind"] == "pdf"
+    assert len(list(upload_dir.iterdir())) == 1  # the second copy was not kept
+
+
+def test_duplicate_within_one_request(client, tmp_path, upload_dir):
+    pdf = factories.text_pdf(tmp_path / "a.pdf").read_bytes()
+    results = _upload(client, [("a.pdf", pdf), ("b.pdf", pdf)]).json()["results"]
+    assert [r["duplicate"] for r in results] == [False, True]
+    assert len(list(upload_dir.iterdir())) == 1
