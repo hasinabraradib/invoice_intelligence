@@ -8,7 +8,7 @@ Pages that already have good text (from the PDF text layer) are never OCR'd.
 import logging
 import math
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import numpy as np
@@ -28,21 +28,30 @@ PageImage = tuple[int, np.ndarray | None, float | None, str | None]
 
 
 def ocr_document(
-    path: Path, parsed: ParsedDocument, options: OcrOptions | None = None
+    path: Path,
+    parsed: ParsedDocument,
+    options: OcrOptions | None = None,
+    on_page: Callable[[int], None] | None = None,
 ) -> ParsedDocument:
-    """Return a copy of `parsed` where pages that needed OCR now carry OCR text."""
+    """Return a copy of `parsed` where pages that needed OCR now carry OCR text.
+
+    on_page(n) is called after each OCR'd page with how many are done (for progress).
+    """
     options = options or OcrOptions()
     doc = parsed.model_copy(deep=True)  # never mutate the caller's object
     targets = {page.page_number: page for page in doc.pages if page.needs_ocr}
     if not targets:
         return doc
 
-    done = 0
+    done = attempted = 0
     for number, image, dpi, error in _page_images(path, doc.file_kind, sorted(targets), options):
+        attempted += 1
         page = targets[number]
         if image is None:
             page.error = error
             doc.errors.append(f"Page {number}: could not be rendered for OCR.")
+            if on_page:
+                on_page(attempted)
             continue
         try:
             _ocr_into(page, image, dpi, options)
@@ -60,6 +69,8 @@ def ocr_document(
             done += 1
         finally:
             del image  # drop the only reference so the page's pixels are freed now
+            if on_page:
+                on_page(attempted)
 
     low = sum(1 for p in targets.values() if LOW_CONFIDENCE_WARNING in p.warnings)
     if done:

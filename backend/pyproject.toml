@@ -25,6 +25,7 @@ dependencies = [
     "pytesseract>=0.3.13",       # thin wrapper that runs the tesseract binary
     "httpx>=0.27",               # HTTP client for the LLM providers' REST APIs
     "pgvector>=0.3",             # SQLAlchemy type for pgvector's vector column
+    "arq>=0.26",                 # async job queue on Redis (fits our async SQLAlchemy)
 ]
 
 [project.optional-dependencies]

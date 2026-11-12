@@ -36,6 +36,18 @@ class Settings(BaseSettings):
     money_tolerance: Decimal = Field(default=Decimal("0.01"), ge=0)
     review_confidence: float = Field(default=0.6, ge=0, le=1)
 
+    # Background jobs
+    job_max_attempts: int = Field(default=3, ge=1, le=10)
+    job_retry_base_seconds: float = Field(default=10, gt=0)  # 10s, 20s, 40s... + jitter
+    job_timeout_base_seconds: int = Field(default=120, gt=0)
+    job_timeout_per_page_seconds: int = Field(default=15, gt=0)
+    job_timeout_max_seconds: int = Field(default=3600, gt=0)
+    worker_concurrency: int = Field(default=2, ge=1, le=32)
+    stuck_job_minutes: int = Field(default=30, ge=1)
+
+    # Browsers may call the API from these origins (the Next.js dev server by default).
+    cors_origins: list[str] = ["http://localhost:3000"]
+
     @field_validator("llm_model", "llm_api_key", mode="before")
     @classmethod
     def _blank_is_none(cls, value):

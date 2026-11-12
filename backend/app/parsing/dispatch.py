@@ -75,3 +75,24 @@ def parse_image(path: Path, kind: FileKind) -> ParsedDocument:
         PageText(page_number=n, source="none", needs_ocr=True) for n in range(1, frames + 1)
     ]
     return doc
+
+
+def count_pages(path: Path) -> int:
+    """Cheap page count (PDF pages or image frames) used to size job timeouts.
+    Returns 1 when unknown; never raises."""
+    try:
+        kind = detect_file_kind(path)
+        if kind is FileKind.PDF:
+            import pypdfium2 as pdfium
+
+            pdf = pdfium.PdfDocument(path)
+            try:
+                return max(len(pdf), 1)
+            finally:
+                pdf.close()
+        if kind.is_image:
+            with Image.open(path) as image:
+                return max(getattr(image, "n_frames", 1), 1)
+    except Exception:  # noqa: S110  (a page count is only a hint)
+        pass
+    return 1

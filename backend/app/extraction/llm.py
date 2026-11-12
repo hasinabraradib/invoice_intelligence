@@ -23,7 +23,15 @@ DEFAULT_MODELS = {"gemini": "gemini-2.5-flash", "groq": "openai/gpt-oss-120b"}
 
 
 class LLMError(Exception):
-    """The provider could not give us an answer (network, HTTP error, blocked reply)."""
+    """The provider could not give us an answer (network, HTTP error, blocked reply).
+
+    retryable=True means "temporary": rate limit, server error, timeout or network
+    trouble. A later job retry may succeed; a bad key or bad request will not.
+    """
+
+    def __init__(self, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class LLMInvalidJSON(LLMError):
@@ -63,12 +71,14 @@ def post_with_retries(
             response = client.post(url, headers=headers, json=body)
         except httpx.TransportError as exc:  # includes timeouts
             if attempt == max_attempts:
-                raise LLMError(f"network error after {attempt} attempts") from exc
+                raise LLMError(f"network error after {attempt} attempts", retryable=True) from exc
             sleep(_backoff(attempt, None, base_delay, max_delay))
             continue
         if response.status_code == 429 or response.status_code >= 500:
             if attempt == max_attempts:
-                raise LLMError(f"HTTP {response.status_code} after {attempt} attempts")
+                raise LLMError(
+                    f"HTTP {response.status_code} after {attempt} attempts", retryable=True
+                )
             logger.warning("LLM HTTP %d, retrying (attempt %d)", response.status_code, attempt)
             sleep(_backoff(attempt, response.headers.get("retry-after"), base_delay, max_delay))
             continue

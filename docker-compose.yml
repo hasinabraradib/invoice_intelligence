@@ -35,7 +35,8 @@ services:
 
   worker:
     <<: *backend
-    command: python -m app.worker
+    # arq worker: picks queued jobs from Redis and runs the processing pipeline.
+    command: arq app.worker.WorkerSettings
 
   postgres:
     # Official Postgres + the pgvector extension (needed later for semantic search).

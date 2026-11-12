@@ -54,7 +54,7 @@ FIELD_KINDS: dict[str, Kind] = {
 class FieldResult(BaseModel):
     raw_value: str | None = None  # exactly what the LLM quoted
     value: Decimal | date | str | None = None  # typed: Decimal (amounts), date, ISO code, text
-    status: Literal["found", "missing", "uncertain"] = "missing"
+    status: Literal["found", "missing", "uncertain", "corrected"] = "missing"
     evidence: str | None = None
     page: int | None = None
     confidence: float = 0.0
@@ -71,6 +71,7 @@ class LineItemResult(BaseModel):
 class ExtractionResult(BaseModel):
     ok: bool
     failure_reason: str | None = None
+    retryable: bool = False  # True if the failure was temporary (rate limit, outage)
     provider: str
     fields: dict[str, FieldResult] = Field(default_factory=dict)
     line_items: list[LineItemResult] = Field(default_factory=list)
@@ -103,6 +104,7 @@ def extract_invoice(
             extraction, error = _call_with_repair(llm, system, user, schema, result)
         except LLMError as exc:
             extraction, error = None, f"LLM request failed: {exc}"
+            result.retryable = exc.retryable
         if extraction is None:
             result.failure_reason = f"chunk {index}/{len(chunks)}: {error}"
             result.duration_seconds = round(time.perf_counter() - started, 2)

@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs ocr-sample extract-sample
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -21,6 +21,12 @@ lint: env  ## Check lint rules and formatting (no changes made)
 
 logs:
 	$(COMPOSE) logs -f api worker
+
+worker: env  ## (Re)build and start only the background worker
+	$(COMPOSE) up -d --build worker
+
+worker-logs:
+	$(COMPOSE) logs -f worker
 
 # Usage: make ocr-sample FILE=samples/scan.jpg [LANGS=eng+ben]
 # samples/ is mounted read-only into a one-off container.
