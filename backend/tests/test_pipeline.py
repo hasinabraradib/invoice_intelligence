@@ -211,6 +211,7 @@ async def test_repository_duplicate_lookups(db_session):
             document_id=doc.id,
             supplier_key="acme",
             invoice_number="7",
+            invoice_number_key="7",
             invoice_date=date(2026, 1, 2),
             total=Decimal("10.00"),
         )

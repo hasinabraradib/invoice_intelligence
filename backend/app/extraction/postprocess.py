@@ -251,6 +251,14 @@ _COMPANY_SUFFIXES = {
 }
 
 
+def normalise_invoice_number(number: str | None) -> str | None:
+    """Key for duplicate detection: "inv 001", "INV-001", "INV/001" -> "INV001"."""
+    if not number:
+        return None
+    s = unicodedata.normalize("NFKC", number).translate(_QUOTES_DASHES).upper()
+    return re.sub(r"[\s\-/.]", "", s) or None
+
+
 def normalise_supplier_key(name: str | None) -> str | None:
     """Key for duplicate detection: "ACME Supplies (Pvt.) Ltd." -> "acme supplies"."""
     if not name:

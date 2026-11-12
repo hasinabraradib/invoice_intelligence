@@ -4,13 +4,14 @@ Never logs document text (CLAUDE.md rule 5).
 """
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.extraction.postprocess import normalise_invoice_number
 from app.extraction.prompt import SourcePage
 from app.extraction.service import ExtractionResult, FieldResult
 from app.models import (
@@ -161,6 +162,7 @@ class Repository:
             value = result.fields[column].value if column in result.fields else None
             setattr(invoice, column, _clean(value) if isinstance(value, str) else value)
         invoice.supplier_key = result.supplier_key
+        invoice.invoice_number_key = normalise_invoice_number(invoice.invoice_number)
         invoice.needs_review = needs_review
         invoice.overall_confidence = overall_confidence
         invoice.fields = _jsonable({n: _field_json(f) for n, f in result.fields.items()})
@@ -169,9 +171,7 @@ class Repository:
         await self.session.flush()
 
         await self.session.execute(delete(LineItem).where(LineItem.invoice_id == invoice.id))
-        await self.session.execute(
-            delete(ValidationIssue).where(ValidationIssue.invoice_id == invoice.id)
-        )
+        await self.replace_issues(invoice.id, issues)
         await self.session.execute(delete(PageText).where(PageText.document_id == document_id))
         for position, item in enumerate(result.line_items, start=1):
             self.session.add(
@@ -185,8 +185,6 @@ class Repository:
                     fields=_jsonable({n: _field_json(f) for n, f in item}),
                 )
             )
-        for issue in issues:
-            self.session.add(ValidationIssue(invoice_id=invoice.id, **issue.model_dump()))
         for page in _merge_split_pages(pages):
             self.session.add(
                 PageText(
@@ -200,6 +198,90 @@ class Repository:
         await self.session.flush()
         return invoice
 
+    async def get_invoice(self, invoice_id: uuid.UUID) -> Invoice | None:
+        return await self.session.get(Invoice, invoice_id)
+
+    async def get_line_items(self, invoice_id: uuid.UUID) -> list[LineItem]:
+        rows = await self.session.scalars(
+            select(LineItem).where(LineItem.invoice_id == invoice_id).order_by(LineItem.position)
+        )
+        return list(rows)
+
+    async def get_issues(self, invoice_id: uuid.UUID) -> list[ValidationIssue]:
+        rows = await self.session.scalars(
+            select(ValidationIssue)
+            .where(ValidationIssue.invoice_id == invoice_id)
+            .order_by(ValidationIssue.severity, ValidationIssue.code)
+        )
+        return list(rows)
+
+    async def replace_issues(self, invoice_id: uuid.UUID, issues: list[Issue]) -> None:
+        await self.session.execute(
+            delete(ValidationIssue).where(ValidationIssue.invoice_id == invoice_id)
+        )
+        for issue in issues:
+            self.session.add(ValidationIssue(invoice_id=invoice_id, **issue.model_dump()))
+
+    # ------------------------------------------------------------ job queue state
+
+    async def create_job(self, document_id: uuid.UUID) -> ProcessingJob:
+        job = ProcessingJob(document_id=document_id, status=JobStatus.QUEUED, attempts=0)
+        self.session.add(job)
+        await self.session.flush()
+        return job
+
+    async def get_job(self, job_id: uuid.UUID) -> ProcessingJob | None:
+        return await self.session.get(ProcessingJob, job_id)
+
+    async def latest_job(self, document_id: uuid.UUID) -> ProcessingJob | None:
+        return await self.session.scalar(
+            select(ProcessingJob)
+            .where(ProcessingJob.document_id == document_id)
+            .order_by(ProcessingJob.created_at.desc(), ProcessingJob.id)
+            .limit(1)
+        )
+
+    async def has_active_job(self, document_id: uuid.UUID) -> bool:
+        count = await self.session.scalar(
+            select(func.count())
+            .select_from(ProcessingJob)
+            .where(
+                ProcessingJob.document_id == document_id,
+                ProcessingJob.status.in_([JobStatus.QUEUED, JobStatus.RUNNING]),
+            )
+        )
+        return bool(count)
+
+    async def stuck_jobs(self, older_than_minutes: int) -> list[ProcessingJob]:
+        cutoff = _now() - timedelta(minutes=older_than_minutes)
+        rows = await self.session.scalars(
+            select(ProcessingJob).where(
+                ProcessingJob.status == JobStatus.RUNNING, ProcessingJob.started_at < cutoff
+            )
+        )
+        return list(rows)
+
+    async def documents_with_failed_latest_job(self) -> list[uuid.UUID]:
+        """Documents whose most recent job failed (older failures already retried are
+        ignored, so retry-failed never queues the same document twice)."""
+        # Number each document's jobs newest-first; row 1 is the latest job.
+        ranked = select(
+            ProcessingJob.document_id,
+            ProcessingJob.status,
+            func.row_number()
+            .over(
+                partition_by=ProcessingJob.document_id,
+                order_by=(ProcessingJob.created_at.desc(), ProcessingJob.id.desc()),
+            )
+            .label("position"),
+        ).subquery()
+        rows = await self.session.scalars(
+            select(ranked.c.document_id).where(
+                ranked.c.position == 1, ranked.c.status == JobStatus.FAILED
+            )
+        )
+        return list(rows)
+
     # ------------------------------------------------------------ duplicate lookups
 
     async def find_invoices_by_supplier_and_number(
@@ -208,7 +290,7 @@ class Repository:
         rows = await self.session.scalars(
             select(Invoice.document_id).where(
                 Invoice.supplier_key == supplier_key,
-                Invoice.invoice_number == invoice_number,
+                Invoice.invoice_number_key == normalise_invoice_number(invoice_number),
                 Invoice.document_id != exclude_document_id,
             )
         )

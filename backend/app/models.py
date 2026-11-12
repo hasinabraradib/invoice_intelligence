@@ -107,6 +107,8 @@ class ProcessingJob(Base):
     )
     stage: Mapped[str | None] = mapped_column(String(30))
     attempts: Mapped[int] = mapped_column(Integer, default=0)
+    pages_done: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    pages_total: Mapped[int | None] = mapped_column(Integer)
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -122,7 +124,9 @@ class Invoice(Base):
     document_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("documents.id", ondelete="CASCADE"), unique=True
     )
-    invoice_number: Mapped[str | None] = mapped_column(String(100))
+    invoice_number: Mapped[str | None] = mapped_column(String(100))  # as printed
+    # "INV-001", "inv 001" and "INV/001" all become "INV001" (duplicate detection).
+    invoice_number_key: Mapped[str | None] = mapped_column(String(100))
     invoice_date: Mapped[date | None] = mapped_column(Date)
     due_date: Mapped[date | None] = mapped_column(Date)
     supplier_name: Mapped[str | None] = mapped_column(Text)
@@ -140,7 +144,7 @@ class Invoice(Base):
     extracted_at: Mapped[datetime] = _now()
 
     __table_args__ = (
-        Index("ix_invoices_supplier_number", "supplier_key", "invoice_number"),
+        Index("ix_invoices_supplier_number_key", "supplier_key", "invoice_number_key"),
         Index("ix_invoices_supplier_date_total", "supplier_key", "invoice_date", "total"),
     )
 
