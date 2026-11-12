@@ -50,13 +50,26 @@ Each file gets its own result (`status_code` 200, or 415 unsupported type, 413 t
 The file type is detected from the file's content, not its name.
 See [samples/README.md](samples/README.md) for trying it with your own invoices.
 
+### OCR (scans and photos)
+
+Pages without a usable text layer (scanned PDFs, PNG/JPEG/TIFF) are OCR'd with Tesseract
+inside the container. English (`eng`) and Bengali (`ben`) are installed; choose with
+`OCR_LANGS` in `.env` (`eng`, `ben` or `eng+ben`; more languages = slower). Pages with a
+mean word confidence below `OCR_MIN_CONFIDENCE` (default 60) get a "low OCR confidence"
+warning.
+
+```bash
+# Inspect OCR text, confidence and timing for one of your sample files
+make ocr-sample FILE=samples/scanned-invoice.jpg LANGS=eng+ben
+```
+
 ### Run tests locally (optional, without Docker)
 
 ```bash
 cd backend
 uv venv --python 3.12 .venv && uv pip install -e '.[dev]'
-.venv/bin/pytest            # fast tests
-.venv/bin/pytest -m slow    # 1000-page PDF memory test
+.venv/bin/pytest            # fast tests (OCR tests skip if tesseract is missing)
+.venv/bin/pytest -m slow    # slow tests: 1000-page PDF memory, very noisy OCR
 ```
 
 ## API
