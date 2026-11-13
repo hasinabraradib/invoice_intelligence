@@ -546,8 +546,8 @@
       ]
     },
     {
-      "a": "inv-42.pdf",
-      "b": "inv-42-purchase-order.pdf",
+      "a": "inv-02.pdf",
+      "b": "inv-02-purchase-order.pdf",
       "mode": "invoices_vs_invoices",
       "split": "dev",
       "expected_findings": [

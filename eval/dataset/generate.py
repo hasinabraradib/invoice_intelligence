@@ -831,7 +831,7 @@ def main() -> None:
             unit = Decimal(str(round(extra_rng.uniform(lo, hi), 2))).quantize(CENT)
             lines.append(Line(item, qty, unit, (qty * unit).quantize(CENT)))
         inv_date = date(2026, 3, 1) + timedelta(days=extra_rng.randrange(0, 200))
-        inv = Invoice(
+        extra = Invoice(
             id=f"inv-{n}",
             invoice_number=f"INV-{inv_date.year}-{900 + n}",
             invoice_date=inv_date,
@@ -844,9 +844,9 @@ def main() -> None:
             show_subtotal=False,
             notes=[note],
         )
-        name = f"{inv.id}.pdf"
-        pdf = pdf_bytes(lambda c, inv=inv, n=n: draw_invoice(c, inv, n % 3, [inv.lines]))
-        add_file(name, pdf, "pdf_digital", "dev", [label(inv, name, "pdf_digital", "dev")])
+        name = f"{extra.id}.pdf"
+        pdf = pdf_bytes(lambda c, x=extra, n=n: draw_invoice(c, x, n % 3, [x.lines]))
+        add_file(name, pdf, "pdf_digital", "dev", [label(extra, name, "pdf_digital", "dev")])
 
     for lid, data in labels.items():
         (LABELS / f"{lid}.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
