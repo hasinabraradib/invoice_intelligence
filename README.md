@@ -109,7 +109,30 @@ pages, a fixed seed, and a fake LLM, so this is the pipeline's own cost without 
 |---|---|---|---|
 | 1000 text pages | 502 / 502 | 3.5 s | 0.004 s |
 | 1000 text pages + local embeddings | 502 / 502 | 25.2 s | 0.025 s |
-| 50 scanned pages (OCR) | 27 / 27 | 45 s | 0.90 s (≈ 15 min per 1000) |
+| 50 scanned pages (OCR) | 27 / 27 | 50-60 s | 1.0-1.2 s (≈ 17-20 min per 1000) |
+
+**Parallel OCR.** OCR pages run in a pool of worker processes (`OCR_WORKERS`, default CPU
+cores − 1). Each worker renders and OCRs its own page; at most 2 × workers pages are in
+flight, and results keep page order. If a job times out, the pool is terminated, so the
+work really stops. Measured on this laptop (alternating runs, same 24 scanned pages):
+
+| OCR | Seconds per page |
+|---|---|
+| Sequential (before) | 1.14 |
+| Pool, 2 workers | 1.04 (−8%) |
+| Pool, 9 workers (default here) | 1.11 (−3%) |
+
+The gain is small because OpenCV's denoising already spreads each page over every core,
+and this machine has about 4 cores' worth of real compute (one page takes 3.75 s on one
+thread and 0.94 s on all of them). Without splitting OpenCV's threads between workers, extra
+processes gave no gain at all. On a server with more real cores, try `OCR_WORKERS=2..4`
+with `make batch-benchmark ARGS=--scanned`. Machine drift between runs is ±10%, so
+compare runs made back to back.
+
+**Partly failed batches.** If some invoices fail for good while others succeed, the
+document is `partially_failed` and keeps the good invoices. "Retry all failed" (or
+`POST /documents/{id}/reprocess?only_failed=true`) continues the failed job: it reuses the
+page texts and boundaries and extracts only the invoices that failed.
 
 With a real LLM, add the provider's time: about one extraction call per invoice, run 4 at a
 time, plus about one classifier call per 20 unclear pages. On these synthetic pages the rules
