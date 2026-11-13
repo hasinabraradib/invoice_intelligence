@@ -8,7 +8,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
-from app.api import assistant, crosschecks, documents, errors, health, invoices, jobs, search
+from app.api import (
+    assistant,
+    crosschecks,
+    documents,
+    errors,
+    evaluation,
+    health,
+    invoices,
+    jobs,
+    search,
+)
 from app.config import get_settings
 from app.db import create_engine, create_sessionmaker
 from app.jobs import ArqQueue
@@ -63,7 +73,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     errors.install(app)
-    for module in (health, assistant, documents, invoices, crosschecks, search, jobs):
+    for module in (health, assistant, documents, invoices, crosschecks, search, jobs, evaluation):
         app.include_router(module.router)
     return app
 

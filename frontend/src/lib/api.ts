@@ -83,6 +83,8 @@ export function query(params: Record<string, string | number | undefined | null>
 }
 
 export const api = {
+  /** Headline of the latest `make eval` run, or null if none was stored. */
+  latestEvaluation: () => request<S["EvalRunView"] | null>("/evaluation/latest"),
   listDocuments: (
     filters: DocumentFilters & { limit: number; offset: number; order?: "newest" | "oldest" },
   ) => request<Paged<DocumentSummary>>(`/documents${query(filters)}`),

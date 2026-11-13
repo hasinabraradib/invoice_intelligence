@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { assistant } from "@/lib/assistant";
+import { api } from "@/lib/api";
+import { evaluationTiles } from "@/lib/evaluation";
 import { ErrorBox, SkeletonRows } from "@/components/Feedback";
 import { errorMessage } from "@/components/Toast";
 
@@ -13,6 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
 /** The numbers behind the assistant's greeting, at a glance. */
 export default function DashboardPage() {
   const stats = useQuery({ queryKey: ["stats"], queryFn: assistant.stats, refetchInterval: 10_000 });
+  const evaluation = useQuery({ queryKey: ["evaluation"], queryFn: api.latestEvaluation });
   if (stats.isPending) return <SkeletonRows />;
   if (stats.isError) return <ErrorBox message={errorMessage(stats.error)} onRetry={() => void stats.refetch()} />;
   const s = stats.data;
@@ -45,6 +48,29 @@ export default function DashboardPage() {
             </li>
           ))}
         </ul>
+      </section>
+      <section className="card" aria-labelledby="eval-heading">
+        <h2 id="eval-heading" className="text-lg font-semibold">Latest evaluation</h2>
+        {evaluation.data ? (
+          <>
+            <p className="mb-3 text-sm text-slate-600">
+              {evaluation.data.dataset} data, {evaluation.data.split} split, {evaluation.data.model},{" "}
+              {new Date(evaluation.data.run_at).toLocaleString()}. Details in docs/evaluation.md.
+            </p>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {evaluationTiles(evaluation.data.headline).map((t) => (
+                <div key={t.label} title={t.hint}>
+                  <dt className="text-sm text-slate-600">{t.label}</dt>
+                  <dd className="text-2xl font-semibold tabular-nums">{t.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        ) : (
+          <p className="text-sm text-slate-600">
+            {evaluation.isPending ? "Loading..." : "No evaluation stored yet. Run make eval to measure accuracy."}
+          </p>
+        )}
       </section>
     </div>
   );

@@ -38,7 +38,7 @@ from app.search.embedder import FakeEmbedder  # noqa: E402
 
 TABLES = (
     "documents, processing_jobs, invoices, line_items, validation_issues, corrections, "
-    "page_texts, conversations"  # CASCADE also empties tables that point at these
+    "page_texts, conversations, eval_runs"  # CASCADE also empties tables that point at these
 )
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

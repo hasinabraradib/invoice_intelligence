@@ -441,3 +441,20 @@ class AssistantAction(Base):
     created_at: Mapped[datetime] = _now()
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class EvalRun(Base):
+    """One evaluation run's headline numbers (make eval), so the dashboard can show the
+    latest accuracy. The full raw results stay in eval/results/<timestamp>.json."""
+
+    __tablename__ = "eval_runs"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    created_at: Mapped[datetime] = _now(index=True)
+    run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # when the eval ran
+    dataset: Mapped[str] = mapped_column(String(50))  # "synthetic", "synthetic+real"
+    split: Mapped[str] = mapped_column(String(20))  # the split the headline is for ("test")
+    provider: Mapped[str] = mapped_column(String(30))
+    model: Mapped[str] = mapped_column(String(100))
+    results_file: Mapped[str] = mapped_column(String(255))
+    headline: Mapped[dict[str, Any]] = mapped_column(JSONB)  # small, flat numbers

@@ -470,6 +470,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evaluation/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest evaluation results (null if `make eval` has not been run) */
+        get: operations["get_latest_evaluation_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -871,6 +888,28 @@ export interface components {
         /** ErrorResponse */
         ErrorResponse: {
             error: components["schemas"]["ErrorDetail"];
+        };
+        /** EvalRunView */
+        EvalRunView: {
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at: string;
+            /** Dataset */
+            dataset: string;
+            /** Split */
+            split: string;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Results File */
+            results_file: string;
+            /** Headline */
+            headline: {
+                [key: string]: unknown;
+            };
         };
         /** FieldView */
         FieldView: {
@@ -2550,6 +2589,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RetryFailedResponse"];
+                };
+            };
+        };
+    };
+    get_latest_evaluation_latest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvalRunView"] | null;
                 };
             };
         };

@@ -486,3 +486,20 @@ class Stats(BaseModel):
     documents_failed: int
     spreadsheets: int
     cross_checks: int
+
+
+# ---------------------------------------------------------------- evaluation
+
+
+class EvalRunView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    run_at: datetime
+    dataset: str
+    split: str
+    provider: str
+    model: str
+    results_file: str
+    # Flat numbers, e.g. field_accuracy, false_fill_rate, line_item_f1, flag_precision,
+    # flag_recall, document_success_rate, p50_seconds_per_document, cost_usd_per_document
+    headline: dict[str, Any]
