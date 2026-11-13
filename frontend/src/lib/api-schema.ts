@@ -116,6 +116,8 @@ export interface paths {
         /**
          * Process a document again
          * @description Safe to call any time: processing is idempotent and human corrections are kept.
+         *     With only_failed=true the new job continues the last one (for partially_failed
+         *     batches); otherwise everything is read and extracted again.
          */
         post: operations["reprocess_documents__document_id__reprocess_post"];
         delete?: never;
@@ -279,7 +281,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Re-queue every document whose last job failed */
+        /** Retry every document whose last job failed (only its failed invoices) */
         post: operations["retry_failed_jobs_retry_failed_post"];
         delete?: never;
         options?: never;
@@ -406,7 +408,7 @@ export interface components {
          * DocumentStatus
          * @enum {string}
          */
-        DocumentStatus: "uploaded" | "processing" | "processed" | "needs_review" | "failed";
+        DocumentStatus: "uploaded" | "processing" | "processed" | "needs_review" | "failed" | "partially_failed";
         /**
          * DocumentStatusView
          * @description Small and cheap, for polling every second or two.
@@ -1149,7 +1151,10 @@ export interface operations {
     };
     reprocess_documents__document_id__reprocess_post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Redo only the invoices that failed in the last job */
+                only_failed?: boolean;
+            };
             header?: never;
             path: {
                 document_id: string;

@@ -8,6 +8,7 @@ const STATUSES = [
   ["processed", "Processed"],
   ["needs_review", "Needs review"],
   ["failed", "Failed"],
+  ["partially_failed", "Partly failed"],
 ] as const;
 
 type Props = { value: DocumentFilters; onChange: (next: DocumentFilters) => void; idPrefix: string };

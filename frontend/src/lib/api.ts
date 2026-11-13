@@ -97,8 +97,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ reviewed_by: reviewedBy, override_reason: overrideReason ?? null }),
     }),
-  reprocess: (id: string) =>
-    request<JobAccepted>(`/documents/${id}/reprocess`, { method: "POST" }),
+  reprocess: (id: string, onlyFailed = false) =>
+    request<JobAccepted>(`/documents/${id}/reprocess${onlyFailed ? "?only_failed=true" : ""}`, {
+      method: "POST",
+    }),
   retryFailed: () =>
     request<{ requeued: number }>(`/jobs/retry-failed`, { method: "POST" }),
   search: (

@@ -29,7 +29,7 @@ export function DocumentsTable() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["documents"] });
   const reprocess = useMutation({
-    mutationFn: api.reprocess,
+    mutationFn: (id: string) => api.reprocess(id),
     onSuccess: () => {
       toast.success("Queued for processing again.");
       void refresh();

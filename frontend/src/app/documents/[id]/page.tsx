@@ -54,7 +54,8 @@ function Review() {
         ["queued", "running"].includes(q.state.data.job_status ?? "")) ? 2000 : false,
   });
   const state = status.data?.status;
-  const done = state === "processed" || state === "needs_review";
+  // Any finished state may have saved invoices (a partly failed batch keeps its good ones).
+  const done = state !== undefined && state !== "uploaded" && state !== "processing";
   // The status is part of the key, so results reload by themselves when processing ends.
   const result = useQuery({
     queryKey: ["result", id, state],
@@ -113,7 +114,7 @@ function Review() {
     onError: (error) => toast.error(errorMessage(error)),
   });
   const reprocess = useMutation({
-    mutationFn: () => api.reprocess(id),
+    mutationFn: (onlyFailed: boolean) => api.reprocess(id, onlyFailed),
     onSuccess: () => {
       setReprocessOpen(false);
       toast.success("Queued for processing again. Your corrections are kept.");
@@ -182,10 +183,18 @@ function Review() {
         </div>
       </div>
 
+      {s.status === "partially_failed" ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-orange-300 bg-orange-50 p-4 text-sm text-orange-900">
+          <span><strong>Some invoices failed</strong> (the others are saved): {s.error ?? "unknown error"}</span>
+          <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(true)} disabled={reprocess.isPending}>
+            Retry failed invoices
+          </button>
+        </div>
+      ) : null}
       {s.status === "failed" ? (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-900">
           <span><strong>Processing failed:</strong> {s.error ?? "unknown error"}</span>
-          <button type="button" className="btn-secondary" onClick={() => reprocess.mutate()} disabled={reprocess.isPending}>
+          <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(false)} disabled={reprocess.isPending}>
             Retry
           </button>
         </div>
@@ -264,7 +273,7 @@ function Review() {
       <ConfirmDialog open={reprocessOpen} title="Reprocess this document?"
         message="Parsing, OCR and extraction run again. Your corrected fields are kept; other values may change."
         confirmLabel="Reprocess" busy={reprocess.isPending}
-        onConfirm={() => reprocess.mutate()} onClose={() => setReprocessOpen(false)} />
+        onConfirm={() => reprocess.mutate(false)} onClose={() => setReprocessOpen(false)} />
     </div>
   );
 }

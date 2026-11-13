@@ -7,6 +7,7 @@ const DOCUMENT: Record<DocumentStatus, { label: string; style: string }> = {
   processed: { label: "Processed", style: "bg-green-50 text-green-800 border-green-300" },
   needs_review: { label: "Needs review", style: "bg-amber-50 text-amber-900 border-amber-300" },
   failed: { label: "Failed", style: "bg-red-50 text-red-800 border-red-300" },
+  partially_failed: { label: "Partly failed", style: "bg-orange-50 text-orange-900 border-orange-300" },
 };
 
 const FIELD: Record<string, string> = {

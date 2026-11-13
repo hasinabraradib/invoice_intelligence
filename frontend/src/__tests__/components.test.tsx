@@ -10,6 +10,11 @@ describe("status badges", () => {
     expect(screen.getByText("Needs review")).toBeInTheDocument();
   });
 
+  it("has a label for partly failed batches", () => {
+    render(<StatusBadge status="partially_failed" />);
+    expect(screen.getByText("Partly failed")).toBeInTheDocument();
+  });
+
   it.each(["found", "missing", "uncertain", "corrected"])("field status %s has text", (status) => {
     render(<FieldStatusBadge status={status} />);
     expect(screen.getByText(status)).toBeInTheDocument();
