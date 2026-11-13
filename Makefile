@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -60,3 +60,8 @@ e2e:
 # Usage: make batch-benchmark [PAGES=1000] [ARGS="--embed local" | "--scanned" | "--llm real"]
 batch-benchmark: env
 	$(COMPOSE) run --rm api python scripts/batch_benchmark.py --pages $(or $(PAGES),1000) $(ARGS)
+
+# Ask the assistant the 15 questions in docs/assistant-eval.md with the REAL provider
+# (uses API credits) and report how many had the right number and citation.
+assistant-eval: env
+	$(COMPOSE) run --rm --build -v "$(CURDIR)/docs:/docs:ro" api python scripts/assistant_eval.py
