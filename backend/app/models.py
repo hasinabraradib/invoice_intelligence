@@ -198,7 +198,7 @@ class Correction(Base):
 
 
 class PageText(Base):
-    """Text of each page (or sheet), for keyword search now and semantic search later."""
+    """Text of each page (or sheet), for keyword search."""
 
     __tablename__ = "page_texts"
 
@@ -215,9 +215,37 @@ class PageText(Base):
     search: Mapped[str] = mapped_column(
         TSVECTOR, Computed("to_tsvector('simple', coalesce(text, ''))", persisted=True)
     )
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
 
     __table_args__ = (
         UniqueConstraint("document_id", "page_number"),
         Index("ix_page_texts_search", "search", postgresql_using="gin"),
+    )
+
+
+class TextChunk(Base):
+    """~500-token pieces of one page with their embedding, for semantic search.
+    A chunk never spans two pages, so every semantic hit has a page number."""
+
+    __tablename__ = "text_chunks"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    page_number: Mapped[int] = mapped_column(Integer)
+    chunk_index: Mapped[int] = mapped_column(Integer)  # 0, 1, 2... within the page
+    text: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIM))
+
+    __table_args__ = (
+        UniqueConstraint("document_id", "page_number", "chunk_index"),
+        # HNSW = fast approximate nearest-neighbour index; cosine distance to match the
+        # normalised sentence embeddings.
+        Index(
+            "ix_text_chunks_embedding",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
     )
