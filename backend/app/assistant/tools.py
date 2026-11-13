@@ -234,6 +234,8 @@ async def search_documents(ctx: ToolContext, args: SearchArgs) -> ToolOutcome:
                 "total": _text(hit.total),
                 "currency": hit.currency,
                 "matched_by": hit.matched_by,
+                # Only some of the search words are on this page: check before relying on it.
+                "partial_match": hit.partial_match,
                 "text": _plain(hit.snippet),
             }
         )

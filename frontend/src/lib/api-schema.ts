@@ -1460,6 +1460,11 @@ export interface components {
             total?: string | null;
             /** Currency */
             currency?: string | null;
+            /**
+             * Partial Match
+             * @default false
+             */
+            partial_match: boolean;
         };
         /** Stats */
         Stats: {

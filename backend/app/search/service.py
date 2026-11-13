@@ -9,15 +9,16 @@ over the best CANDIDATES matches of each kind.
 """
 
 import html
+import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 from typing import Literal
 
 import anyio
 from pydantic import BaseModel
-from sqlalchemy import and_, func, literal_column, select, text
+from sqlalchemy import Text, and_, func, literal_column, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.filters import DocumentFilters
@@ -35,6 +36,7 @@ SNIPPET_CHARS = 240
 _START, _STOP = "\x02", "\x03"
 _HEADLINE = f"StartSel={_START}, StopSel={_STOP}, MaxWords=25, MinWords=8, MaxFragments=2"
 _CONFIG = literal_column("'simple'::regconfig")  # same config page_texts.search uses
+_OPERATORS = re.compile(r'(^|\s)-\S|"|\bor\b', re.IGNORECASE)  # websearch syntax
 
 
 class SemanticUnavailable(Exception):
@@ -58,6 +60,9 @@ class SearchHit(BaseModel):
     invoice_date: date | None = None
     total: Decimal | None = None
     currency: str | None = None
+    # True when no page contained every keyword and this page matched only some of them
+    # (ranked by how well it matched). Exact matches are always preferred.
+    partial_match: bool = False
 
 
 @dataclass
@@ -67,6 +72,7 @@ class _Match:
     snippet: str
     score: float
     info: dict  # filename, status, supplier... for the response
+    partial: bool = False  # keyword: matched only some of the words
 
 
 _INFO_COLUMNS = (
@@ -137,6 +143,7 @@ async def search(
             snippet=m.snippet,
             score=round(score, 6),
             matched_by=source,
+            partial_match=m.partial,
             invoice_count=counts.get(m.document_id, 0),
             **m.info,
         )
@@ -169,9 +176,25 @@ def _invoice_on_page(page_column):
 
 
 async def _keyword_matches(session, q: str, filters: DocumentFilters) -> list[_Match]:
+    """Pages containing every word; if there are none, pages containing any of them.
+
+    Requiring every word made a natural question fail completely: "Umbrella Trading
+    invoice start page" found nothing because "start" and "page" are not printed on it.
+    The fallback ranks by ts_rank, so pages with more of the words come first, and marks
+    the matches as partial. A query using search operators ("-draft", quotes, "or") gets
+    no fallback: its author was being precise, and plain words would drop the operators.
+    """
     # websearch_to_tsquery accepts what people type ("acme -draft", '"office chairs"')
     # and never raises a syntax error.
-    query = func.websearch_to_tsquery(_CONFIG, q)
+    exact = await _keyword_query(session, func.websearch_to_tsquery(_CONFIG, q), filters)
+    if exact or _OPERATORS.search(q):
+        return exact
+    words = func.cast(func.plainto_tsquery(_CONFIG, q), Text)
+    any_word = func.to_tsquery(_CONFIG, func.replace(words, " & ", " | "))
+    return [replace(m, partial=True) for m in await _keyword_query(session, any_word, filters)]
+
+
+async def _keyword_query(session, query, filters: DocumentFilters) -> list[_Match]:
     rank = func.ts_rank(PageText.search, query).label("rank")
     snippet = func.ts_headline(_CONFIG, PageText.text, query, _HEADLINE).label("snippet")
     statement = (

@@ -153,12 +153,36 @@ async def test_matched_by_and_snippets(db_session, corpus):
     assert hits[0].document_id == corpus["power"] and hits[0].matched_by == "both"
     assert "<mark>zebrawood</mark>" in hits[0].snippet  # keyword snippet preferred
 
-    # Keyword needs ALL words; the semantic side still finds the shared word.
-    # 1 of 2 query words shared: ~0.14 with the fake embedder, so a lower bar here.
+    # No page has ALL the words: keyword falls back to pages with SOME of them (partial),
+    # and hybrid shows that page as found by both.
     hits, total = await _search(db_session, "zebrawood unicorn", "hybrid", min_similarity=0.1)
-    assert total == 1 and hits[0].matched_by == "semantic"
-    assert "<mark>" not in hits[0].snippet and "Electricity bill" in hits[0].snippet
-    assert (await _search(db_session, "zebrawood unicorn", "keyword"))[1] == 0
+    assert total == 1 and hits[0].matched_by == "both" and hits[0].partial_match
+    assert "<mark>zebrawood</mark>" in hits[0].snippet
+    hits, total = await _search(db_session, "zebrawood unicorn", "keyword")
+    assert total == 1 and hits[0].document_id == corpus["power"] and hits[0].partial_match
+
+
+async def test_keyword_question_with_extra_words_still_finds_the_page(db_session, corpus):
+    """Regression (assistant eval Q10): the model asked keyword search for
+    "Umbrella Trading invoice start page in eval-batch.pdf"; "start", "page" and the file
+    name are not printed, so requiring every word found nothing and the assistant said
+    the invoice did not exist."""
+    hits, total = await _search(
+        db_session, "Dhaka Power invoice start page in batch.pdf", "keyword"
+    )
+    assert hits[0].document_id == corpus["power"] and hits[0].partial_match
+    assert hits == sorted(hits, key=lambda h: -h.score)  # most words matched first
+
+    exact, _ = await _search(db_session, "electricity bill", "keyword")
+    assert [h.document_id for h in exact] == [corpus["power"]] and not exact[0].partial_match
+
+
+async def test_keyword_fallback_respects_search_operators(db_session, corpus):
+    # "-office" excludes: falling back to plain words would return the office pages.
+    assert (await _search(db_session, "unicorn -office", "keyword"))[1] == 0
+    assert (await _search(db_session, '"unicorn office"', "keyword"))[1] == 0
+    found, _ = await _search(db_session, "office -chairs", "keyword")
+    assert corpus["chairs"] not in {h.document_id for h in found}
 
 
 async def test_one_hit_per_document_best_first(db_session, corpus):
