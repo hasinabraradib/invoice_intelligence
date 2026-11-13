@@ -166,6 +166,24 @@ def test_crosscheck_recall_matches_kind_field_and_number():
     assert (m["found"], m["recall"], m["extra_findings"]) == (2, 0.6667, 1)
 
 
+def test_line_findings_match_through_the_attached_invoice_number():
+    expected = [
+        {
+            "kind": "line_item_mismatch",
+            "field": "line_items[2].quantity",
+            "invoice_number": "PE/0107",
+        }
+    ]
+    finding = {
+        "kind": "line_item_mismatch",
+        "field": "line_items[2].quantity",
+        "message": 'Line "Express courier service": quantity differs.',
+    }
+    assert s.crosscheck_metrics(expected, [finding])["found"] == 0
+    enriched = {**finding, "invoice_number_a": "PE/0107"}
+    assert s.crosscheck_metrics(expected, [enriched])["found"] == 1
+
+
 def test_duplicates_and_percentiles():
     dup = s.InvoiceScore(
         "c", "c.jpg", "image_scan", "test", True, duplicate_expected=True, duplicate_flagged=True

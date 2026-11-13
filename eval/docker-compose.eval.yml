@@ -1,0 +1,17 @@
+# Isolated evaluation stack, used by `make eval` as compose project "invoice-eval".
+# It has its own database, Redis and uploads volumes, so the eval never sees or changes
+# your dev data, and duplicate detection only compares eval documents with each other.
+# No published ports: the runner talks to http://api:8000 on the stack's own network, so
+# it can run while your dev stack is up.
+services:
+  api:
+    ports: !reset []
+    restart: "no"
+  worker:
+    restart: "no"
+  frontend:
+    profiles: ["not-in-eval"]
+  postgres:
+    restart: "no"
+  redis:
+    restart: "no"

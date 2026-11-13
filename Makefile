@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -76,3 +76,17 @@ assistant-eval: env
 eval-dataset: env
 	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/eval:/eval" api \
 		python /eval/dataset/generate.py
+
+# Full evaluation with the REAL provider (uses API credits), in an isolated stack with its
+# own database (compose project invoice-eval), then the headline goes to your dev database
+# for the dashboard. Writes eval/results/<timestamp>.json and docs/evaluation.md.
+# Usage: make eval [ARGS="--skip-assistant" | "--real"]
+EVAL_COMPOSE := $(COMPOSE) -p invoice-eval -f docker-compose.yml -f eval/docker-compose.eval.yml
+eval: eval-dataset
+	-docker volume rm -f invoice-eval_pgdata invoice-eval_uploads > /dev/null 2>&1
+	$(EVAL_COMPOSE) up -d --build --wait api worker
+	$(EVAL_COMPOSE) run --rm --no-deps -v "$(CURDIR)/eval:/eval" -v "$(CURDIR)/docs:/docs" \
+		api python /eval/run_eval.py --api http://api:8000 $(ARGS); \
+		status=$$?; $(EVAL_COMPOSE) down; exit $$status
+	$(COMPOSE) run --rm -v "$(CURDIR)/eval/results:/results:ro" api \
+		python scripts/store_eval_run.py /results

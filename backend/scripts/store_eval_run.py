@@ -27,4 +27,6 @@ async def main(path: Path, report: dict) -> None:
 
 if __name__ == "__main__":
     results = Path(sys.argv[1])
+    if results.is_dir():  # the newest run (file names are sortable timestamps)
+        results = sorted(results.glob("*.json"))[-1]
     asyncio.run(main(results, json.loads(results.read_text())))

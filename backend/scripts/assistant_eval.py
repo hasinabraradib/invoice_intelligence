@@ -265,6 +265,7 @@ async def run(keep: bool) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--keep", action="store_true", help="keep the eval database")
+    parser.add_argument("--out", type=Path, help="also write the full report (all answers) here")
     args = parser.parse_args()
     try:
         report = asyncio.run(run(args.keep))
@@ -284,6 +285,8 @@ def main() -> int:
         f"tokens in/out: {report['input_tokens']}/{report['output_tokens']}"
     )
     print(json.dumps({k: v for k, v in report.items() if k != "results"}))
+    if args.out:
+        args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str))
     return 0
 
 

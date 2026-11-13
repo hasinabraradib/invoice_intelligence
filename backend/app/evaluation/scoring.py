@@ -310,7 +310,10 @@ def crosscheck_metrics(expected: list[dict], findings: list[dict]) -> dict[str, 
         key = _number(e["invoice_number"])
         hit = None
         for n, f in enumerate(issues):
-            text = " ".join(str(f.get(k) or "") for k in ("message", "value_a", "value_b"))
+            # Line-level messages name the line, not the invoice: the runner adds the
+            # invoice numbers of both sides (invoice_number_a/_b) from the invoice ids.
+            keys = ("message", "value_a", "value_b", "invoice_number_a", "invoice_number_b")
+            text = " ".join(str(f.get(k) or "") for k in keys)
             if (
                 n not in used
                 and f.get("kind") == e["kind"]
