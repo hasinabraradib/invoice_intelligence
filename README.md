@@ -76,6 +76,45 @@ outages, timeouts, database hiccups) are retried with exponential backoff, up to
 `JOB_MAX_ATTEMPTS`. Permanent ones (corrupt file, password protected...) fail at once.
 Jobs left "running" by a crashed worker are requeued when the worker restarts.
 
+### Batch documents (many invoices in one PDF)
+
+A scanned batch of about 1000 pages is split into one **segment per invoice** before
+extraction:
+
+1. **Rules first.** Each page's top lines are checked for an "INVOICE" heading, an invoice
+   number (a different number means a new invoice), and "Page k of N" markers (page 1 starts
+   an invoice; later pages continue it, so a 2-page invoice stays one).
+2. **LLM only for unclear pages.** Pages with no clue, or with clues that disagree, are sent
+   to the LLM in batches of 20, headers only (~400 characters each): "does this page start a
+   new invoice?". Without an answer, a page joins the previous invoice. Merging two invoices
+   gets caught in review; splitting one would scatter its fields.
+3. **Per-invoice extraction**, concurrently (`SEGMENT_CONCURRENCY`, default 4, so you stay
+   within your provider's rate limit). Each invoice is validated, duplicate-checked (including
+   against other invoices in the same batch) and saved as soon as it finishes.
+4. **Resumable.** If some invoices fail with a temporary error, the job's retry reuses the
+   saved page texts (no re-OCR) and the stored boundaries, and redoes only the unfinished
+   invoices.
+
+Re-processing is idempotent. Invoices whose page range is unchanged keep their row and their
+corrections. If the boundaries change, corrections move to the overlapping new invoice, which
+is flagged `SEGMENT_CHANGED` for review. Spreadsheets are one invoice per sheet.
+
+`GET /documents/{id}/result` returns `{"invoices": [...]}` in page order; the review page has
+an invoice switcher that jumps the page viewer to each invoice.
+
+**Measured** with `make batch-benchmark` on a synthetic 1000-page batch (502 invoices of 1-4
+pages, a fixed seed, and a fake LLM, so this is the pipeline's own cost without provider time):
+
+| Run | Invoices split exactly right | Total | Per page |
+|---|---|---|---|
+| 1000 text pages | 502 / 502 | 3.5 s | 0.004 s |
+| 1000 text pages + local embeddings | 502 / 502 | 25.2 s | 0.025 s |
+| 50 scanned pages (OCR) | 27 / 27 | 45 s | 0.90 s (≈ 15 min per 1000) |
+
+With a real LLM, add the provider's time: about one extraction call per invoice, run 4 at a
+time, plus about one classifier call per 20 unclear pages. On these synthetic pages the rules
+are exact; real scans are messier, so check the review queue.
+
 ### Search modes
 
 `GET /search?q=...&mode=hybrid` (default). Every mode returns **one hit per document** (its

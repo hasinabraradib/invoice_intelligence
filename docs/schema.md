@@ -6,7 +6,7 @@ in `backend/alembic/versions/`; the models are in `backend/app/models.py`.
 ```mermaid
 erDiagram
     documents ||--o{ processing_jobs : "is processed by"
-    documents ||--o| invoices : "yields"
+    documents ||--o{ invoices : "contains (one per segment)"
     documents ||--o{ page_texts : "has"
     documents ||--o{ text_chunks : "is split into"
     invoices ||--o{ line_items : "contains"
@@ -23,6 +23,7 @@ erDiagram
         text storage_path
         string status "uploaded|processing|processed|needs_review|failed"
         text error
+        uuid text_job_id "job that saved the page texts"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -30,16 +31,26 @@ erDiagram
         uuid id PK
         uuid document_id FK
         string status "queued|running|succeeded|failed"
-        string stage "parsing|ocr|extracting|validating|saving"
+        string stage "parsing|ocr|segmenting|extracting|embedding"
         int attempts
+        int pages_done
+        int pages_total
+        int segments_done
+        int segments_total
+        jsonb segments "invoice boundaries found by this job"
         text error
         timestamptz started_at
         timestamptz finished_at
     }
     invoices {
         uuid id PK
-        uuid document_id FK,UK
+        uuid document_id FK
+        int segment_index "UK with document_id"
+        int page_start
+        int page_end
+        uuid job_id "job whose extraction is stored"
         string invoice_number
+        string invoice_number_key
         date invoice_date
         date due_date
         text supplier_name
@@ -50,6 +61,10 @@ erDiagram
         numeric tax "18,2"
         numeric total "18,2"
         bool needs_review
+        string reviewed_by
+        timestamptz reviewed_at
+        text review_override_reason
+        jsonb approved_error_keys
         float overall_confidence
         jsonb fields "status, evidence, page, confidence, reasons"
         jsonb raw_model_output
@@ -108,14 +123,14 @@ erDiagram
 | Table | Why |
 |---|---|
 | `documents` | One row per uploaded file. The unique `sha256` means the same bytes are stored only once. `status` is what the UI shows. |
-| `processing_jobs` | One row per processing run, so you can see how many attempts there were and which `stage` failed, without overwriting history. |
-| `invoices` | The extracted invoice, at most one per document. Re-processing updates the same row, so `corrections` stay attached. Money is `NUMERIC`, never float. |
+| `processing_jobs` | One row per processing run, so you can see how many attempts there were and which `stage` failed, without overwriting history. It also holds progress (pages and invoices done) and the segmentation it found, so a retry of the same job resumes with the same boundaries. |
+| `invoices` | One row per invoice found in a document (`segment_index`, `page_start`-`page_end`); a scanned batch PDF can hold hundreds. Re-processing updates the rows whose page range is unchanged, so `corrections` stay attached. `job_id` records which job's extraction is stored, so a retry skips finished invoices. Money is `NUMERIC`, never float. |
 | `line_items` | Invoice rows in printed order (`position`). They're replaced on every run, which keeps re-processing idempotent. |
 | `validation_issues` | What the rules flagged (errors and warnings) and why: the review queue reads this. |
 | `corrections` | Audit trail of human edits (who changed what, from what, and when). Never deleted on re-processing. |
 | `page_texts` | Text of every page or sheet, for keyword search (generated `tsvector` with a GIN index). |
 | `text_chunks` | Pieces of about 500 tokens from one page each (50-token overlap) with their 384-number embedding, for semantic search. An HNSW index makes nearest-neighbour lookups fast. They're replaced on every run (idempotent), and chunks never cross pages, so every hit has a page number. |
 
-Indexes: `invoices(supplier_key, invoice_number_key)` and `invoices(supplier_key, invoice_date, total)`
+Unique: `invoices(document_id, segment_index)`. Indexes: `invoices(document_id)`, `invoices(supplier_key, invoice_number_key)` and `invoices(supplier_key, invoice_date, total)`
 for the duplicate checks, and `documents(status)` for listing by status. Foreign keys cascade
 on delete, so deleting a document removes everything derived from it.
