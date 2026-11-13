@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/", label: "Documents" },
   { href: "/review", label: "Review queue" },
   { href: "/search", label: "Search" },
+  { href: "/cross-check", label: "Cross-check" },
 ];
 
 export function Nav(props: { pathname?: string }) {

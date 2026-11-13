@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, isActive, type DocumentResult, type InvoicePatch, type InvoiceResult } from "@/lib/api";
+import { api, ApiError, getLedger, isActive, type DocumentResult, type InvoicePatch, type InvoiceResult } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { ApproveDialog } from "@/components/ApproveDialog";
 import { StatusBadge } from "@/components/Badges";
@@ -13,6 +13,7 @@ import { errorMessage, useToast } from "@/components/Toast";
 import { FieldList } from "@/components/review/FieldList";
 import { CorrectionsHistory, DuplicateLinks, IssuesPanel } from "@/components/review/IssuesPanel";
 import { InvoiceSwitcher } from "@/components/review/InvoiceSwitcher";
+import { LedgerPanel } from "@/components/review/LedgerPanel";
 import { LineItems } from "@/components/review/LineItems";
 import { PageViewer } from "@/components/review/PageViewer";
 import { useReviewer } from "@/components/review/useReviewer";
@@ -45,7 +46,7 @@ function Review() {
   };
   const setPage = (n: number, scroll = false) => go(selected, n, scroll);
 
-  const document = useQuery({ queryKey: ["document", id], queryFn: () => api.getDocument(id) });
+  const document = useQuery({ queryKey: ["document", id, "detail"], queryFn: () => api.getDocument(id) });
   const status = useQuery({
     queryKey: ["status", id],
     queryFn: () => api.getStatus(id),
@@ -54,12 +55,16 @@ function Review() {
         ["queued", "running"].includes(q.state.data.job_status ?? "")) ? 2000 : false,
   });
   const state = status.data?.status;
+  useEffect(() => {
+    if (state) void queryClient.invalidateQueries({ queryKey: ["document", id, "detail"] });
+  }, [state, id, queryClient]);
   // Any finished state may have saved invoices (a partly failed batch keeps its good ones).
   const done = state !== undefined && state !== "uploaded" && state !== "processing";
   // The status is part of the key, so results reload by themselves when processing ends.
   const result = useQuery({
     queryKey: ["result", id, state],
-    enabled: done,
+    // Ledger spreadsheets have no invoices of their own: do not ask for a result.
+    enabled: done && (document.data?.invoice_count ?? 0) > 0,
     queryFn: async () => {
       try {
         return await api.getResult(id);
@@ -70,6 +75,12 @@ function Review() {
     },
   });
   const pages = useQuery({ queryKey: ["pages", id, state], queryFn: () => api.getPages(id) });
+  const ledger = useQuery({
+    queryKey: ["ledger", id, state],
+    enabled: done && document.data?.mime_type !== "application/pdf",
+    queryFn: () => getLedger(id),
+  });
+  const hasLedger = Boolean(ledger.data?.sheets.some((sheet) => sheet.is_ledger));
   const invoices = result.data?.invoices ?? [];
   const invoice = invoices.find((i) => i.segment_index === selected) ?? invoices[0];
   const invoiceId = invoice?.invoice_id;
@@ -119,7 +130,7 @@ function Review() {
       setReprocessOpen(false);
       toast.success("Queued for processing again. Your corrections are kept.");
       void queryClient.invalidateQueries({ queryKey: ["status", id] });
-      void queryClient.invalidateQueries({ queryKey: ["document", id] });
+      void queryClient.invalidateQueries({ queryKey: ["document", id, "detail"] });
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -257,6 +268,8 @@ function Review() {
             </>
           ) : result.isError ? (
             <ErrorBox message={errorMessage(result.error)} onRetry={() => void result.refetch()} />
+          ) : hasLedger && ledger.data ? (
+            <LedgerPanel ledger={ledger.data} sheet={params.get("sheet")} row={params.get("row") ? Number(params.get("row")) : null} />
           ) : busy || (done && result.isPending) ? (
             <div className="card"><p className="mb-3 text-sm text-slate-600">Extracting fields…</p><SkeletonRows rows={6} /></div>
           ) : (

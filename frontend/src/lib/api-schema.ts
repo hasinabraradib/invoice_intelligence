@@ -184,6 +184,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents/{document_id}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ledger sheets (lists of invoices): column mapping and rows */
+        get: operations["get_ledger_documents__document_id__ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{document_id}/column-mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Fix how a sheet's columns map to invoice fields
+         * @description Re-maps the stored rows at once (no re-processing). The mapping is marked manual and
+         *     kept when the document is processed again.
+         */
+        put: operations["put_column_mapping_documents__document_id__column_mapping_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices/{invoice_id}": {
         parameters: {
             query?: never;
@@ -239,6 +277,46 @@ export interface paths {
          *     NEW error, needs_review is set again and this approval is cleared.
          */
         post: operations["approve_invoice_invoices__invoice_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cross-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List cross-checks */
+        get: operations["list_cross_checks_cross_checks_get"];
+        put?: never;
+        /**
+         * Compare two documents (runs in the background)
+         * @description Invoices vs a ledger spreadsheet, or invoices vs invoices (e.g. a purchase order or a
+         *     second copy). The order does not matter for a ledger: invoices are always side A.
+         *     Running the same pair again replaces the earlier results.
+         */
+        post: operations["create_cross_check_cross_checks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cross-checks/{cross_check_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A cross-check with all findings and their evidence */
+        get: operations["get_cross_check_cross_checks__cross_check_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -326,6 +404,26 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /**
+         * ColumnMappingUpdate
+         * @description Fix a wrong mapping. Only the fields you send change; null un-maps a field.
+         * @example {
+         *       "columns": {
+         *         "total": "Gross (BDT)"
+         *       },
+         *       "sheet": "Invoices"
+         *     }
+         */
+        ColumnMappingUpdate: {
+            /** Sheet */
+            sheet: string;
+            /** Columns */
+            columns?: {
+                [key: string]: string | null;
+            };
+            /** Is Ledger */
+            is_ledger?: boolean | null;
+        };
         /** CorrectionView */
         CorrectionView: {
             /**
@@ -346,6 +444,73 @@ export interface components {
              * Format: date-time
              */
             corrected_at: string;
+        };
+        /** CrossCheckCreate */
+        CrossCheckCreate: {
+            /**
+             * Document A Id
+             * Format: uuid
+             */
+            document_a_id: string;
+            /**
+             * Document B Id
+             * Format: uuid
+             */
+            document_b_id: string;
+        };
+        /** CrossCheckDetail */
+        CrossCheckDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            document_a: components["schemas"]["DocumentRef"];
+            document_b: components["schemas"]["DocumentRef"];
+            /** Mode */
+            mode: ("invoices_vs_ledger" | "invoices_vs_invoices") | null;
+            status: components["schemas"]["JobStatus"];
+            /** Error */
+            error: string | null;
+            /** Summary */
+            summary: {
+                [key: string]: number;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Findings */
+            findings: components["schemas"]["FindingView"][];
+        };
+        /** CrossCheckView */
+        CrossCheckView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            document_a: components["schemas"]["DocumentRef"];
+            document_b: components["schemas"]["DocumentRef"];
+            /** Mode */
+            mode: ("invoices_vs_ledger" | "invoices_vs_invoices") | null;
+            status: components["schemas"]["JobStatus"];
+            /** Error */
+            error: string | null;
+            /** Summary */
+            summary: {
+                [key: string]: number;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Finished At */
+            finished_at: string | null;
         };
         /** DocumentDetail */
         DocumentDetail: {
@@ -390,6 +555,16 @@ export interface components {
              */
             updated_at: string;
             latest_job?: components["schemas"]["JobView"] | null;
+        };
+        /** DocumentRef */
+        DocumentRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Filename */
+            filename: string;
         };
         /**
          * DocumentResult
@@ -545,6 +720,40 @@ export interface components {
          * @enum {string}
          */
         FileKind: "pdf" | "png" | "jpeg" | "tiff" | "xlsx" | "xls" | "csv";
+        /** FindingView */
+        FindingView: {
+            /** Kind */
+            kind: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "error";
+            /** Field */
+            field: string | null;
+            /** Value A */
+            value_a: string | null;
+            /** Value B */
+            value_b: string | null;
+            /** Message */
+            message: string;
+            /** Invoice A Id */
+            invoice_a_id: string | null;
+            /** Invoice B Id */
+            invoice_b_id: string | null;
+            /** Segment A */
+            segment_a: number | null;
+            /** Segment B */
+            segment_b: number | null;
+            /** Page A */
+            page_a: number | null;
+            /** Page B */
+            page_b: number | null;
+            /** Sheet B */
+            sheet_b: string | null;
+            /** Row B */
+            row_b: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -759,6 +968,64 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
         };
+        /** LedgerRowView */
+        LedgerRowView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Sheet Name */
+            sheet_name: string;
+            /** Row Number */
+            row_number: number;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Total */
+            total: string | null;
+            /** Tax */
+            tax: string | null;
+            /** Currency */
+            currency: string | null;
+            /** Problems */
+            problems: string[];
+            /** Cells */
+            cells: {
+                [key: string]: unknown;
+            };
+        };
+        /** LedgerSheetView */
+        LedgerSheetView: {
+            /** Name */
+            name: string;
+            /** Page */
+            page: number;
+            /** Is Ledger */
+            is_ledger: boolean;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "auto" | "manual";
+            /** Columns */
+            columns: {
+                [key: string]: string | null;
+            };
+            /** Available Columns */
+            available_columns: string[];
+            /** Row Count */
+            row_count: number;
+        };
+        /** LedgerView */
+        LedgerView: {
+            /** Sheets */
+            sheets: components["schemas"]["LedgerSheetView"][];
+            rows: components["schemas"]["Page_LedgerRowView_"];
+        };
         /** LineItemPatch */
         LineItemPatch: {
             /**
@@ -797,10 +1064,32 @@ export interface components {
             /** Has Image */
             has_image: boolean;
         };
+        /** Page[CrossCheckView] */
+        Page_CrossCheckView_: {
+            /** Items */
+            items: components["schemas"]["CrossCheckView"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
         /** Page[DocumentSummary] */
         Page_DocumentSummary_: {
             /** Items */
             items: components["schemas"]["DocumentSummary"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** Page[LedgerRowView] */
+        Page_LedgerRowView_: {
+            /** Items */
+            items: components["schemas"]["LedgerRowView"][];
             /** Total */
             total: number;
             /** Limit */
@@ -1320,6 +1609,94 @@ export interface operations {
             };
         };
     };
+    get_ledger_documents__document_id__ledger_get: {
+        parameters: {
+            query?: {
+                sheet?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerView"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_column_mapping_documents__document_id__column_mapping_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ColumnMappingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerSheetView"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     correct_invoice_invoices__invoice_id__patch: {
         parameters: {
             query?: never;
@@ -1439,6 +1816,130 @@ export interface operations {
             };
             /** @description Errors remain and no override reason */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_cross_checks_cross_checks_get: {
+        parameters: {
+            query?: {
+                document_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CrossCheckView_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_cross_check_cross_checks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrossCheckCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrossCheckView"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A document is not processed yet */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_cross_check_cross_checks__cross_check_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cross_check_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrossCheckDetail"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

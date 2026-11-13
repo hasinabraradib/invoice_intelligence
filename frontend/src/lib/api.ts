@@ -18,6 +18,11 @@ export type UploadResult = S["UploadResult"];
 export type UploadResponse = S["UploadResponse"];
 export type JobAccepted = S["JobAccepted"];
 export type InvoicePatch = S["InvoicePatch"];
+export type CrossCheckView = S["CrossCheckView"];
+export type CrossCheckDetail = S["CrossCheckDetail"];
+export type FindingView = S["FindingView"];
+export type LedgerView = S["LedgerView"];
+export type LedgerRowView = S["LedgerRowView"];
 export type Paged<T> = { items: T[]; total: number; limit: number; offset: number };
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -107,6 +112,19 @@ export const api = {
     params: DocumentFilters & { q: string; mode: string; limit: number; offset: number },
   ) => request<Paged<SearchHit>>(`/search${query(params)}`),
 };
+
+export const crossChecks = {
+  create: (documentA: string, documentB: string) =>
+    request<CrossCheckView>(`/cross-checks`, {
+      method: "POST",
+      body: JSON.stringify({ document_a_id: documentA, document_b_id: documentB }),
+    }),
+  list: (limit = 20) => request<Paged<CrossCheckView>>(`/cross-checks${query({ limit })}`),
+  get: (id: string) => request<CrossCheckDetail>(`/cross-checks/${id}`),
+};
+
+export const getLedger = (id: string, limit = 500) =>
+  request<LedgerView>(`/documents/${id}/ledger${query({ limit })}`);
 
 export const pageImageUrl = (id: string, page: number) =>
   `${API_URL}/documents/${id}/pages/${page}/image`;
