@@ -86,10 +86,19 @@ class ExtractionResult(BaseModel):
 def extract_invoice(
     parsed: ParsedDocument, llm: LLMClient, *, chunk_tokens: int = 6000
 ) -> ExtractionResult:
-    """Never raises for LLM problems: returns ok=False with a reason instead."""
+    """Extract ONE invoice from a whole document (see extract_from_pages)."""
+    return extract_from_pages(source_pages(parsed), llm, chunk_tokens=chunk_tokens)
+
+
+def extract_from_pages(
+    pages: list[SourcePage], llm: LLMClient, *, chunk_tokens: int = 6000
+) -> ExtractionResult:
+    """Extract one invoice from the given pages (e.g. one segment of a batch PDF). Page
+    numbers stay the document's own, so evidence points at the right page.
+
+    Never raises for LLM problems: returns ok=False with a reason instead."""
     started = time.perf_counter()
     result = ExtractionResult(ok=False, provider=llm.name)
-    pages = source_pages(parsed)
     if not pages:
         result.failure_reason = "document has no text to extract from"
         return result

@@ -156,7 +156,7 @@ async def revalidate(
     )
     duplicates = await find_duplicate_issues(
         repo,
-        document_id=invoice.document_id,
+        invoice_id=invoice.id,
         supplier_key=invoice.supplier_key,
         invoice_number=invoice.invoice_number,
         invoice_date=invoice.invoice_date,
@@ -167,10 +167,8 @@ async def revalidate(
         invoice, issues, report.needs_review or any(i.severity == "error" for i in duplicates)
     )
     await repo.replace_issues(invoice.id, issues)
-    await repo.set_document_status(
-        invoice.document_id,
-        DocumentStatus.NEEDS_REVIEW if invoice.needs_review else DocumentStatus.PROCESSED,
-    )
+    await repo.session.flush()
+    await refresh_document_status(repo, invoice.document_id)
     return issues
 
 
@@ -205,3 +203,86 @@ def duplicate_links(issues) -> list[dict[str, Any]]:
                 except ValueError:
                     continue
     return links
+
+
+async def refresh_document_status(repo: Repository, document_id: uuid.UUID) -> DocumentStatus:
+    """A document needs review if ANY of its invoices does."""
+    invoices = await repo.get_invoices(document_id)
+    status = (
+        DocumentStatus.NEEDS_REVIEW
+        if any(i.needs_review for i in invoices)
+        else DocumentStatus.PROCESSED
+    )
+    await repo.set_document_status(document_id, status)
+    return status
+
+
+BOUNDARY_ISSUE = "SEGMENT_CHANGED"
+
+
+async def reconcile_segments(repo: Repository, document_id: uuid.UUID, segments) -> None:
+    """Line up existing invoice rows with newly found segments (before extraction).
+
+    - Same page range as before: the row is reused (same id), so its corrections, approval
+      and corrected values stay attached.
+    - New range: a new row is created.
+    - Old rows whose range no longer exists are deleted, but their corrections are first
+      moved to the new invoice that overlaps them most, and that segment is flagged
+      (segment.recheck) so a "please re-check" issue is added after extraction.
+    """
+    old = await repo.get_invoices(document_id)
+    for position, invoice in enumerate(old):  # step aside: avoid unique clashes while swapping
+        invoice.segment_index = -1 - position
+    await repo.session.flush()
+
+    by_range = {(i.page_start, i.page_end): i for i in old}
+    rows: dict[int, Invoice] = {}
+    for segment in segments:  # page ranges are unique, so each old row is reused at most once
+        invoice = by_range.get((segment.page_start, segment.page_end))
+        if invoice is None:
+            invoice = Invoice(
+                document_id=document_id,
+                page_start=segment.page_start,
+                page_end=segment.page_end,
+                fields={},
+                raw_model_output=[],
+            )
+            repo.session.add(invoice)
+        invoice.segment_index = segment.index
+        rows[segment.index] = invoice
+    await repo.session.flush()
+    kept = {invoice.id for invoice in rows.values()}
+
+    for invoice in old:
+        if invoice.id in kept:
+            continue
+        corrections = await repo.get_corrections(invoice.id)
+        if corrections:
+            target = max(segments, key=lambda seg: _overlap(seg, invoice))
+            for correction in corrections:
+                correction.invoice_id = rows[target.index].id
+            target.recheck = True
+            target.notes.append(
+                f"corrections moved from the old invoice on pages "
+                f"{invoice.page_start}-{invoice.page_end}"
+            )
+            await repo.session.flush()
+        await repo.session.delete(invoice)
+    await repo.session.flush()
+
+
+def _overlap(segment, invoice: Invoice) -> int:
+    start = max(segment.page_start, invoice.page_start or 0)
+    end = min(segment.page_end, invoice.page_end or 0)
+    return max(0, end - start + 1)
+
+
+def boundary_issue(segment) -> ValidationIssue:
+    return ValidationIssue(
+        code=BOUNDARY_ISSUE,
+        severity="warning",
+        field=None,
+        message="The invoice boundaries changed on re-processing; earlier corrections were "
+        "kept in the history but not applied. Please re-check this invoice.",
+        actual=f"pages {segment.page_start}-{segment.page_end}",
+    )

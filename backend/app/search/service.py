@@ -17,7 +17,7 @@ from typing import Literal
 
 import anyio
 from pydantic import BaseModel
-from sqlalchemy import func, literal_column, select, text
+from sqlalchemy import and_, func, literal_column, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.filters import DocumentFilters
@@ -49,6 +49,10 @@ class SearchHit(BaseModel):
     score: float  # keyword: ts_rank, semantic: cosine similarity, hybrid: RRF score
     matched_by: Literal["keyword", "semantic", "both"]
     status: DocumentStatus
+    # The invoice on the matching page (a batch PDF holds many).
+    invoice_id: uuid.UUID | None = None
+    segment_index: int | None = None
+    invoice_count: int = 1
     supplier_name: str | None = None
     invoice_number: str | None = None
     invoice_date: date | None = None
@@ -68,6 +72,8 @@ class _Match:
 _INFO_COLUMNS = (
     Document.filename,
     Document.status,
+    Invoice.id.label("invoice_id"),
+    Invoice.segment_index,
     Invoice.supplier_name,
     Invoice.invoice_number,
     Invoice.invoice_date,
@@ -122,6 +128,8 @@ async def search(
             source = "both" if both else ("keyword" if doc_id in by_keyword else "semantic")
             ranked.append((match, score, source))
 
+    page_slice = ranked[offset : offset + limit]
+    counts = await _invoice_counts(session, [m.document_id for m, _, _ in page_slice])
     hits = [
         SearchHit(
             document_id=m.document_id,
@@ -129,9 +137,10 @@ async def search(
             snippet=m.snippet,
             score=round(score, 6),
             matched_by=source,
+            invoice_count=counts.get(m.document_id, 0),
             **m.info,
         )
-        for m, score, source in ranked[offset : offset + limit]
+        for m, score, source in page_slice
     ]
     return hits, len(ranked)
 
@@ -151,6 +160,14 @@ def _info(row) -> dict:
     return {c.key: getattr(row, c.key) for c in _INFO_COLUMNS}
 
 
+def _invoice_on_page(page_column):
+    """Join the invoice whose page range contains this page."""
+    return and_(
+        Invoice.document_id == Document.id,
+        page_column.between(Invoice.page_start, Invoice.page_end),
+    )
+
+
 async def _keyword_matches(session, q: str, filters: DocumentFilters) -> list[_Match]:
     # websearch_to_tsquery accepts what people type ("acme -draft", '"office chairs"')
     # and never raises a syntax error.
@@ -158,10 +175,10 @@ async def _keyword_matches(session, q: str, filters: DocumentFilters) -> list[_M
     rank = func.ts_rank(PageText.search, query).label("rank")
     snippet = func.ts_headline(_CONFIG, PageText.text, query, _HEADLINE).label("snippet")
     statement = (
-        filters.apply(
+        filters.apply_joined(
             select(PageText.document_id, PageText.page_number, rank, snippet, *_INFO_COLUMNS)
             .join(Document, Document.id == PageText.document_id)
-            .outerjoin(Invoice, Invoice.document_id == Document.id)
+            .outerjoin(Invoice, _invoice_on_page(PageText.page_number))
             .where(PageText.search.op("@@")(query))
         )
         .order_by(rank.desc(), Document.created_at.desc(), PageText.page_number)
@@ -182,7 +199,7 @@ async def _semantic_matches(
     # filtered searches still find enough matches.
     await session.execute(text("SET LOCAL hnsw.ef_search = 200"))
     statement = (
-        filters.apply(
+        filters.apply_joined(
             select(
                 TextChunk.document_id,
                 TextChunk.page_number,
@@ -191,7 +208,7 @@ async def _semantic_matches(
                 *_INFO_COLUMNS,
             )
             .join(Document, Document.id == TextChunk.document_id)
-            .outerjoin(Invoice, Invoice.document_id == Document.id)
+            .outerjoin(Invoice, _invoice_on_page(TextChunk.page_number))
         )
         .order_by(distance)
         .limit(CANDIDATES)
@@ -216,3 +233,14 @@ def _plain_snippet(raw: str) -> str:
     if len(text_) > SNIPPET_CHARS:
         text_ = text_[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
     return html.escape(text_)
+
+
+async def _invoice_counts(session, document_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+    if not document_ids:
+        return {}
+    rows = await session.execute(
+        select(Invoice.document_id, func.count())
+        .where(Invoice.document_id.in_(document_ids))
+        .group_by(Invoice.document_id)
+    )
+    return {doc_id: count for doc_id, count in rows}

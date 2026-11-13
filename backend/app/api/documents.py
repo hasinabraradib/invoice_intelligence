@@ -18,10 +18,10 @@ from app.api.deps import get_queue
 from app.api.errors import ERRORS, ApiError, not_found
 from app.api.schemas import (
     DocumentDetail,
+    DocumentResult,
     DocumentStatusView,
     DocumentSummary,
     FileError,
-    InvoiceResult,
     JobAccepted,
     JobProgress,
     JobView,
@@ -35,7 +35,7 @@ from app.config import Settings, get_settings
 from app.db import get_session
 from app.filters import DocumentFilters
 from app.jobs import JobQueue
-from app.models import Document, DocumentStatus, Invoice, JobStatus
+from app.models import Document, DocumentStatus, JobStatus
 from app.parsing.errors import (
     CorruptFile,
     DocumentError,
@@ -219,23 +219,24 @@ async def list_documents(
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> Page[DocumentSummary]:
-    """Newest first by default. Invoice filters (supplier, dates, needs_review) only match
-    documents that already have an extracted invoice. Each item has its latest job."""
+    """Newest first by default. One row per document, with its invoice count and latest
+    job. Invoice filters (supplier, dates, needs_review) match documents that have at least
+    one matching invoice."""
     filters = DocumentFilters(status_, needs_review, supplier, date_from, date_to)
-    base = filters.apply(
-        select(Document, Invoice).outerjoin(Invoice, Invoice.document_id == Document.id)
-    )
+    base = filters.apply(select(Document))
     total = await session.scalar(select(func.count()).select_from(base.subquery()))
     sort = (
         (Document.created_at.desc(), Document.id)
         if order == "newest"
         else (Document.created_at.asc(), Document.id)
     )
-    rows = (await session.execute(base.order_by(*sort).limit(limit).offset(offset))).all()
-    jobs = await Repository(session).latest_jobs([doc.id for doc, _ in rows])
+    docs = list(await session.scalars(base.order_by(*sort).limit(limit).offset(offset)))
+    repo = Repository(session)
+    jobs = await repo.latest_jobs([doc.id for doc in docs])
+    invoices = await repo.invoices_for_documents([doc.id for doc in docs])
     items = []
-    for doc, invoice in rows:
-        item = document_summary(doc, invoice)
+    for doc in docs:
+        item = document_summary(doc, invoices[doc.id])
         job = jobs.get(doc.id)
         item.job = JobProgress.model_validate(job) if job else None
         items.append(item)
@@ -258,10 +259,12 @@ async def _get_document(session: AsyncSession, document_id: uuid.UUID) -> Docume
 async def get_document(document_id: uuid.UUID, session: Session) -> DocumentDetail:
     repo = Repository(session)
     document = await _get_document(session, document_id)
-    invoice = await repo.get_invoice_by_document(document_id)
+    invoices = await repo.get_invoices(document_id)
     job = await repo.latest_job(document_id)
+    summary = document_summary(document, invoices)
     detail = DocumentDetail.model_validate(document)
-    detail.invoice = document_summary(document, invoice).invoice
+    detail.invoice, detail.invoice_count = summary.invoice, summary.invoice_count
+    detail.needs_review = summary.needs_review
     detail.latest_job = JobView.model_validate(job) if job else None
     return detail
 
@@ -283,24 +286,33 @@ async def get_status(document_id: uuid.UUID, session: Session) -> DocumentStatus
             job.pages_total,
             job.attempts,
         )
+        view.segments_done, view.segments_total = job.segments_done, job.segments_total
         view.error = view.error or job.error
     return view
 
 
 @router.get(
     "/{document_id}/result",
-    response_model=InvoiceResult,
+    response_model=DocumentResult,
     responses=ERRORS,
-    summary="Extracted invoice with evidence, issues and duplicates",
+    summary="Every invoice in the document, with evidence, issues and duplicates",
 )
-async def get_result(document_id: uuid.UUID, session: Session) -> InvoiceResult:
+async def get_result(document_id: uuid.UUID, session: Session) -> DocumentResult:
+    """A single invoice for most files; one entry per invoice for batch PDFs, in page order
+    (`page_start`/`page_end` say where each one is)."""
     repo = Repository(session)
     await _get_document(session, document_id)
-    invoice = await repo.get_invoice_by_document(document_id)
-    if invoice is None:
+    invoices = await repo.get_invoices(document_id)
+    if not invoices:
         raise ApiError(404, "result_not_ready", "No extraction result for this document yet.")
-    return invoice_result(
-        invoice, await repo.get_line_items(invoice.id), await repo.get_issues(invoice.id)
+    return DocumentResult(
+        document_id=document_id,
+        invoices=[
+            invoice_result(
+                invoice, await repo.get_line_items(invoice.id), await repo.get_issues(invoice.id)
+            )
+            for invoice in invoices
+        ],
     )
 
 

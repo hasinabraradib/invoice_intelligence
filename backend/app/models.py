@@ -87,6 +87,9 @@ class Document(Base):
         _status(DocumentStatus, "document_status"), default=DocumentStatus.UPLOADED
     )
     error: Mapped[str | None] = mapped_column(Text)
+    # The job that last saved this document's page texts: a retry of that same job can
+    # reuse them instead of parsing and OCR'ing a 1000-page file again.
+    text_job_id: Mapped[uuid.UUID | None] = mapped_column()
     created_at: Mapped[datetime] = _now()
     updated_at: Mapped[datetime] = _now(onupdate=func.now())
 
@@ -109,6 +112,10 @@ class ProcessingJob(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     pages_done: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     pages_total: Mapped[int | None] = mapped_column(Integer)
+    segments_done: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    segments_total: Mapped[int | None] = mapped_column(Integer)
+    # The invoice boundaries this job found; a retry reuses them so it can resume.
+    segments: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -116,14 +123,21 @@ class ProcessingJob(Base):
 
 
 class Invoice(Base):
-    """The extracted invoice. One per document (re-processing updates this same row)."""
+    """One invoice found in a document. A batch PDF has many (one per segment, numbered
+    by segment_index); re-processing updates the rows whose page range is unchanged."""
 
     __tablename__ = "invoices"
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     document_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("documents.id", ondelete="CASCADE"), unique=True
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
+    segment_index: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    page_start: Mapped[int | None] = mapped_column(Integer)
+    page_end: Mapped[int | None] = mapped_column(Integer)
+    # The job whose extraction is stored here (None = not extracted yet). A retry of the
+    # same job skips segments it already finished.
+    job_id: Mapped[uuid.UUID | None] = mapped_column()
     invoice_number: Mapped[str | None] = mapped_column(String(100))  # as printed
     # "INV-001", "inv 001" and "INV/001" all become "INV001" (duplicate detection).
     invoice_number_key: Mapped[str | None] = mapped_column(String(100))
@@ -150,6 +164,7 @@ class Invoice(Base):
     approved_error_keys: Mapped[list[str]] = mapped_column(JSONB, default=list, server_default="[]")
 
     __table_args__ = (
+        UniqueConstraint("document_id", "segment_index", name="uq_invoices_document_segment"),
         Index("ix_invoices_supplier_number_key", "supplier_key", "invoice_number_key"),
         Index("ix_invoices_supplier_date_total", "supplier_key", "invoice_date", "total"),
     )

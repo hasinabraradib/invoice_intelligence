@@ -14,7 +14,7 @@ pytestmark = pytest.mark.anyio
 
 
 async def _result(api, doc_id):
-    return (await api.get(f"/documents/{doc_id}/result")).json()
+    return (await api.get(f"/documents/{doc_id}/result")).json()["invoices"][0]
 
 
 async def test_original_file_is_served_inline_safely(api, run_job, tmp_path):

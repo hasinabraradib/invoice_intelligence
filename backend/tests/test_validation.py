@@ -211,7 +211,7 @@ class FakeRepo:
 
 ME, OTHER, THIRD = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
 ARGS = {
-    "document_id": ME,
+    "invoice_id": ME,
     "supplier_key": "acme",
     "invoice_number": "INV-1",
     "invoice_date": date(2026, 11, 1),

@@ -101,7 +101,7 @@ async def test_process_document_saves_everything(db_session, tmp_path, settings)
     )
     assert hit == 1
     job = await db_session.scalar(select(m.ProcessingJob))
-    assert (job.status, job.stage, job.attempts) == (m.JobStatus.SUCCEEDED, "saving", 1)
+    assert (job.status, job.stage, job.attempts) == (m.JobStatus.SUCCEEDED, "extracting", 1)
     assert job.finished_at is not None
 
 
@@ -149,7 +149,9 @@ async def test_failed_extraction_sets_status_failed(db_session, tmp_path, settin
     assert "invalid JSON" in document.error
     job = await db_session.scalar(select(m.ProcessingJob))
     assert job.status == m.JobStatus.FAILED and job.stage == "extracting"
-    assert await _count(db_session, m.Invoice) == 0
+    # The planned invoice row stays (a retry resumes from it) but holds no extraction.
+    [placeholder] = (await db_session.scalars(select(m.Invoice))).all()
+    assert placeholder.job_id is None and placeholder.invoice_number is None
 
 
 async def test_unreadable_file_fails_cleanly(db_session, tmp_path, settings):
@@ -206,8 +208,10 @@ async def test_repository_duplicate_lookups(db_session):
     from datetime import date
     from decimal import Decimal
 
+    invoice_id = uuid.uuid4()
     db_session.add(
         m.Invoice(
+            id=invoice_id,
             document_id=doc.id,
             supplier_key="acme",
             invoice_number="7",
@@ -221,7 +225,8 @@ async def test_repository_duplicate_lookups(db_session):
 
     assert await repo.find_document_id_by_sha256("a" * 64) == doc.id
     assert await repo.find_invoices_by_supplier_and_number("acme", "7", other) == [doc.id]
-    assert await repo.find_invoices_by_supplier_and_number("acme", "7", doc.id) == []
+    # Only the invoice itself is excluded (returned ids are DOCUMENT ids).
+    assert await repo.find_invoices_by_supplier_and_number("acme", "7", invoice_id) == []
     assert await repo.find_invoices_by_supplier_date_total(
         "acme", date(2026, 1, 2), Decimal("10.00"), other
     ) == [doc.id]

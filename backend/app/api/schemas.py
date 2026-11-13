@@ -75,6 +75,8 @@ class JobView(BaseModel):
     attempts: int
     pages_done: int
     pages_total: int | None
+    segments_done: int
+    segments_total: int | None
     error: str | None
     created_at: datetime
     started_at: datetime | None
@@ -85,6 +87,9 @@ class InvoiceSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    segment_index: int
+    page_start: int | None
+    page_end: int | None
     invoice_number: str | None
     invoice_date: date | None
     supplier_name: str | None
@@ -100,6 +105,8 @@ class JobProgress(BaseModel):
     stage: str | None
     pages_done: int
     pages_total: int | None
+    segments_done: int
+    segments_total: int | None
     attempts: int
 
 
@@ -113,7 +120,9 @@ class DocumentSummary(BaseModel):
     size_bytes: int
     page_count: int
     created_at: datetime
-    invoice: InvoiceSummary | None = None
+    invoice: InvoiceSummary | None = None  # the first invoice (most documents have one)
+    invoice_count: int = 0  # a batch PDF can hold many invoices
+    needs_review: bool = False  # True if ANY invoice needs review
     job: JobProgress | None = None  # latest job, for progress in lists
 
 
@@ -135,6 +144,8 @@ class DocumentStatusView(BaseModel):
     stage: str | None = None
     pages_done: int = 0
     pages_total: int | None = None
+    segments_done: int = 0  # invoices extracted so far
+    segments_total: int | None = None  # invoices found in the document
     attempts: int = 0
 
 
@@ -189,6 +200,10 @@ class DuplicateLink(BaseModel):
 class InvoiceResult(BaseModel):
     invoice_id: uuid.UUID
     document_id: uuid.UUID
+    segment_index: int  # 0-based position of this invoice in the document
+    page_start: int | None
+    page_end: int | None
+    extracted: bool  # False while a (re)processing job has not reached this invoice yet
     needs_review: bool
     reviewed_by: str | None = None
     reviewed_at: datetime | None = None
@@ -281,3 +296,10 @@ class ApproveRequest(BaseModel):
     reviewed_by: str = Field(min_length=1, max_length=255)
     # Required (non-empty) when error-level issues remain; stored for the audit trail.
     override_reason: str | None = Field(default=None, max_length=2000)
+
+
+class DocumentResult(BaseModel):
+    """Every invoice found in one document, in page order."""
+
+    document_id: uuid.UUID
+    invoices: list[InvoiceResult]

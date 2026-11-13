@@ -42,7 +42,7 @@ async def test_upload_then_job_gives_processed_result_with_evidence(api, run_job
     assert (status["stage"], status["pages_done"], status["pages_total"]) == ("embedding", 2, 2)
     assert status["attempts"] == 1 and status["error"] is None
 
-    result = (await api.get(f"/documents/{doc_id}/result")).json()
+    result = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"][0]
     assert result["fields"]["total"]["value"] == "4.50"
     assert result["fields"]["total"]["evidence"] == "Total due: 4.50 EUR"
     assert result["fields"]["total"]["page"] == 1 and result["fields"]["total"]["confidence"] > 0.9
@@ -160,7 +160,7 @@ async def test_correction_is_audited_revalidated_and_survives_reprocess(
 ):
     uploaded = await _processed(api, run_job, tmp_path)
     doc_id = uploaded["document_id"]
-    invoice_id = (await api.get(f"/documents/{doc_id}/result")).json()["invoice_id"]
+    invoice_id = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"][0]["invoice_id"]
 
     # Raise an issue: subtotal no longer matches the line items.
     response = await api.patch(
@@ -206,7 +206,7 @@ async def test_correction_is_audited_revalidated_and_survives_reprocess(
     # Re-processing (model says 4.50 again) must keep the human values.
     job = (await api.post(f"/documents/{doc_id}/reprocess")).json()
     await run_job(job["job_id"], FakeLLMClient(GOOD_REPLY))
-    result = (await api.get(f"/documents/{doc_id}/result")).json()
+    result = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"][0]
     assert result["invoice_id"] == invoice_id
     assert result["fields"]["subtotal"]["value"] == "5.00"
     assert result["fields"]["subtotal"]["status"] == "corrected"
@@ -215,9 +215,9 @@ async def test_correction_is_audited_revalidated_and_survives_reprocess(
 
 async def test_patch_validates_types(api, run_job, tmp_path):
     uploaded = await _processed(api, run_job, tmp_path)
-    invoice_id = (await api.get(f"/documents/{uploaded['document_id']}/result")).json()[
-        "invoice_id"
-    ]
+    invoice_id = (await api.get(f"/documents/{uploaded['document_id']}/result")).json()["invoices"][
+        0
+    ]["invoice_id"]
 
     for body in (
         {"corrected_by": "a", "total": "abc"},

@@ -13,9 +13,11 @@ from app.invoices import HEADER_FIELDS, duplicate_links
 from app.models import Document, Invoice, LineItem, ValidationIssue
 
 
-def document_summary(document: Document, invoice: Invoice | None) -> DocumentSummary:
+def document_summary(document: Document, invoices: list[Invoice]) -> DocumentSummary:
     summary = DocumentSummary.model_validate(document)
-    summary.invoice = InvoiceSummary.model_validate(invoice) if invoice else None
+    summary.invoice = InvoiceSummary.model_validate(invoices[0]) if invoices else None
+    summary.invoice_count = len(invoices)
+    summary.needs_review = any(i.needs_review for i in invoices)
     return summary
 
 
@@ -26,6 +28,10 @@ def invoice_result(
     return InvoiceResult(
         invoice_id=invoice.id,
         document_id=invoice.document_id,
+        segment_index=invoice.segment_index,
+        page_start=invoice.page_start,
+        page_end=invoice.page_end,
+        extracted=invoice.job_id is not None,
         needs_review=invoice.needs_review,
         overall_confidence=invoice.overall_confidence,
         reviewed_by=invoice.reviewed_by,

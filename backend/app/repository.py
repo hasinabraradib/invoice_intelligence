@@ -139,29 +139,89 @@ class Repository:
 
     # ------------------------------------------------------------ invoices
 
-    async def get_invoice_by_document(self, document_id: uuid.UUID) -> Invoice | None:
-        return await self.session.scalar(select(Invoice).where(Invoice.document_id == document_id))
+    async def get_invoices(self, document_id: uuid.UUID) -> list[Invoice]:
+        """All invoices found in a document, in page order."""
+        rows = await self.session.scalars(
+            select(Invoice)
+            .where(Invoice.document_id == document_id)
+            .order_by(Invoice.segment_index)
+        )
+        return list(rows)
 
-    async def save_extraction(
+    async def invoices_for_documents(
+        self, document_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, list[Invoice]]:
+        """Invoices of many documents in one query (for list pages)."""
+        found: dict[uuid.UUID, list[Invoice]] = {i: [] for i in document_ids}
+        if document_ids:
+            rows = await self.session.scalars(
+                select(Invoice)
+                .where(Invoice.document_id.in_(document_ids))
+                .order_by(Invoice.document_id, Invoice.segment_index)
+            )
+            for invoice in rows:
+                found[invoice.document_id].append(invoice)
+        return found
+
+    # ------------------------------------------------------------ page texts
+
+    async def save_page_texts(
         self,
-        *,
         document_id: uuid.UUID,
+        pages: list[SourcePage],
+        *,
+        page_count: int,
+        job_id: uuid.UUID,
+    ) -> None:
+        """Replace the document's page texts (idempotent) and remember which job wrote them."""
+        await self.session.execute(delete(PageText).where(PageText.document_id == document_id))
+        for page in _merge_split_pages(pages):
+            self.session.add(
+                PageText(
+                    document_id=document_id,
+                    page_number=page.number,
+                    source=page.source,
+                    text=_clean(page.text) or "",
+                    ocr_confidence=page.ocr_confidence,
+                )
+            )
+        await self.session.execute(
+            update(Document)
+            .where(Document.id == document_id)
+            .values(page_count=page_count, text_job_id=job_id)
+        )
+        await self.session.flush()
+
+    async def load_source_pages(self, document_id: uuid.UUID) -> list[SourcePage]:
+        """Page texts saved earlier, as SourcePages (used when a retry resumes)."""
+        return [
+            SourcePage(
+                p.page_number,
+                p.text,
+                label=f"sheet {p.page_number}" if p.source == "sheet" else "",
+                ocr_confidence=p.ocr_confidence,
+                source=p.source,
+            )
+            for p in await self.get_page_texts(document_id)
+        ]
+
+    # ------------------------------------------------------------ segments
+
+    async def save_segment(
+        self,
+        invoice: Invoice,
+        *,
         result: ExtractionResult,
         issues: list[Issue],
         needs_review: bool,
         overall_confidence: float,
-        pages: list[SourcePage],
+        job_id: uuid.UUID,
     ) -> Invoice:
-        """Write (or overwrite) this document's invoice, line items, issues and page texts.
+        """Write one segment's extraction into its invoice row.
 
-        Idempotent: the invoice row is UPDATED in place (same id, so corrections that point
-        at it survive); its child rows and the page texts are deleted and re-inserted.
-        Runs in the caller's transaction, so it all lands together or not at all.
+        Idempotent: the row is UPDATED in place (same id, so corrections pointing at it
+        survive); its line items and issues are deleted and re-inserted. Caller commits.
         """
-        invoice = await self.get_invoice_by_document(document_id)
-        if invoice is None:
-            invoice = Invoice(document_id=document_id)
-            self.session.add(invoice)
         for column in HEADER_COLUMNS:
             value = result.fields[column].value if column in result.fields else None
             setattr(invoice, column, _clean(value) if isinstance(value, str) else value)
@@ -172,11 +232,9 @@ class Repository:
         invoice.fields = _jsonable({n: _field_json(f) for n, f in result.fields.items()})
         invoice.raw_model_output = _jsonable(result.raw_outputs)
         invoice.extracted_at = _now()
-        await self.session.flush()
-
+        invoice.job_id = job_id
         await self.session.execute(delete(LineItem).where(LineItem.invoice_id == invoice.id))
         await self.replace_issues(invoice.id, issues)
-        await self.session.execute(delete(PageText).where(PageText.document_id == document_id))
         for position, item in enumerate(result.line_items, start=1):
             self.session.add(
                 LineItem(
@@ -187,16 +245,6 @@ class Repository:
                     unit_price=item.unit_price.value,
                     line_total=item.line_total.value,
                     fields=_jsonable({n: _field_json(f) for n, f in item}),
-                )
-            )
-        for page in _merge_split_pages(pages):
-            self.session.add(
-                PageText(
-                    document_id=document_id,
-                    page_number=page.number,
-                    source=page.source,
-                    text=_clean(page.text) or "",
-                    ocr_confidence=page.ocr_confidence,
                 )
             )
         await self.session.flush()
@@ -329,13 +377,13 @@ class Repository:
     # ------------------------------------------------------------ duplicate lookups
 
     async def find_invoices_by_supplier_and_number(
-        self, supplier_key: str, invoice_number: str, exclude_document_id: uuid.UUID
+        self, supplier_key: str, invoice_number: str, exclude_invoice_id: uuid.UUID | None
     ) -> list[uuid.UUID]:
         rows = await self.session.scalars(
             select(Invoice.document_id).where(
                 Invoice.supplier_key == supplier_key,
                 Invoice.invoice_number_key == normalise_invoice_number(invoice_number),
-                Invoice.document_id != exclude_document_id,
+                Invoice.id != exclude_invoice_id,
             )
         )
         return list(rows)
@@ -345,14 +393,14 @@ class Repository:
         supplier_key: str,
         invoice_date: date,
         total: Decimal,
-        exclude_document_id: uuid.UUID,
+        exclude_invoice_id: uuid.UUID | None,
     ) -> list[uuid.UUID]:
         rows = await self.session.scalars(
             select(Invoice.document_id).where(
                 Invoice.supplier_key == supplier_key,
                 Invoice.invoice_date == invoice_date,
                 Invoice.total == total,
-                Invoice.document_id != exclude_document_id,
+                Invoice.id != exclude_invoice_id,
             )
         )
         return list(rows)

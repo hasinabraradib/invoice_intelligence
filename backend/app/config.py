@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     worker_concurrency: int = Field(default=2, ge=1, le=32)
     stuck_job_minutes: int = Field(default=30, ge=1)
 
+    # Batch documents: invoices extracted at the same time per document (keep it within
+    # your LLM provider's rate limit), and pages per LLM call when classifying unclear pages.
+    segment_concurrency: int = Field(default=4, ge=1, le=32)
+    segment_classifier_batch: int = Field(default=20, ge=1, le=100)
+
     # Semantic search. Chunks of ~500 tokens with 50 overlap, never across pages.
     embeddings_enabled: bool = True
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
