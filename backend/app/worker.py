@@ -20,6 +20,7 @@ from app.models import JobStatus, ProcessingJob
 from app.parsing.dispatch import count_pages
 from app.pipeline import TEMPORARY_ERRORS, process_document, record_failure
 from app.repository import Repository
+from app.search.embedder import get_embedder
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("worker")
@@ -32,6 +33,7 @@ async def startup(ctx: dict[str, Any]) -> None:
     ctx["sessionmaker"] = create_sessionmaker(ctx["engine"])
     ctx["queue"] = ArqQueue(settings.redis_url)
     ctx["llm_factory"] = lambda: get_llm_client(settings)
+    ctx["embedder"] = get_embedder(settings)  # model loads on first use, then stays loaded
     async with ctx["sessionmaker"]() as session:
         await requeue_stuck_jobs(Repository(session), ctx["queue"], settings.stuck_job_minutes)
     logger.info("worker ready (concurrency=%d)", settings.worker_concurrency)
@@ -68,7 +70,9 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
         pages = await anyio.to_thread.run_sync(count_pages, Path(document.storage_path))
         try:
             with anyio.fail_after(job_timeout(pages, settings)):
-                outcome = await process_document(document.id, session, llm, settings, job_id=job.id)
+                outcome = await process_document(
+                    document.id, session, llm, settings, job_id=job.id, embedder=ctx.get("embedder")
+                )
         except TimeoutError:
             # The run was cancelled mid-way: reset the session, then read attempts afresh.
             await session.rollback()

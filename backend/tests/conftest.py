@@ -25,10 +25,11 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
 from sqlalchemy.pool import NullPool  # noqa: E402
 
 from alembic import command  # noqa: E402
-from app.api.deps import get_queue  # noqa: E402
+from app.api.deps import get_embedder, get_queue  # noqa: E402
 from app.config import Settings, get_settings  # noqa: E402
 from app.db import get_session  # noqa: E402
 from app.main import create_app  # noqa: E402
+from app.search.embedder import FakeEmbedder  # noqa: E402
 
 TABLES = (
     "documents, processing_jobs, invoices, line_items, validation_issues, corrections, page_texts"
@@ -51,8 +52,14 @@ def upload_dir(tmp_path):
 def settings(upload_dir):
     # Small limits so the "too large" test only needs a ~1 MB file.
     # OCR off: API tests check upload/parse behaviour; OCR has its own tests.
+    # Embeddings off: tests get a FakeEmbedder explicitly instead of the real model.
     return Settings(
-        upload_dir=upload_dir, max_upload_mb=1, max_files_per_request=10, ocr_enabled=False
+        upload_dir=upload_dir,
+        max_upload_mb=1,
+        max_files_per_request=10,
+        ocr_enabled=False,
+        embeddings_enabled=False,
+        semantic_min_similarity=0.15,  # fake embedder scale, see test_search_semantic
     )
 
 
@@ -143,7 +150,12 @@ def queue():
 
 
 @pytest.fixture
-async def api(settings, database_url, queue):
+def embedder():
+    return FakeEmbedder()
+
+
+@pytest.fixture
+async def api(settings, database_url, queue, embedder):
     """httpx AsyncClient talking to the app in-process, on the test database."""
     app = create_app()
     engine = create_async_engine(database_url, poolclass=NullPool)
@@ -155,6 +167,7 @@ async def api(settings, database_url, queue):
     app.dependency_overrides[get_settings] = lambda: settings
     app.dependency_overrides[get_session] = test_session
     app.dependency_overrides[get_queue] = lambda: queue
+    app.dependency_overrides[get_embedder] = lambda: embedder
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
@@ -163,7 +176,7 @@ async def api(settings, database_url, queue):
 
 
 @pytest.fixture
-async def run_job(settings, database_url):
+async def run_job(settings, database_url, embedder):
     """Run the worker's job function directly (no Redis, no arq process)."""
     from app.worker import process_job
 
@@ -178,6 +191,7 @@ async def run_job(settings, database_url):
         ctx = {
             "settings": settings,
             "llm_factory": factory,
+            "embedder": embedder,
             "sessionmaker": async_sessionmaker(engine, expire_on_commit=False),
         }
         return await process_job(ctx, str(job_id))

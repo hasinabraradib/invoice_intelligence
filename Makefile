@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -38,3 +38,7 @@ ocr-sample: env
 extract-sample: env
 	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/samples:/samples:ro" api \
 		python scripts/extract_sample.py "/samples/$(notdir $(FILE))"
+
+# Build semantic-search embeddings for documents processed before step 5 (safe to re-run).
+embed-backfill: env
+	$(COMPOSE) run --rm api python scripts/embed_backfill.py

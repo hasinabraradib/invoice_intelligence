@@ -46,7 +46,7 @@ GOOD_REPLY = {
 
 @pytest.fixture
 def settings(upload_dir):
-    return Settings(upload_dir=upload_dir, ocr_enabled=False)
+    return Settings(upload_dir=upload_dir, ocr_enabled=False, embeddings_enabled=False)
 
 
 async def _document(session, path) -> uuid.UUID:

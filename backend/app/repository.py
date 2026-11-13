@@ -125,11 +125,14 @@ class Repository:
             update(ProcessingJob).where(ProcessingJob.id == job_id).values(**values)
         )
 
-    async def finish_job(self, job_id: uuid.UUID, *, error: str | None = None) -> None:
+    async def finish_job(
+        self, job_id: uuid.UUID, *, error: str | None = None, note: str | None = None
+    ) -> None:
+        """error -> job failed; note -> job succeeded with a warning message."""
         await self.update_job(
             job_id,
             status=JobStatus.FAILED if error else JobStatus.SUCCEEDED,
-            error=error,
+            error=error or note,
             finished_at=_now(),
         )
 

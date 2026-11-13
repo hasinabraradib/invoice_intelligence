@@ -1,4 +1,4 @@
-"""process_document: parse -> OCR -> extract -> validate -> duplicate check -> save.
+"""process_document: parse -> OCR -> extract -> validate -> duplicate check -> save -> embed.
 
 Idempotent (CLAUDE.md rule 4): running it again for the same document replaces that
 document's invoice, line items, issues and page texts in ONE transaction; nothing is
@@ -34,6 +34,8 @@ from app.parsing.dispatch import parse_document
 from app.parsing.errors import DocumentError
 from app.parsing.models import ParseLimits
 from app.repository import Repository
+from app.search.embedder import Embedder
+from app.search.indexing import index_document
 from app.validation.duplicates import find_duplicate_issues
 from app.validation.rules import validate_invoice
 
@@ -70,6 +72,7 @@ async def process_document(
     settings: Settings | None = None,
     *,
     job_id: uuid.UUID | None = None,
+    embedder: Embedder | None = None,
 ) -> ProcessOutcome:
     settings = settings or get_settings()
     repo = Repository(session)
@@ -78,9 +81,10 @@ async def process_document(
         raise ValueError(f"document {document_id} not found")
 
     job = await repo.get_job(job_id) if job_id else await repo.create_job(document_id)
+    job_id = job.id  # plain value: safe to use even after a rollback expires `job`
     attempts = job.attempts + 1
     await repo.update_job(
-        job.id,
+        job_id,
         status=JobStatus.RUNNING,
         attempts=attempts,
         stage=None,
@@ -92,7 +96,7 @@ async def process_document(
     await session.commit()
 
     async def stage(name: str, **progress: int | None) -> None:
-        await repo.update_job(job.id, stage=name, **progress)
+        await repo.update_job(job_id, stage=name, **progress)
         await session.commit()  # visible to pollers right away
 
     try:
@@ -162,7 +166,7 @@ async def process_document(
         needs_review = report.needs_review or any(i.severity == "error" for i in duplicates)
         status = DocumentStatus.NEEDS_REVIEW if needs_review else DocumentStatus.PROCESSED
 
-        await repo.update_job(job.id, stage="saving")
+        await repo.update_job(job_id, stage="saving")
         invoice = await repo.save_extraction(
             document_id=document_id,
             result=result,
@@ -171,14 +175,14 @@ async def process_document(
             overall_confidence=_overall_confidence(result),
             pages=source_pages(parsed),
         )
+        invoice_id = invoice.id
         await repo.set_document_status(document_id, status, page_count=parsed.page_count)
-        await repo.finish_job(job.id)
         await session.commit()  # the single transaction that replaces everything
     except DocumentError as exc:
         return await record_failure(
             session,
             document_id,
-            job.id,
+            job_id,
             exc.message,
             temporary=False,
             attempts=attempts,
@@ -188,7 +192,7 @@ async def process_document(
         return await record_failure(
             session,
             document_id,
-            job.id,
+            job_id,
             str(exc),
             temporary=exc.temporary,
             attempts=attempts,
@@ -198,7 +202,7 @@ async def process_document(
         return await record_failure(
             session,
             document_id,
-            job.id,
+            job_id,
             f"temporary error ({type(exc).__name__})",
             temporary=True,
             attempts=attempts,
@@ -209,15 +213,39 @@ async def process_document(
         return await record_failure(
             session,
             document_id,
-            job.id,
+            job_id,
             f"internal error ({type(exc).__name__})",
             temporary=False,
             attempts=attempts,
             settings=settings,
         )
 
+    # The result is saved. Embedding is a bonus for search: if it fails, the document
+    # keeps its result and the job succeeds with a warning.
+    note = None
+    if embedder is not None:
+        try:
+            await stage("embedding")
+            await index_document(
+                session,
+                document_id,
+                embedder,
+                chunk_tokens=settings.embed_chunk_tokens,
+                overlap_tokens=settings.embed_chunk_overlap,
+            )
+            await session.commit()
+        except Exception as exc:
+            await session.rollback()
+            logger.warning("embedding failed for document %s: %s", document_id, type(exc).__name__)
+            note = (
+                f"warning: semantic search index not updated ({type(exc).__name__}); "
+                "keyword search still works"
+            )
+    await repo.finish_job(job_id, note=note)
+    await session.commit()
+
     logger.info("document %s processed: status=%s issues=%d", document_id, status, len(issues))
-    return ProcessOutcome(document_id, status, job.id, invoice.id, len(issues), attempts=attempts)
+    return ProcessOutcome(document_id, status, job_id, invoice_id, len(issues), attempts=attempts)
 
 
 async def record_failure(
