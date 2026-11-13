@@ -59,6 +59,10 @@ def _jsonable(value: Any) -> Any:
     return value
 
 
+class JobInProgress(Exception):
+    pass
+
+
 class Repository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -352,6 +356,17 @@ class Repository:
             .order_by(PageText.page_number)
         )
         return list(rows)
+
+    async def create_reprocess_job(
+        self, document_id: uuid.UUID, *, only_failed: bool = False
+    ) -> ProcessingJob:
+        """A new job for a document; raises JobInProgress if one is queued or running.
+        only_failed: continue the last job (redo only its failed invoices). Caller commits
+        and enqueues."""
+        if await self.has_active_job(document_id):
+            raise JobInProgress("A job for this document is already queued or running.")
+        last = await self.latest_job(document_id) if only_failed else None
+        return await self.create_job(document_id, resume_job_id=last.id if last else None)
 
     async def has_active_job(self, document_id: uuid.UUID) -> bool:
         count = await self.session.scalar(

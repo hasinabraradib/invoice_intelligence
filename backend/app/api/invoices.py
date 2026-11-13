@@ -1,7 +1,6 @@
 """PATCH /invoices/{id}: human corrections, with an audit trail and re-validation."""
 
 import uuid
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -12,8 +11,7 @@ from app.api.schemas import ApproveRequest, CorrectionView, InvoicePatch, Invoic
 from app.api.views import invoice_result
 from app.config import Settings, get_settings
 from app.db import get_session
-from app.invoices import apply_corrections, error_keys, revalidate
-from app.models import Correction, DocumentStatus
+from app.invoices import ApprovalRefused, apply_corrections, approve, revalidate
 from app.repository import Repository
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -97,30 +95,9 @@ async def approve_invoice(
     invoice = await repo.get_invoice(invoice_id)
     if invoice is None:
         raise not_found("invoice")
-    issues = await repo.get_issues(invoice.id)
-    errors = [i for i in issues if i.severity == "error"]
-    reason = (body.override_reason or "").strip() or None
-    if errors and reason is None:
-        raise ApiError(
-            409,
-            "unresolved_errors",
-            f"{len(errors)} error(s) remain. Fix them, or give an override_reason.",
-        )
-
-    invoice.needs_review = False
-    invoice.reviewed_by = body.reviewed_by
-    invoice.reviewed_at = datetime.now(UTC)
-    invoice.review_override_reason = reason
-    invoice.approved_error_keys = error_keys(issues)
-    session.add(
-        Correction(
-            invoice_id=invoice.id,
-            field="approval",
-            old_value=None,
-            new_value=f"approved (override: {reason})" if reason else "approved",
-            corrected_by=body.reviewed_by,
-        )
-    )
-    await repo.set_document_status(invoice.document_id, DocumentStatus.PROCESSED)
+    try:
+        issues = await approve(repo, invoice, body.reviewed_by, body.override_reason)
+    except ApprovalRefused as exc:
+        raise ApiError(409, "unresolved_errors", str(exc)) from exc
     await session.commit()
     return invoice_result(invoice, await repo.get_line_items(invoice.id), issues)

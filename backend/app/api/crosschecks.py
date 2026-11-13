@@ -17,10 +17,10 @@ from app.api.schemas import (
     FindingView,
     Page,
 )
-from app.crosscheck.service import CrossCheckError, prepare
+from app.crosscheck.service import CrossCheckError, queue_cross_check
 from app.db import get_session
 from app.jobs import JobQueue
-from app.models import CrossCheck, CrossCheckFinding, Document, JobStatus
+from app.models import CrossCheck, CrossCheckFinding, Document
 
 router = APIRouter(prefix="/cross-checks", tags=["cross-checks"])
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -61,20 +61,9 @@ async def create_cross_check(
     second copy). The order does not matter for a ledger: invoices are always side A.
     Running the same pair again replaces the earlier results."""
     try:
-        a_id, b_id, mode = await prepare(session, body.document_a_id, body.document_b_id)
+        check = await queue_cross_check(session, queue, body.document_a_id, body.document_b_id)
     except CrossCheckError as exc:
         raise ApiError(exc.status, exc.code, exc.message) from exc
-    check = await session.scalar(
-        select(CrossCheck).where(CrossCheck.document_a_id == a_id, CrossCheck.document_b_id == b_id)
-    )
-    if check is None:
-        check = CrossCheck(document_a_id=a_id, document_b_id=b_id, summary={})
-        session.add(check)
-    elif check.status in (JobStatus.QUEUED, JobStatus.RUNNING):
-        return await _view(session, check)  # already on its way: do not queue it twice
-    check.mode, check.status, check.error = mode, JobStatus.QUEUED, None
-    await session.commit()
-    await queue.enqueue_cross_check(check.id)
     return await _view(session, check)
 
 

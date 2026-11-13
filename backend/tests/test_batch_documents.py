@@ -384,3 +384,25 @@ async def test_retry_without_llm_keeps_partially_failed(api, run_job, tmp_path):
     assert await run_job(job_id, ValueError("LLM_PROVIDER is 'none'")) == "partially_failed"
     result = (await api.get(f"/documents/{uploaded['document_id']}/result")).json()["invoices"]
     assert sum(i["extracted"] for i in result) == 2  # the saved invoices are untouched
+
+
+async def test_approving_one_invoice_keeps_document_in_review_while_others_wait(
+    api, run_job, tmp_path
+):
+    uploaded = await _upload_batch(api, tmp_path)
+    await run_job(uploaded["job_id"], BatchLLM())
+    doc_id = uploaded["document_id"]
+    first, second, _ = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"]
+    for invoice in (first, second):  # clearing a required field makes each need review
+        await api.patch(
+            f"/invoices/{invoice['invoice_id']}",
+            json={"corrected_by": "bo", "invoice_number": None},
+        )
+
+    await api.post(
+        f"/invoices/{first['invoice_id']}/approve",
+        json={"reviewed_by": "bo", "override_reason": "checked on paper"},
+    )
+
+    status = (await api.get(f"/documents/{doc_id}/status")).json()["status"]
+    assert status == "needs_review"  # the second invoice still needs a look

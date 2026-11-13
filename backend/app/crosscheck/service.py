@@ -283,3 +283,23 @@ async def count_findings(session: AsyncSession, check_id: uuid.UUID) -> int:
         )
         or 0
     )
+
+
+async def queue_cross_check(
+    session: AsyncSession, queue, a_id: uuid.UUID, b_id: uuid.UUID
+) -> CrossCheck:
+    """Validate the pair, reuse or create its cross-check row, and queue it (unless it is
+    already queued or running). Raises CrossCheckError."""
+    a_id, b_id, mode = await prepare(session, a_id, b_id)
+    check = await session.scalar(
+        select(CrossCheck).where(CrossCheck.document_a_id == a_id, CrossCheck.document_b_id == b_id)
+    )
+    if check is None:
+        check = CrossCheck(document_a_id=a_id, document_b_id=b_id, summary={})
+        session.add(check)
+    elif check.status in (JobStatus.QUEUED, JobStatus.RUNNING):
+        return check  # already on its way: do not queue it twice
+    check.mode, check.status, check.error = mode, JobStatus.QUEUED, None
+    await session.commit()
+    await queue.enqueue_cross_check(check.id)
+    return check

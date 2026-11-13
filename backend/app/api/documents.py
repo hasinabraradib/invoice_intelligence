@@ -52,7 +52,7 @@ from app.parsing.errors import (
 from app.parsing.file_types import detect_file_kind, extension_warning
 from app.parsing.models import FileKind
 from app.previews import NoPreview, PageNotFound, page_preview
-from app.repository import Repository
+from app.repository import JobInProgress, Repository
 from app.storage import StoredFile, sanitize_filename, save_upload
 
 logger = logging.getLogger(__name__)
@@ -347,12 +347,10 @@ async def reprocess(
     batches); otherwise everything is read and extracted again."""
     repo = Repository(session)
     await _get_document(session, document_id)
-    if await repo.has_active_job(document_id):
-        raise ApiError(
-            409, "job_in_progress", "A job for this document is already queued or running."
-        )
-    last = await repo.latest_job(document_id) if only_failed else None
-    job = await repo.create_job(document_id, resume_job_id=last.id if last else None)
+    try:
+        job = await repo.create_reprocess_job(document_id, only_failed=only_failed)
+    except JobInProgress as exc:
+        raise ApiError(409, "job_in_progress", str(exc)) from exc
     await session.commit()
     await _enqueue_or_mark_failed(repo, queue, job.id, document_id)
     return JobAccepted(document_id=document_id, job_id=job.id, status=JobStatus.QUEUED)

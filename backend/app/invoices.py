@@ -2,7 +2,7 @@
 database, keeping human corrections, applying corrections, and re-validation."""
 
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -289,3 +289,39 @@ def boundary_issue(segment) -> ValidationIssue:
         "kept in the history but not applied. Please re-check this invoice.",
         actual=f"pages {segment.page_start}-{segment.page_end}",
     )
+
+
+class ApprovalRefused(Exception):
+    pass
+
+
+async def approve(
+    repo: Repository, invoice: Invoice, reviewed_by: str, override_reason: str | None
+) -> list:
+    """Clear needs_review. Refused while error issues remain, unless a reason is given
+    (stored, and logged in corrections). The document's status then follows ALL its
+    invoices (a batch may still have others to review). Caller commits."""
+    issues = await repo.get_issues(invoice.id)
+    errors = [i for i in issues if i.severity == "error"]
+    reason = (override_reason or "").strip() or None
+    if errors and reason is None:
+        raise ApprovalRefused(
+            f"{len(errors)} error(s) remain. Fix them, or give an override_reason."
+        )
+    invoice.needs_review = False
+    invoice.reviewed_by = reviewed_by
+    invoice.reviewed_at = datetime.now(UTC)
+    invoice.review_override_reason = reason
+    invoice.approved_error_keys = error_keys(issues)
+    repo.session.add(
+        Correction(
+            invoice_id=invoice.id,
+            field="approval",
+            old_value=None,
+            new_value=f"approved (override: {reason})" if reason else "approved",
+            corrected_by=reviewed_by,
+        )
+    )
+    await repo.session.flush()
+    await refresh_document_status(repo, invoice.document_id)
+    return issues
