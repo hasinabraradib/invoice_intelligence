@@ -43,6 +43,8 @@ class DocumentStatus(StrEnum):
     PROCESSED = "processed"
     NEEDS_REVIEW = "needs_review"
     FAILED = "failed"
+    # Some invoices of a batch failed for good, the others were extracted and kept.
+    PARTIALLY_FAILED = "partially_failed"
 
 
 class JobStatus(StrEnum):
@@ -116,6 +118,9 @@ class ProcessingJob(Base):
     segments_total: Mapped[int | None] = mapped_column(Integer)
     # The invoice boundaries this job found; a retry reuses them so it can resume.
     segments: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
+    # "Retry failed": continue from this earlier job (reuse its page texts, boundaries and
+    # finished invoices) instead of starting over.
+    resume_job_id: Mapped[uuid.UUID | None] = mapped_column()
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

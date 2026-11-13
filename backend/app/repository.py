@@ -276,8 +276,15 @@ class Repository:
 
     # ------------------------------------------------------------ job queue state
 
-    async def create_job(self, document_id: uuid.UUID) -> ProcessingJob:
-        job = ProcessingJob(document_id=document_id, status=JobStatus.QUEUED, attempts=0)
+    async def create_job(
+        self, document_id: uuid.UUID, *, resume_job_id: uuid.UUID | None = None
+    ) -> ProcessingJob:
+        job = ProcessingJob(
+            document_id=document_id,
+            status=JobStatus.QUEUED,
+            attempts=0,
+            resume_job_id=resume_job_id,
+        )
         self.session.add(job)
         await self.session.flush()
         return job
@@ -353,12 +360,15 @@ class Repository:
         )
         return list(rows)
 
-    async def documents_with_failed_latest_job(self) -> list[uuid.UUID]:
-        """Documents whose most recent job failed (older failures already retried are
-        ignored, so retry-failed never queues the same document twice)."""
+    async def documents_with_failed_latest_job(self) -> list[tuple[uuid.UUID, uuid.UUID]]:
+        """(document id, failed job id) for documents whose most recent job failed.
+
+        Older failures that were already retried are ignored, so retry-failed never queues
+        the same document twice."""
         # Number each document's jobs newest-first; row 1 is the latest job.
         ranked = select(
             ProcessingJob.document_id,
+            ProcessingJob.id,
             ProcessingJob.status,
             func.row_number()
             .over(
@@ -367,12 +377,12 @@ class Repository:
             )
             .label("position"),
         ).subquery()
-        rows = await self.session.scalars(
-            select(ranked.c.document_id).where(
+        rows = await self.session.execute(
+            select(ranked.c.document_id, ranked.c.id).where(
                 ranked.c.position == 1, ranked.c.status == JobStatus.FAILED
             )
         )
-        return list(rows)
+        return [(row.document_id, row.id) for row in rows]
 
     # ------------------------------------------------------------ duplicate lookups
 

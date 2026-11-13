@@ -115,7 +115,14 @@ async def process_document(
     job_id = job.id  # plain values: safe to use even after a rollback expires the objects
     attempts = job.attempts + 1
     stored_segments = job.segments  # saved by an earlier attempt of THIS job
-    reuse_text = document.text_job_id == job_id
+    # "Retry failed" jobs continue an earlier job: its page texts, boundaries and finished
+    # invoices count as this job's own.
+    resume_from = job.resume_job_id
+    own_jobs = {job_id} | ({resume_from} if resume_from else set())
+    if not stored_segments and resume_from:
+        previous = await repo.get_job(resume_from)
+        stored_segments = previous.segments if previous else None
+    reuse_text = document.text_job_id in own_jobs
     path, filename, page_count = Path(document.storage_path), document.filename, document.page_count
     await repo.update_job(
         job_id,
@@ -144,8 +151,10 @@ async def process_document(
         if not pages:
             raise PipelineError("the document has no text to extract from")
 
-        if stored_segments:
+        rows = {i.segment_index: i for i in await repo.get_invoices(document_id)}
+        if stored_segments and all(s["index"] in rows for s in stored_segments):
             segments = [Segment(**s) for s in stored_segments]
+            await repo.update_job(job_id, segments=stored_segments, segments_total=len(segments))
         else:
             await stage("segmenting")
             classifier = llm_page_classifier(llm, settings.segment_classifier_batch)
@@ -159,7 +168,7 @@ async def process_document(
             await session.commit()
 
         rows = {i.segment_index: i for i in await repo.get_invoices(document_id)}
-        pending = [s for s in segments if rows[s.index].job_id != job_id]
+        pending = [s for s in segments if rows[s.index].job_id not in own_jobs]
         finished = len(segments) - len(pending)
         if finished:
             logger.info(
@@ -229,6 +238,7 @@ async def process_document(
             temporary=any(f.retryable for f in failures),
             attempts=attempts,
             settings=settings,
+            partial=len(failures) < len(segments),  # the other invoices are saved
         )
 
     # Results are saved. Embedding is a bonus for search: if it fails, the document keeps
@@ -442,9 +452,12 @@ async def record_failure(
     temporary: bool,
     attempts: int,
     settings: Settings,
+    partial: bool = False,
 ) -> ProcessOutcome:
     """Roll back unsaved work, then either schedule a retry (temporary error with attempts
-    left) or mark the document and job as failed. Segments already saved stay saved."""
+    left) or mark the document and job as failed. Segments already saved stay saved; if
+    some invoices were saved (partial), the document becomes partially_failed instead, and
+    POST /jobs/retry-failed redoes only the failed invoices."""
     await session.rollback()
     repo = Repository(session)
     message = message[:500]
@@ -456,9 +469,9 @@ async def record_failure(
         )
         status = DocumentStatus.PROCESSING
     else:
-        await repo.set_document_status(document_id, DocumentStatus.FAILED, error=message)
+        status = DocumentStatus.PARTIALLY_FAILED if partial else DocumentStatus.FAILED
+        await repo.set_document_status(document_id, status, error=message)
         await repo.finish_job(job_id, error=message)
-        status = DocumentStatus.FAILED
     await session.commit()
     logger.warning("document %s %s: %s", document_id, "will retry" if retry else "failed", message)
     return ProcessOutcome(

@@ -56,6 +56,8 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
         try:
             llm = ctx["llm_factory"]()
         except ValueError as exc:  # LLM not configured: retrying will not help
+            # Invoices saved by an earlier job stay valid: keep "partially_failed" then.
+            saved = any(i.job_id for i in await repo.get_invoices(document.id))
             outcome = await record_failure(
                 session,
                 document.id,
@@ -64,6 +66,7 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
                 temporary=False,
                 attempts=job.attempts + 1,
                 settings=settings,
+                partial=saved,
             )
             return outcome.status
 

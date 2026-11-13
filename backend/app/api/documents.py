@@ -329,15 +329,25 @@ async def get_result(document_id: uuid.UUID, session: Session) -> DocumentResult
     },
     summary="Process a document again",
 )
-async def reprocess(document_id: uuid.UUID, session: Session, queue: Queue) -> JobAccepted:
-    """Safe to call any time: processing is idempotent and human corrections are kept."""
+async def reprocess(
+    document_id: uuid.UUID,
+    session: Session,
+    queue: Queue,
+    only_failed: Annotated[
+        bool, Query(description="Redo only the invoices that failed in the last job")
+    ] = False,
+) -> JobAccepted:
+    """Safe to call any time: processing is idempotent and human corrections are kept.
+    With only_failed=true the new job continues the last one (for partially_failed
+    batches); otherwise everything is read and extracted again."""
     repo = Repository(session)
     await _get_document(session, document_id)
     if await repo.has_active_job(document_id):
         raise ApiError(
             409, "job_in_progress", "A job for this document is already queued or running."
         )
-    job = await repo.create_job(document_id)
+    last = await repo.latest_job(document_id) if only_failed else None
+    job = await repo.create_job(document_id, resume_job_id=last.id if last else None)
     await session.commit()
     await _enqueue_or_mark_failed(repo, queue, job.id, document_id)
     return JobAccepted(document_id=document_id, job_id=job.id, status=JobStatus.QUEUED)

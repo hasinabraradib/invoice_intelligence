@@ -56,10 +56,11 @@ class BatchLLM(FakeLLMClient):
     """Answers like a model would, from what is in the prompt: extraction replies quote
     the invoice found in the given pages; classification replies come from `starts`."""
 
-    def __init__(self, starts: dict[int, bool] | None = None, fail: dict[str, int] | None = None):
+    def __init__(self, starts=None, fail=None, broken=()):
         super().__init__(lambda system, user: self.answer(system, user))
         self.starts = starts or {}
         self.fail = dict(fail or {})  # invoice number -> times to fail with a 429
+        self.broken = set(broken)  # invoice numbers that always get unusable JSON
         self.extractions: list[str] = []
         self.classified: list[int] = []
         self._lock = threading.Lock()
@@ -81,6 +82,8 @@ class BatchLLM(FakeLLMClient):
             if self.fail.get(number, 0) > 0:
                 self.fail[number] -= 1
                 raise LLMError("HTTP 429 after 4 attempts", retryable=True)
+            if number in self.broken:
+                return "{this is not json"  # a permanent failure (no retry helps)
         total = re.search(r"Total: (\S+)", user)
         supplier = re.search(r"INVOICE\s+(.+)", user)
         page = int(re.search(r"=== PAGE (\d+)", user)[1])
@@ -306,3 +309,78 @@ async def test_api_lists_invoices_per_document_and_search_names_the_invoice(api,
         await api.get("/search", params={"q": "Initech", "mode": "keyword", "supplier": "acme"})
     ).json()["total"] == 0
     assert (await api.get("/documents", params={"supplier": "globex"})).json()["total"] == 1
+
+
+async def _upload_batch(api, tmp_path):
+    pdf = make_pdf(tmp_path / "batch.pdf", BATCH).read_bytes()
+    return (await api.post("/documents", files=[("files", ("batch.pdf", pdf))])).json()["results"][
+        0
+    ]
+
+
+@pytest.mark.parametrize("how", ["retry-failed", "reprocess-only-failed"])
+async def test_partial_failure_then_retry_redoes_only_the_failed_invoice(
+    api, run_job, tmp_path, monkeypatch, how
+):
+    import app.pipeline as pipeline
+
+    parses = []
+    real_parse = pipeline.parse_document
+    monkeypatch.setattr(
+        pipeline, "parse_document", lambda *a, **kw: parses.append(1) or real_parse(*a, **kw)
+    )
+    uploaded = await _upload_batch(api, tmp_path)
+    doc_id = uploaded["document_id"]
+
+    assert await run_job(uploaded["job_id"], BatchLLM(broken={"B-200"})) == "partially_failed"
+    status = (await api.get(f"/documents/{doc_id}/status")).json()
+    assert status["status"] == "partially_failed" and status["job_status"] == "failed"
+    assert "1 of 3 invoice(s) failed: invoice 2 (pages 2-3)" in status["error"]
+    result = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"]
+    assert [i["extracted"] for i in result] == [True, False, True]  # the others are kept
+    listed = (await api.get("/documents", params={"status": "partially_failed"})).json()
+    assert listed["total"] == 1
+
+    if how == "retry-failed":
+        retried = (await api.post("/jobs/retry-failed")).json()
+        assert retried["requeued"] == 1
+        job_id = retried["job_ids"][0]
+    else:
+        job_id = (
+            await api.post(f"/documents/{doc_id}/reprocess", params={"only_failed": "true"})
+        ).json()["job_id"]
+    fixed = BatchLLM()
+    assert await run_job(job_id, fixed) == "processed"
+
+    assert fixed.extractions == ["B-200"]  # only the failed invoice was redone
+    assert len(parses) == 1  # page texts reused: no second parse (or OCR)
+    result = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"]
+    assert [i["extracted"] for i in result] == [True, True, True]
+    assert result[1]["fields"]["invoice_number"]["value"] == "B-200"
+
+
+async def test_full_reprocess_still_redoes_everything(api, run_job, tmp_path):
+    uploaded = await _upload_batch(api, tmp_path)
+    await run_job(uploaded["job_id"], BatchLLM(broken={"B-200"}))
+    job_id = (await api.post(f"/documents/{uploaded['document_id']}/reprocess")).json()["job_id"]
+    again = BatchLLM()
+    await run_job(job_id, again)
+    assert sorted(again.extractions) == ["A-100", "B-200", "C-300"]
+
+
+async def test_all_invoices_failing_is_plain_failed(db_session, tmp_path, settings):
+    doc_id = await _document(db_session, make_pdf(tmp_path / "batch.pdf", BATCH))
+    outcome = await process_document(
+        doc_id, db_session, BatchLLM(broken={"A-100", "B-200", "C-300"}), settings
+    )
+    assert outcome.status == m.DocumentStatus.FAILED
+
+
+async def test_retry_without_llm_keeps_partially_failed(api, run_job, tmp_path):
+    uploaded = await _upload_batch(api, tmp_path)
+    await run_job(uploaded["job_id"], BatchLLM(broken={"B-200"}))
+    job_id = (await api.post("/jobs/retry-failed")).json()["job_ids"][0]
+
+    assert await run_job(job_id, ValueError("LLM_PROVIDER is 'none'")) == "partially_failed"
+    result = (await api.get(f"/documents/{uploaded['document_id']}/result")).json()["invoices"]
+    assert sum(i["extracted"] for i in result) == 2  # the saved invoices are untouched
