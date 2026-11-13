@@ -256,6 +256,8 @@ async def run(keep: bool) -> dict:
         "right_number": sum(r["value_ok"] for r in results),
         "right_citation": sum(r["citation_ok"] for r in results),
         "both_right": sum(r["value_ok"] and r["citation_ok"] for r in results),
+        # Corpus extraction + all questions; multiply by the provider's price for cost.
+        **llm.usage.as_dict(),
         "results": results,
     }
 
@@ -278,7 +280,8 @@ def main() -> int:
     print(
         f"\nright number: {report['right_number']}/{report['questions']}  "
         f"right citation: {report['right_citation']}/{report['questions']}  "
-        f"both: {report['both_right']}/{report['questions']}"
+        f"both: {report['both_right']}/{report['questions']}  "
+        f"tokens in/out: {report['input_tokens']}/{report['output_tokens']}"
     )
     print(json.dumps({k: v for k, v in report.items() if k != "results"}))
     return 0

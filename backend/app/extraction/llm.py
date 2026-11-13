@@ -9,6 +9,7 @@ import json
 import logging
 import random
 import re
+import threading
 import time
 import uuid
 from collections.abc import Callable
@@ -63,6 +64,29 @@ class ChatReply:
     tool_calls: list[ToolCall] = field(default_factory=list)
 
 
+@dataclass
+class TokenUsage:
+    """Tokens billed by the provider, summed over successful calls (for cost estimates).
+
+    Failed attempts (429, 5xx) are not billed by the providers, so they are not counted.
+    """
+
+    calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+    def as_dict(self) -> dict[str, int]:
+        return {
+            "llm_calls": self.calls,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+        }
+
+
+def _int(value: Any) -> int:
+    return value if isinstance(value, int) and value >= 0 else 0
+
+
 # Chat messages are provider-neutral dicts:
 #   {"role": "system" | "user", "content": str}
 #   {"role": "assistant", "content": str, "tool_calls": [{"id", "name", "arguments"}]}
@@ -72,6 +96,7 @@ Message = dict[str, Any]
 
 class LLMClient(Protocol):
     name: str
+    usage: TokenUsage  # tokens billed so far by this client
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Send the prompts, return the parsed JSON object (raise LLMError otherwise)."""
@@ -178,6 +203,15 @@ class _HttpClient:
         self._max_attempts = max_attempts
         self._sleep = sleep
         self._http = http_client or httpx.Client(timeout=httpx.Timeout(timeout))
+        # One client is shared by worker threads, so updates take a lock.
+        self.usage = TokenUsage()
+        self._usage_lock = threading.Lock()
+
+    def _record_usage(self, input_tokens: Any, output_tokens: Any) -> None:
+        with self._usage_lock:
+            self.usage.calls += 1
+            self.usage.input_tokens += _int(input_tokens)
+            self.usage.output_tokens += _int(output_tokens)
 
     def _post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
         response = post_with_retries(
@@ -215,12 +249,19 @@ class GeminiClient(_HttpClient):
             {"x-goog-api-key": self._api_key},
             body,
         )
+        self._record_gemini_usage(data)
         try:
             parts = data["candidates"][0]["content"]["parts"]
         except (KeyError, IndexError, TypeError) as exc:
             reason = (data.get("promptFeedback") or {}).get("blockReason", "no candidates")
             raise LLMError(f"Gemini returned no answer ({reason})") from exc
         return parse_json_object("".join(part.get("text", "") for part in parts))
+
+    def _record_gemini_usage(self, data: dict[str, Any]) -> None:
+        meta = data.get("usageMetadata") or {}
+        # Thinking tokens are billed as output tokens.
+        output = _int(meta.get("candidatesTokenCount")) + _int(meta.get("thoughtsTokenCount"))
+        self._record_usage(meta.get("promptTokenCount"), output)
 
     def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
@@ -264,6 +305,7 @@ class GeminiClient(_HttpClient):
         data = self._post(
             f"{self.BASE_URL}/{self.model}:generateContent", {"x-goog-api-key": self._api_key}, body
         )
+        self._record_gemini_usage(data)
         try:
             parts = data["candidates"][0]["content"].get("parts", [])
         except (KeyError, IndexError, TypeError) as exc:
@@ -304,6 +346,8 @@ class GroqClient(_HttpClient):
             },
         }
         data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
+        usage = data.get("usage") or {}
+        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
         try:
             content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -352,6 +396,8 @@ class GroqClient(_HttpClient):
             ]
             body["tool_choice"] = "auto"
         data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
+        usage = data.get("usage") or {}
+        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
         try:
             message = data["choices"][0]["message"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -383,6 +429,7 @@ class UnconfiguredLLM:
 
     def __init__(self, reason: str) -> None:
         self.reason = reason
+        self.usage = TokenUsage()
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         raise LLMError(self.reason, retryable=False)
@@ -408,6 +455,7 @@ class FakeLLMClient:
         # The last one repeats when the script runs out.
         self._chat = list(chat or [])
         self.chat_calls: list[dict[str, Any]] = []
+        self.usage = TokenUsage()  # stays zero: no provider, nothing billed
 
     def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
         self.chat_calls.append(

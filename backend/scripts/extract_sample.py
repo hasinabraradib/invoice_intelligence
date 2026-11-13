@@ -1,6 +1,6 @@
 """Parse + OCR + extract one file with the REAL LLM provider and print a table.
 
-This sends the document's text to the provider set in LLM_PROVIDER (Gemini or Groq), so
+This sends the document's text to the provider set in LLM_PROVIDER (Gemini, Groq or OpenAI), so
 only use files you are allowed to share with that provider.
 
 Usage (inside the backend container, see `make extract-sample`):
@@ -61,7 +61,9 @@ def main() -> int:
     print(
         f"file: {args.path.name}  kind: {doc.file_kind}  pages: {doc.page_count}  "
         f"provider: {result.provider}  chunks: {result.chunk_count}  "
-        f"calls: {result.llm_calls}  time: {result.duration_seconds}s"
+        f"calls: {result.llm_calls}  time: {result.duration_seconds}s  "
+        f"model: {getattr(llm, 'model', '-')}  "
+        f"tokens in/out: {llm.usage.input_tokens}/{llm.usage.output_tokens}"
     )
     if not result.ok:
         print(f"FAILED: {result.failure_reason}")

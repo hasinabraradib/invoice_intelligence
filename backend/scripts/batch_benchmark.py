@@ -204,6 +204,7 @@ async def run(args, path: Path, data: bytes, truth, generate_seconds: float) -> 
         "pages_per_minute": round(args.pages / total * 60, 1),
         "stage_seconds": stage_times,
         "peak_rss_mb": round((peak if sys.platform == "darwin" else peak * 1024) / 1e6, 1),
+        **llm.usage.as_dict(),  # zero with the fake LLM
     }
 
 

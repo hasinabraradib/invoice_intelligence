@@ -92,3 +92,30 @@ def test_get_llm_client_selects_provider_and_requires_key():
         get_llm_client(Settings(llm_provider="gemini", llm_api_key=""))
     with pytest.raises(ValueError, match="none"):
         get_llm_client(Settings(llm_provider="none"))
+
+
+def test_token_usage_is_summed_over_successful_calls_only():
+    ok = _gemini_ok({"a": 1})
+    ok[1]["usageMetadata"] = {
+        "promptTokenCount": 100,
+        "candidatesTokenCount": 20,
+        "thoughtsTokenCount": 5,  # billed as output
+    }
+    client, _, _ = _client(GeminiClient, [(429, {}), ok, ok])
+    client.complete_json("sys", "user", SCHEMA)
+    client.complete_json("sys", "user", SCHEMA)
+    assert client.usage.as_dict() == {"llm_calls": 2, "input_tokens": 200, "output_tokens": 50}
+
+    reply = {
+        "choices": [{"message": {"content": "{}"}}],
+        "usage": {"prompt_tokens": 7, "completion_tokens": 3},
+    }
+    groq, _, _ = _client(GroqClient, [(200, reply)])
+    groq.complete_json("sys", "user", SCHEMA)
+    assert (groq.usage.input_tokens, groq.usage.output_tokens) == (7, 3)
+
+
+def test_missing_usage_counts_the_call_with_zero_tokens():
+    client, _, _ = _client(GroqClient, [(200, {"choices": [{"message": {"content": "{}"}}]})])
+    client.complete_json("sys", "user", SCHEMA)
+    assert client.usage.as_dict() == {"llm_calls": 1, "input_tokens": 0, "output_tokens": 0}
