@@ -5,7 +5,7 @@ import zipfile
 import pytest
 
 from app.parsing.errors import CorruptFile, EmptyFile, UnsupportedFileType
-from app.parsing.file_types import detect_file_kind, extension_warning
+from app.parsing.file_types import detect_file_kind, extension_warning, sniff_delimiter
 from app.parsing.models import FileKind
 from tests import factories
 
@@ -83,3 +83,25 @@ def test_utf16_tab_separated_text_is_csv(tmp_path):
     path = tmp_path / "export.txt"
     path.write_bytes("Item\tQty\nBolt\t3\n".encode("utf-16"))
     assert detect_file_kind(path) is FileKind.CSV
+
+
+def test_key_value_block_above_a_table_is_csv(tmp_path):
+    # Invoice exports from tools other than Excel don't pad rows to one width.
+    path = tmp_path / "invoice.csv"
+    path.write_bytes(
+        b"Invoice No,INV-55\nSupplier,Karnaphuli Foods\nDate,12 Aug 2026\nCurrency,EUR\n"
+        b"Description,Qty,Unit,Total\nRice 25kg,4,31.00,124.00\nTotal,,,124.00\n"
+    )
+    assert detect_file_kind(path) is FileKind.CSV
+    assert sniff_delimiter(path.read_text()) == ","
+
+
+def test_scattered_widths_are_still_rejected(tmp_path):
+    # Prose with commas: many different field counts, no table shape.
+    path = tmp_path / "notes.txt"
+    path.write_bytes(
+        b"Hello, team, this is a note.\nWe met, talked, agreed, and left, happy.\n"
+        b"Next steps, a, b\nOne more line, with, four, parts, five\nplain line\n"
+    )
+    with pytest.raises(UnsupportedFileType):
+        detect_file_kind(path)

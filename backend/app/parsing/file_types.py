@@ -115,7 +115,8 @@ def sniff_delimiter(text: str) -> str | None:
     lines"). It qualifies if there are at least 2 table lines, they are at least half of
     all lines (title lines like "ACME Ltd" are tolerated), and >= 80% of them have the same
     field count. Among qualifying delimiters, the one whose common field count covers the
-    most lines wins (ties: more columns).
+    most lines wins (ties: more columns). A key/value block above a table (two widths)
+    also qualifies, see below.
     """
     best: tuple[float, int, str] | None = None
     for delimiter in CSV_DELIMITERS:
@@ -128,9 +129,24 @@ def sniff_delimiter(text: str) -> str | None:
         if len(table) < 2 or len(table) < len(counts) / 2:
             continue
         modal = max(set(table), key=table.count)
-        if table.count(modal) / len(table) < 0.8:
-            continue
-        candidate = (table.count(modal) / len(counts), modal, delimiter)
+        covered = table.count(modal)
+        if covered / len(table) < 0.8:
+            # Invoice exports often put a key/value block ("Invoice No,INV-55") above the
+            # line-item table: two widths. Accept that if both appear on >= 2 lines and
+            # together cover >= 80%; the wider one is the table.
+            widths = sorted(set(table), key=table.count, reverse=True)[:2]
+            if len(widths) < 2 or min(table.count(w) for w in widths) < 2:
+                continue
+            covered = sum(table.count(w) for w in widths)
+            wide = max(widths)
+            rows = [i for i, count in enumerate(table) if count == wide]
+            # The table must be one unbroken run of >= 3 columns; prose that happens to
+            # repeat two comma counts alternates instead.
+            contiguous = rows[-1] - rows[0] + 1 == len(rows)
+            if covered / len(table) < 0.8 or wide < 3 or not contiguous:
+                continue
+            modal = wide
+        candidate = (covered / len(counts), modal, delimiter)
         if best is None or candidate[:2] > best[:2]:
             best = candidate
     return best[2] if best else None
