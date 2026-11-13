@@ -504,9 +504,14 @@ def render(report: dict) -> str:
         "",
         "### Failure examples (test split, from this run)",
         "",
-        "| Invoice | File type | Field | Outcome | Truth | Predicted | Evidence quoted |",
-        "|---|---|---|---|---|---|---|",
     ]
+    if not report["failure_examples"]:
+        lines.append("No wrong, missing or invented field values on the test split in this run.")
+    else:
+        lines += [
+            "| Invoice | File type | Field | Outcome | Truth | Predicted | Evidence quoted |",
+            "|---|---|---|---|---|---|---|",
+        ]
     for x in report["failure_examples"]:
         ev = " ".join(str(x.get("evidence") or "").split())[:60].replace("|", "/")
         lines.append(
