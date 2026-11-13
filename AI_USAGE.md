@@ -15,6 +15,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-13 | 5c: Batch documents | Claude Code (Claude Opus 5.5) | Segmentation of multi-invoice PDFs (page-signal rules, LLM classifier only for unclear pages, multi-page invoices kept whole); migration for invoice segments and resumable jobs; per-invoice concurrent extraction that saves each invoice and resumes only unfinished ones; corrections kept across boundary changes with a review issue; API, search and UI for many invoices per document (invoice switcher); synthetic 1000-page benchmark with measured timings and segmentation accuracy. | _To fill in after review_ |
 | 2026-11-13 | 5c follow-up: parallel OCR + partial results | Claude Code (Claude Opus 5.5) | OCR in a killable spawn process pool with bounded in-flight pages, page-order results and per-page progress; measured and found OpenCV already used all cores, so OpenCV threads are split per worker (small real gain, documented honestly); partially_failed status (migration) and resume jobs so retry-failed redoes only failed invoices; frontend badge, filter and retry button. | _To fill in after review_ |
 | 2026-11-13 | 5d: Cross-verification | Claude Code (Claude Opus 5.5) | Ledger detection with header synonyms and stored rows (sheet + row evidence), column-mapping override; migration for ledger_rows, cross_checks, findings; pure comparison (invoice number, then supplier+date+total; Decimal tolerance; duplicates; line items by description similarity) run as an arq job; CROSS_CHECK_MISMATCH issues that survive re-validation and set needs_review without changing values; Cross-check page and ledger row highlighting; ledgers processed without an LLM. | _To fill in after review_ |
+| 2026-11-14 | 5e: AI assistant | Claude Code (Claude Opus 5.5) | Native tool calling for Gemini/Groq; agent loop (max 6 tool steps) over read tools wrapping existing services and fixed SQL sums/counts per currency; write tools that only propose actions, confirmed by the user, with expiry and audit trail; code-level guard against injected instructions; conversations/messages/actions tables; SSE streaming with Stop; chat as home page with greeting, suggestions, tool trace, citations, confirmation cards, attachments; safe Markdown renderer; 15-question eval set and scoring script. Fixed an approval bug in batch documents found on the way. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -41,3 +42,17 @@ Why the extraction prompt looks the way it does:
 - **Temperature 0 and a JSON schema** for repeatable, machine-checked output. One repair retry
   for invalid JSON, then a clean failure instead of an exception.
 
+
+## Assistant prompt design (step 5e)
+
+- **Tools instead of free text over documents.** The model reaches data only through tools
+  over our own services, so every answer is grounded in tool results it can cite.
+- **Arithmetic moved out of the model.** Totals and counts come from `sum_invoices` /
+  `count_invoices` (parameterised SQL, Decimal, one total per currency). The prompt forbids
+  mental arithmetic and adding up different currencies.
+- **Citations required** (file, invoice number, page), and "nothing found" is a valid answer.
+- **Changes only by confirmation.** Write tools return a proposal, never a result, and the
+  prompt tells the model to say a change happens only when the user confirms. Code also
+  refuses write tools when the user's own message does not ask for a change. That is the
+  second layer if a document's text manages to persuade the model.
+- **Untrusted-data delimiters** around tool results (hash-tagged, like the extraction prompt).

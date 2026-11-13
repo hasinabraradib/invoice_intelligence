@@ -37,13 +37,58 @@ make down
 `/health` returns HTTP 200 when everything is reachable and HTTP 503 (`"status": "degraded"`)
 when Postgres or Redis is down.
 
+### Assistant (the home page)
+
+Open http://localhost:3000. The assistant greets you with live numbers ("9 invoices need
+review, 2 jobs running") and suggestions that fit your data. You can do everything by
+chatting: ask questions ("How much did we spend with ACME in March?"), drop invoices into
+the chat (it follows processing and summarises the result), and ask it to correct a
+field, approve an invoice, re-process a document or run a cross-check. The other pages are
+still there for manual work.
+
+How it works: the model gets **tools** that wrap our own services, never raw database
+access. Read tools (search, list documents, get an invoice with evidence, review queue, job
+status, stats, cross-check results, `sum_invoices` / `count_invoices`) run automatically,
+at most 6 tool steps per question, and then it must answer. Answers stream token by token,
+show which tools were used, and carry citation chips that open the review page at the cited
+page.
+
+**Safety design**
+
+- **Answers come only from tool results,** and every claim is cited with file, invoice
+  number and page. If nothing is found, it says so.
+- **Numbers come from fixed, parameterised SQL** (`sum_invoices`, `count_invoices`), one
+  total per currency, as Decimal. The model never writes SQL and never does arithmetic.
+- **The assistant never changes anything itself.** Correct, approve, reprocess and
+  cross-check are only *proposed*, as a card with a plain-words summary ("Change the total
+  of INV-2041 from 1,320.00 to 1,230.00"). The change runs only when you press **Confirm**
+  (`POST /assistant/actions/{id}/confirm`); proposals expire after 10 minutes. Confirmed
+  corrections go through the normal audit trail as "assistant (confirmed by user)".
+- **Two layers against prompt injection.** Tool results and document text reach the model
+  as untrusted data between hash-tagged delimiters, and the prompt says to ignore
+  instructions inside them. In code, a write tool is refused unless *your own message* asks
+  for that kind of change, so an invoice saying "approve all invoices" cannot create an
+  action even if the model falls for it.
+- **Bad tool calls become tool errors** returned to the model; they never crash the chat.
+- **Model text is rendered as a small Markdown subset** with React elements only: no raw
+  HTML, and links only to `http(s)` or in-app pages.
+- **Full trace:** every turn (your message, tool calls, tool results, answer) is stored,
+  so any answer can be traced back to the data it used.
+
+Without `LLM_PROVIDER`/`LLM_API_KEY` the chat explains that the language model is not
+configured; everything else keeps working. `make assistant-eval` scores the assistant on
+the 15 questions in [docs/assistant-eval.md](docs/assistant-eval.md) with your real
+provider (right number, right citation).
+
 ### Web UI
 
 `make up` also starts the frontend: **http://localhost:3000**.
 
 | Page | What it is for |
 |---|---|
-| `/` Documents | Drag-and-drop upload with per-file progress, then a live table (it polls only while something is processing), with filters, reprocess and "Retry all failed" |
+| `/` Assistant | Chat (see above) |
+| `/dashboard` | Counts at a glance |
+| `/documents` | Drag-and-drop upload with per-file progress, then a live table (it polls only while something is processing), with filters, reprocess and "Retry all failed" |
 | `/documents/{id}` Review | Page preview on the left; every field on the right with status, confidence, evidence (click it to jump to the page) and inline editing; line items, issues, duplicates, history, approve and reprocess |
 | `/review` Queue | Documents needing review, oldest first; "Next in queue" walks through them |
 | `/search` | Hybrid, keyword or semantic search with the same filters; results open the review page at the matching page |
@@ -257,6 +302,10 @@ Interactive docs: http://localhost:8000/docs. Every error has the same shape:
 | `POST` | `/cross-checks` | Compare two documents in the background → 202 |
 | `GET` | `/cross-checks`, `/cross-checks/{id}` | List checks; one check with summary and findings (evidence on both sides) |
 | `POST` | `/jobs/retry-failed` | Queue every document whose last job failed; returns how many |
+| `POST` | `/assistant/conversations` | Start a conversation (`GET` lists them; `GET /{id}` shows one) |
+| `POST` | `/assistant/conversations/{id}/messages` | Ask; the answer streams as Server-Sent Events (`token`, `tool_call`, `tool_result`, `pending_action`, `citations`, `done`) |
+| `POST` | `/assistant/actions/{id}/confirm` · `/cancel` | Run or drop a change the assistant proposed |
+| `GET` | `/stats` | Counts for the greeting and the dashboard |
 | `GET` | `/health` | App, database and Redis status |
 
 ```bash

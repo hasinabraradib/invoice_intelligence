@@ -13,6 +13,8 @@ erDiagram
     documents ||--o{ cross_checks : "is compared in"
     cross_checks ||--o{ cross_check_findings : "finds"
     cross_checks ||--o{ validation_issues : "raises"
+    conversations ||--o{ messages : "contains"
+    conversations ||--o{ assistant_actions : "proposes"
     invoices ||--o{ line_items : "contains"
     invoices ||--o{ validation_issues : "has"
     invoices ||--o{ corrections : "is corrected by"
@@ -154,6 +156,32 @@ erDiagram
         string sheet_b
         int row_b
     }
+    conversations {
+        uuid id PK
+        string title
+        timestamptz updated_at
+    }
+    messages {
+        uuid id PK
+        uuid conversation_id FK
+        int position
+        string role "user|assistant|tool"
+        text content
+        jsonb tool_calls
+        string tool_call_id
+        string tool_name
+        jsonb meta "citations, tools used, actions, attachments"
+    }
+    assistant_actions {
+        uuid id PK
+        uuid conversation_id FK
+        string tool
+        jsonb arguments
+        text summary
+        string status "pending|confirmed|cancelled|expired|failed"
+        jsonb result
+        timestamptz expires_at
+    }
     text_chunks {
         uuid id PK
         uuid document_id FK
@@ -178,6 +206,9 @@ erDiagram
 | `ledger_rows` | Every row of a spreadsheet, with its sheet and Excel row number as evidence. For ledger sheets (lists of invoices) the mapped fields are filled; `cells` keeps the raw row so a corrected mapping can be applied without re-parsing. The mapping itself is `documents.ledger_mapping`. |
 | `cross_checks` | One comparison of two documents (invoices vs a ledger, or invoices vs invoices). One row per pair: running it again replaces its results. |
 | `cross_check_findings` | Each match or difference, with value A and value B and the evidence on both sides (invoice and page; ledger sheet and row). |
+| `conversations` | One chat with the assistant. |
+| `messages` | Every step of a chat: the user's message, the model's tool calls, the tool results and the answer (with citations), so each answer can be traced to its data. |
+| `assistant_actions` | Changes the assistant proposed. They run only when the user confirms, and expire after 10 minutes. |
 | `text_chunks` | Pieces of about 500 tokens from one page each (50-token overlap) with their 384-number embedding, for semantic search. An HNSW index makes nearest-neighbour lookups fast. They're replaced on every run (idempotent), and chunks never cross pages, so every hit has a page number. |
 
 Unique: `invoices(document_id, segment_index)`. Indexes: `invoices(document_id)`, `invoices(supplier_key, invoice_number_key)` and `invoices(supplier_key, invoice_date, total)`
