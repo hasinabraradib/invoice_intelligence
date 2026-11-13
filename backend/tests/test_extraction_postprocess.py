@@ -55,6 +55,9 @@ def test_amounts_in_evidence():
     ("text", "expected"),
     [
         ("2026-11-12", ("2026-11-12", False)),
+        ("2026-10-03 00:00:00", ("2026-10-03", False)),  # an Excel date cell as text
+        ("2026-10-03T14:30", ("2026-10-03", False)),
+        ("2026-10-03 25", (None, False)),  # not a time: rejected, not guessed
         ("12/11/2026", (None, True)),  # 12 Nov or Dec 11?
         ("03/04/2026", (None, True)),
         ("13/04/2026", ("2026-04-13", False)),  # day first: no month 13

@@ -146,7 +146,10 @@ _MONTHS = {
     )
     for name in names
 }
-_ISO = re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$")
+# An optional time is ignored: spreadsheet date cells read as "2026-10-03 00:00:00".
+_ISO = re.compile(
+    r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ t]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?$"
+)
 _NUMERIC = re.compile(r"^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})$")
 _DAY_MONTH_YEAR = re.compile(r"^(\d{1,2})[\s\-/.]+([a-z]+)\.?[\s\-/.,]+(\d{4})$")
 _MONTH_DAY_YEAR = re.compile(r"^([a-z]+)\.?[\s\-/.]+(\d{1,2}),?[\s\-/.,]+(\d{4})$")
