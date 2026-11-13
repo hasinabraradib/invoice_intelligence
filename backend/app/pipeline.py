@@ -26,7 +26,7 @@ from app.extraction.llm import LLMClient
 from app.extraction.prompt import source_pages
 from app.extraction.schema import ALL_FIELDS
 from app.extraction.service import extract_invoice
-from app.invoices import keep_corrections
+from app.invoices import apply_review_state, keep_corrections
 from app.models import DocumentStatus, JobStatus
 from app.ocr.engine import OcrOptions
 from app.ocr.pipeline import ocr_document
@@ -163,7 +163,9 @@ async def process_document(
             total=result.fields["total"].value,
         )
         issues = report.issues + duplicates
-        needs_review = report.needs_review or any(i.severity == "error" for i in duplicates)
+        needs_review = apply_review_state(
+            existing, issues, report.needs_review or any(i.severity == "error" for i in duplicates)
+        )
         status = DocumentStatus.NEEDS_REVIEW if needs_review else DocumentStatus.PROCESSED
 
         await repo.update_job(job_id, stage="saving")

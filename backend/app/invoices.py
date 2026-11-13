@@ -163,13 +163,35 @@ async def revalidate(
         total=invoice.total,
     )
     issues = report.issues + duplicates
-    invoice.needs_review = report.needs_review or any(i.severity == "error" for i in duplicates)
+    invoice.needs_review = apply_review_state(
+        invoice, issues, report.needs_review or any(i.severity == "error" for i in duplicates)
+    )
     await repo.replace_issues(invoice.id, issues)
     await repo.set_document_status(
         invoice.document_id,
         DocumentStatus.NEEDS_REVIEW if invoice.needs_review else DocumentStatus.PROCESSED,
     )
     return issues
+
+
+def error_keys(issues) -> list[str]:
+    return sorted({f"{i.code}:{i.field or ''}" for i in issues if i.severity == "error"})
+
+
+def apply_review_state(invoice: Invoice | None, issues, needs_review: bool) -> bool:
+    """needs_review after validation, taking an earlier approval into account.
+
+    Not approved yet: whatever validation says. Approved: stays approved unless an error
+    appears that the reviewer did not accept; then the approval is cleared.
+    """
+    if invoice is None or invoice.reviewed_at is None:
+        return needs_review
+    new_errors = set(error_keys(issues)) - set(invoice.approved_error_keys or [])
+    if not new_errors:
+        return False
+    invoice.reviewed_by = invoice.reviewed_at = invoice.review_override_reason = None
+    invoice.approved_error_keys = []
+    return True
 
 
 def duplicate_links(issues) -> list[dict[str, Any]]:

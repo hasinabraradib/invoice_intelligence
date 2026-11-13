@@ -28,6 +28,9 @@ def invoice_result(
         document_id=invoice.document_id,
         needs_review=invoice.needs_review,
         overall_confidence=invoice.overall_confidence,
+        reviewed_by=invoice.reviewed_by,
+        reviewed_at=invoice.reviewed_at,
+        review_override_reason=invoice.review_override_reason,
         extracted_at=invoice.extracted_at,
         fields={name: FieldView(**stored.get(name, {})) for name in HEADER_FIELDS},
         line_items=[

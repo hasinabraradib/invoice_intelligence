@@ -93,6 +93,16 @@ class InvoiceSummary(BaseModel):
     needs_review: bool
 
 
+class JobProgress(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    status: JobStatus
+    stage: str | None
+    pages_done: int
+    pages_total: int | None
+    attempts: int
+
+
 class DocumentSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -104,6 +114,7 @@ class DocumentSummary(BaseModel):
     page_count: int
     created_at: datetime
     invoice: InvoiceSummary | None = None
+    job: JobProgress | None = None  # latest job, for progress in lists
 
 
 class DocumentDetail(DocumentSummary):
@@ -179,6 +190,9 @@ class InvoiceResult(BaseModel):
     invoice_id: uuid.UUID
     document_id: uuid.UUID
     needs_review: bool
+    reviewed_by: str | None = None
+    reviewed_at: datetime | None = None
+    review_override_reason: str | None = None
     overall_confidence: float
     extracted_at: datetime
     fields: dict[str, FieldView]
@@ -230,3 +244,40 @@ class InvoicePatch(BaseModel):
     tax: Money | None = None
     total: Money | None = None
     line_items: list[LineItemPatch] = Field(default_factory=list)
+
+
+class PageInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    page_number: int
+    source: str  # text_layer | ocr | sheet
+    ocr_confidence: float | None
+    text: str  # sheets: tab-separated rows (first rows may be a preamble)
+    has_image: bool  # False for spreadsheets: show `text` as a table instead
+
+
+class CorrectionView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    field: str
+    old_value: str | None
+    new_value: str | None
+    corrected_by: str
+    corrected_at: datetime
+
+
+class ApproveRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "reviewed_by": "reviewer@example.com",
+                "override_reason": "Supplier confirmed the total by phone.",
+            }
+        },
+    )
+
+    reviewed_by: str = Field(min_length=1, max_length=255)
+    # Required (non-empty) when error-level issues remain; stored for the audit trail.
+    override_reason: str | None = Field(default=None, max_length=2000)

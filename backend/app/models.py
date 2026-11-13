@@ -142,6 +142,12 @@ class Invoice(Base):
     fields: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     raw_model_output: Mapped[list[Any]] = mapped_column(JSONB, default=list)
     extracted_at: Mapped[datetime] = _now()
+    # Human approval. approved_error_keys = the error issues ("CODE:field") the reviewer
+    # accepted; only an error NOT in this list re-opens the review later.
+    reviewed_by: Mapped[str | None] = mapped_column(String(255))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_override_reason: Mapped[str | None] = mapped_column(Text)
+    approved_error_keys: Mapped[list[str]] = mapped_column(JSONB, default=list, server_default="[]")
 
     __table_args__ = (
         Index("ix_invoices_supplier_number_key", "supplier_key", "invoice_number_key"),

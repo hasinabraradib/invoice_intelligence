@@ -15,6 +15,7 @@ from app.extraction.postprocess import normalise_invoice_number
 from app.extraction.prompt import SourcePage
 from app.extraction.service import ExtractionResult, FieldResult
 from app.models import (
+    Correction,
     Document,
     DocumentStatus,
     Invoice,
@@ -243,6 +244,46 @@ class Repository:
             .order_by(ProcessingJob.created_at.desc(), ProcessingJob.id)
             .limit(1)
         )
+
+    async def latest_jobs(self, document_ids: list[uuid.UUID]) -> dict[uuid.UUID, ProcessingJob]:
+        """Latest job of each document, in one query (for list pages)."""
+        if not document_ids:
+            return {}
+        ranked = (
+            select(
+                ProcessingJob.id,
+                func.row_number()
+                .over(
+                    partition_by=ProcessingJob.document_id,
+                    order_by=(ProcessingJob.created_at.desc(), ProcessingJob.id.desc()),
+                )
+                .label("position"),
+            )
+            .where(ProcessingJob.document_id.in_(document_ids))
+            .subquery()
+        )
+        jobs = await self.session.scalars(
+            select(ProcessingJob)
+            .join(ranked, ranked.c.id == ProcessingJob.id)
+            .where(ranked.c.position == 1)
+        )
+        return {job.document_id: job for job in jobs}
+
+    async def get_corrections(self, invoice_id: uuid.UUID) -> list[Correction]:
+        rows = await self.session.scalars(
+            select(Correction)
+            .where(Correction.invoice_id == invoice_id)
+            .order_by(Correction.corrected_at, Correction.id)
+        )
+        return list(rows)
+
+    async def get_page_texts(self, document_id: uuid.UUID) -> list[PageText]:
+        rows = await self.session.scalars(
+            select(PageText)
+            .where(PageText.document_id == document_id)
+            .order_by(PageText.page_number)
+        )
+        return list(rows)
 
     async def has_active_job(self, document_id: uuid.UUID) -> bool:
         count = await self.session.scalar(
