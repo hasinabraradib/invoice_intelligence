@@ -408,3 +408,76 @@ class FindingView(BaseModel):
 
 class CrossCheckDetail(CrossCheckView):
     findings: list[FindingView]
+
+
+# ---------------------------------------------------------------- assistant
+
+
+class Attachment(BaseModel):
+    document_id: uuid.UUID
+    filename: str = Field(max_length=255)
+
+
+class MessageCreate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "content": "How much did we spend with ACME in March?",
+                "attachments": [],
+            }
+        },
+    )
+
+    content: str = Field(min_length=1, max_length=4000)
+    attachments: list[Attachment] = Field(default_factory=list, max_length=20)
+
+
+class ConversationCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(None, max_length=200)
+
+
+class ActionView(BaseModel):
+    id: uuid.UUID
+    tool: str
+    summary: str
+    status: Literal["pending", "confirmed", "cancelled", "expired", "failed"]
+    expires_at: datetime
+    result: dict[str, Any] | None = None
+    error: str | None = None
+
+
+class MessageView(BaseModel):
+    id: uuid.UUID
+    role: Literal["user", "assistant"]
+    content: str
+    created_at: datetime
+    citations: list[dict[str, Any]] = Field(default_factory=list)
+    tools_used: list[dict[str, Any]] = Field(default_factory=list)
+    actions: list[ActionView] = Field(default_factory=list)
+    attachments: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ConversationView(BaseModel):
+    id: uuid.UUID
+    title: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationDetail(ConversationView):
+    messages: list[MessageView]
+
+
+class Stats(BaseModel):
+    documents: int
+    documents_by_status: dict[str, int]
+    invoices: int
+    invoices_need_review: int
+    jobs_running: int
+    jobs_queued: int
+    documents_failed: int
+    spreadsheets: int
+    cross_checks: int

@@ -47,6 +47,14 @@ class DocumentStatus(StrEnum):
     PARTIALLY_FAILED = "partially_failed"
 
 
+class ActionStatus(StrEnum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+    FAILED = "failed"
+
+
 class JobStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
@@ -371,3 +379,60 @@ class CrossCheckFinding(Base):
     row_b: Mapped[int | None] = mapped_column(Integer)
     segment_a: Mapped[int | None] = mapped_column(Integer)
     segment_b: Mapped[int | None] = mapped_column(Integer)
+
+
+class Conversation(Base):
+    """A chat with the assistant."""
+
+    __tablename__ = "conversations"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str | None] = mapped_column(String(200))  # from the first question
+    created_at: Mapped[datetime] = _now()
+    updated_at: Mapped[datetime] = _now(onupdate=func.now())
+
+
+class ChatMessage(Base):
+    """One message in a conversation, including the model's tool calls and the tool results,
+    so every answer can be traced back to the data it used."""
+
+    __tablename__ = "messages"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    role: Mapped[str] = mapped_column(String(20))  # user | assistant | tool
+    content: Mapped[str] = mapped_column(Text, default="")
+    tool_calls: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)  # assistant
+    tool_call_id: Mapped[str | None] = mapped_column(String(100))  # tool
+    tool_name: Mapped[str | None] = mapped_column(String(100))  # tool
+    # Final answers: citations, tools used and proposed actions; user: attachments.
+    meta: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = _now()
+
+    __table_args__ = (UniqueConstraint("conversation_id", "position"),)
+
+
+class AssistantAction(Base):
+    """A change the assistant PROPOSED (correct, approve, reprocess, cross-check). It runs
+    only when the user confirms it, and expires after a few minutes."""
+
+    __tablename__ = "assistant_actions"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), index=True
+    )
+    tool: Mapped[str] = mapped_column(String(50))
+    arguments: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    summary: Mapped[str] = mapped_column(Text)  # what will happen, in plain words
+    status: Mapped[ActionStatus] = mapped_column(
+        _status(ActionStatus, "action_status"), default=ActionStatus.PENDING
+    )
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = _now()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

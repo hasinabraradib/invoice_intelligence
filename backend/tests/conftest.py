@@ -25,14 +25,20 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
 from sqlalchemy.pool import NullPool  # noqa: E402
 
 from alembic import command  # noqa: E402
-from app.api.deps import get_embedder, get_queue  # noqa: E402
+from app.api.deps import (  # noqa: E402
+    get_assistant_llm,
+    get_embedder,
+    get_queue,
+    get_sessionmaker,
+)
 from app.config import Settings, get_settings  # noqa: E402
 from app.db import get_session  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.search.embedder import FakeEmbedder  # noqa: E402
 
 TABLES = (
-    "documents, processing_jobs, invoices, line_items, validation_issues, corrections, page_texts"
+    "documents, processing_jobs, invoices, line_items, validation_issues, corrections, "
+    "page_texts, conversations"  # CASCADE also empties tables that point at these
 )
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -158,8 +164,22 @@ def embedder():
     return FakeEmbedder()
 
 
+class AssistantLLM:
+    """Holder so a test can swap the assistant's (fake) LLM: assistant_llm.llm = ..."""
+
+    def __init__(self) -> None:
+        from app.extraction.llm import FakeLLMClient
+
+        self.llm = FakeLLMClient()
+
+
 @pytest.fixture
-async def api(settings, database_url, queue, embedder):
+def assistant_llm():
+    return AssistantLLM()
+
+
+@pytest.fixture
+async def api(settings, database_url, queue, embedder, assistant_llm):
     """httpx AsyncClient talking to the app in-process, on the test database."""
     app = create_app()
     engine = create_async_engine(database_url, poolclass=NullPool)
@@ -172,6 +192,10 @@ async def api(settings, database_url, queue, embedder):
     app.dependency_overrides[get_session] = test_session
     app.dependency_overrides[get_queue] = lambda: queue
     app.dependency_overrides[get_embedder] = lambda: embedder
+    app.dependency_overrides[get_sessionmaker] = lambda: async_sessionmaker(
+        engine, expire_on_commit=False
+    )
+    app.dependency_overrides[get_assistant_llm] = lambda: assistant_llm.llm
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         yield client

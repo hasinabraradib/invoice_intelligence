@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
-from app.api import crosschecks, documents, errors, health, invoices, jobs, search
+from app.api import assistant, crosschecks, documents, errors, health, invoices, jobs, search
 from app.config import get_settings
 from app.db import create_engine, create_sessionmaker
 from app.jobs import ArqQueue
@@ -16,6 +16,10 @@ from app.jobs import ArqQueue
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 TAGS = [
+    {
+        "name": "assistant",
+        "description": "Chat: ask questions, propose changes (confirmed by you).",
+    },
     {"name": "documents", "description": "Upload invoices, follow processing, read results."},
     {"name": "invoices", "description": "Human corrections (audited)."},
     {"name": "search", "description": "Keyword search over page text."},
@@ -59,7 +63,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     errors.install(app)
-    for module in (health, documents, invoices, crosschecks, search, jobs):
+    for module in (health, assistant, documents, invoices, crosschecks, search, jobs):
         app.include_router(module.router)
     return app
 
