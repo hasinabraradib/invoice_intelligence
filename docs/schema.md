@@ -9,6 +9,10 @@ erDiagram
     documents ||--o{ invoices : "contains (one per segment)"
     documents ||--o{ page_texts : "has"
     documents ||--o{ text_chunks : "is split into"
+    documents ||--o{ ledger_rows : "lists (spreadsheets)"
+    documents ||--o{ cross_checks : "is compared in"
+    cross_checks ||--o{ cross_check_findings : "finds"
+    cross_checks ||--o{ validation_issues : "raises"
     invoices ||--o{ line_items : "contains"
     invoices ||--o{ validation_issues : "has"
     invoices ||--o{ corrections : "is corrected by"
@@ -108,6 +112,48 @@ erDiagram
         float ocr_confidence
         tsvector search "generated, GIN index"
     }
+    ledger_rows {
+        uuid id PK
+        uuid document_id FK
+        string sheet_name
+        int row_number "as shown in Excel"
+        jsonb cells "raw row"
+        string invoice_number
+        string invoice_number_key
+        date invoice_date
+        text supplier_name
+        string supplier_key
+        numeric total "18,2"
+        numeric tax "18,2"
+        string currency
+        jsonb problems
+    }
+    cross_checks {
+        uuid id PK
+        uuid document_a_id FK "invoices side"
+        uuid document_b_id FK "ledger or invoices"
+        string mode
+        string status
+        jsonb summary
+        text error
+    }
+    cross_check_findings {
+        uuid id PK
+        uuid cross_check_id FK
+        int position
+        string kind
+        string severity
+        string field
+        text value_a
+        text value_b
+        uuid invoice_a_id FK
+        uuid invoice_b_id FK
+        uuid ledger_row_id FK
+        int page_a
+        int page_b
+        string sheet_b
+        int row_b
+    }
     text_chunks {
         uuid id PK
         uuid document_id FK
@@ -126,9 +172,12 @@ erDiagram
 | `processing_jobs` | One row per processing run, so you can see how many attempts there were and which `stage` failed, without overwriting history. It also holds progress (pages and invoices done) and the segmentation it found, so a retry of the same job resumes with the same boundaries. |
 | `invoices` | One row per invoice found in a document (`segment_index`, `page_start`-`page_end`); a scanned batch PDF can hold hundreds. Re-processing updates the rows whose page range is unchanged, so `corrections` stay attached. `job_id` records which job's extraction is stored, so a retry skips finished invoices. Money is `NUMERIC`, never float. |
 | `line_items` | Invoice rows in printed order (`position`). They're replaced on every run, which keeps re-processing idempotent. |
-| `validation_issues` | What the rules flagged (errors and warnings) and why: the review queue reads this. |
+| `validation_issues` | What the rules flagged (errors and warnings) and why: the review queue reads this. Issues with a `cross_check_id` came from a cross-check; they survive re-validation and are replaced only when that check runs again. |
 | `corrections` | Audit trail of human edits (who changed what, from what, and when). Never deleted on re-processing. |
 | `page_texts` | Text of every page or sheet, for keyword search (generated `tsvector` with a GIN index). |
+| `ledger_rows` | Every row of a spreadsheet, with its sheet and Excel row number as evidence. For ledger sheets (lists of invoices) the mapped fields are filled; `cells` keeps the raw row so a corrected mapping can be applied without re-parsing. The mapping itself is `documents.ledger_mapping`. |
+| `cross_checks` | One comparison of two documents (invoices vs a ledger, or invoices vs invoices). One row per pair: running it again replaces its results. |
+| `cross_check_findings` | Each match or difference, with value A and value B and the evidence on both sides (invoice and page; ledger sheet and row). |
 | `text_chunks` | Pieces of about 500 tokens from one page each (50-token overlap) with their 384-number embedding, for semantic search. An HNSW index makes nearest-neighbour lookups fast. They're replaced on every run (idempotent), and chunks never cross pages, so every hit has a page number. |
 
 Unique: `invoices(document_id, segment_index)`. Indexes: `invoices(document_id)`, `invoices(supplier_key, invoice_number_key)` and `invoices(supplier_key, invoice_date, total)`

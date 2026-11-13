@@ -138,6 +138,33 @@ With a real LLM, add the provider's time: about one extraction call per invoice,
 time, plus about one classifier call per 20 unclear pages. On these synthetic pages the rules
 are exact; real scans are messier, so check the review queue.
 
+### Cross-verification (PDF vs Excel, PDF vs PDF)
+
+Open **Cross-check** in the UI (or `POST /cross-checks`), pick two documents, and the worker
+compares them in the background:
+
+- **Invoices vs a ledger.** A spreadsheet that lists many invoices (columns such as invoice
+  no, date, supplier/vendor, amount/total, tax, currency) is recognised as a *ledger*. Its
+  columns are mapped by header synonyms in plain code ("Inv #", "Vendor", "Amount (BDT)"),
+  and every row is stored with its sheet and row number. Ledgers are not sent to the LLM.
+  If a mapping is wrong, fix it with `PUT /documents/{id}/column-mapping`. The rows are
+  re-mapped at once and the fix is kept on re-processing.
+- **Invoices vs invoices**, e.g. an invoice against its purchase order, or two copies.
+  Header fields are compared, and line items are paired by description similarity and
+  amounts.
+
+Invoices are matched by normalised invoice number, then by supplier + date + total.
+Findings: matched, amount / date / currency / field mismatch, missing in the ledger or PDF
+(or in either PDF), duplicate ledger rows, and line items that differ or exist on one side
+only. Money is compared as Decimal within `MONEY_TOLERANCE` (a 0.004 difference matches; 0.02
+does not). Each finding links to its evidence on both sides: the invoice page, or the
+highlighted ledger row.
+
+Nothing is ever changed. A mismatch adds a `CROSS_CHECK_MISMATCH` issue (severity error) to
+the invoices involved, which sets `needs_review`. These issues survive re-validation and are
+replaced only when that cross-check runs again. Running a pair again replaces its findings
+(idempotent).
+
 ### Search modes
 
 `GET /search?q=...&mode=hybrid` (default). Every mode returns **one hit per document** (its
@@ -225,6 +252,10 @@ Interactive docs: http://localhost:8000/docs. Every error has the same shape:
 | `GET` | `/documents/{id}/pages/{n}/image` | PNG preview of a page or frame (cached; 404 for spreadsheets) |
 | `GET` | `/invoices/{id}/corrections` | Audit history of human changes |
 | `POST` | `/invoices/{id}/approve` | Approve after review; 409 while errors remain unless `override_reason` is given |
+| `GET` | `/documents/{id}/ledger` | Ledger sheets of a spreadsheet: column mapping and rows (with sheet row numbers) |
+| `PUT` | `/documents/{id}/column-mapping` | Fix how a sheet's columns map to invoice fields; rows are re-mapped at once |
+| `POST` | `/cross-checks` | Compare two documents in the background → 202 |
+| `GET` | `/cross-checks`, `/cross-checks/{id}` | List checks; one check with summary and findings (evidence on both sides) |
 | `POST` | `/jobs/retry-failed` | Queue every document whose last job failed; returns how many |
 | `GET` | `/health` | App, database and Redis status |
 
