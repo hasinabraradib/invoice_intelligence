@@ -1,0 +1,43 @@
+{
+  "id": "inv-05",
+  "file": "inv-05.csv",
+  "file_type": "csv",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 128",
+    "invoice_date": "2026-08-15",
+    "due_date": "2026-09-14",
+    "supplier_name": "Northwind Office Supply Ltd",
+    "customer_name": null,
+    "currency": "USD",
+    "subtotal": "1363.48",
+    "tax": "102.26",
+    "total": "1465.74"
+  },
+  "line_items": [
+    {
+      "description": "Calibration certificate",
+      "quantity": "12",
+      "unit_price": "93.80",
+      "line_total": "1125.60"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "2",
+      "unit_price": "118.94",
+      "line_total": "237.88"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "customer_name"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no customer printed"
+  ]
+}

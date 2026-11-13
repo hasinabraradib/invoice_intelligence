@@ -1,0 +1,43 @@
+{
+  "id": "inv-36",
+  "file": "inv-36.csv",
+  "file_type": "csv",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2025-0345",
+    "invoice_date": "2025-11-12",
+    "due_date": "2025-12-12",
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": null,
+    "subtotal": "3147.41",
+    "tax": "598.01",
+    "total": "3745.42"
+  },
+  "line_items": [
+    {
+      "description": "Software licence (annual)",
+      "quantity": "5",
+      "unit_price": "608.59",
+      "line_total": "3042.95"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "1",
+      "unit_price": "104.46",
+      "line_total": "104.46"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "currency"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no currency printed anywhere"
+  ]
+}

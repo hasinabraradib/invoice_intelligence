@@ -1,0 +1,54 @@
+{
+  "id": "inv-02",
+  "file": "inv-02.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "PE/0107",
+    "invoice_date": "2025-09-14",
+    "due_date": "2025-10-14",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "BDT",
+    "subtotal": "3698.51",
+    "tax": "554.78",
+    "total": "4253.29"
+  },
+  "line_items": [
+    {
+      "description": "Calibration certificate",
+      "quantity": "10",
+      "unit_price": "143.53",
+      "line_total": "1435.30"
+    },
+    {
+      "description": "Express courier service",
+      "quantity": "10",
+      "unit_price": "45.00",
+      "line_total": "450.00"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "2",
+      "unit_price": "5.66",
+      "line_total": "11.32"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "3",
+      "unit_price": "445.91",
+      "line_total": "1337.73"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "3",
+      "unit_price": "154.72",
+      "line_total": "464.16"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

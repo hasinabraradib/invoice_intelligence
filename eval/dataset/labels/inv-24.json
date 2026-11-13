@@ -1,0 +1,70 @@
+{
+  "id": "inv-24",
+  "file": "batch-6-invoices.pdf",
+  "file_type": "pdf_batch",
+  "split": "test",
+  "segment": [
+    5,
+    7
+  ],
+  "fields": {
+    "invoice_number": "2026/BD/0261",
+    "invoice_date": "2026-07-20",
+    "due_date": "2026-08-19",
+    "supplier_name": "Jamuna Paper Mills",
+    "customer_name": "Test Garments Ltd",
+    "currency": "BDT",
+    "subtotal": "3573.50",
+    "tax": "268.01",
+    "total": "3829.01"
+  },
+  "line_items": [
+    {
+      "description": "LED panel 60x60",
+      "quantity": "50",
+      "unit_price": "44.75",
+      "line_total": "2237.50"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "12.5",
+      "unit_price": "8.64",
+      "line_total": "108.00"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "200",
+      "unit_price": "5.99",
+      "line_total": "1198.00"
+    },
+    {
+      "description": "Maintenance visit (extra)",
+      "quantity": "1",
+      "unit_price": "10.00",
+      "line_total": "10.00"
+    },
+    {
+      "description": "Cotton fabric (metre) (extra)",
+      "quantity": "1",
+      "unit_price": "10.00",
+      "line_total": "10.00"
+    },
+    {
+      "description": "LED panel 60x60 (extra)",
+      "quantity": "1",
+      "unit_price": "10.00",
+      "line_total": "10.00"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "field": "total"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "wrong total (subtotal + tax != total)"
+  ]
+}

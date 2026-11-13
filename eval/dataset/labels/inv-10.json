@@ -1,0 +1,38 @@
+{
+  "id": "inv-10",
+  "file": "inv-10.xlsx",
+  "file_type": "xlsx",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 163",
+    "invoice_date": "2026-04-23",
+    "due_date": null,
+    "supplier_name": "Alpine Instruments AG",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "EUR",
+    "subtotal": "232.84",
+    "tax": "17.46",
+    "total": "250.30"
+  },
+  "line_items": [
+    {
+      "description": "Toner cartridge",
+      "quantity": "3",
+      "unit_price": "75.22",
+      "line_total": "225.66"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "2",
+      "unit_price": "3.59",
+      "line_total": "7.18"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no due date"
+  ]
+}

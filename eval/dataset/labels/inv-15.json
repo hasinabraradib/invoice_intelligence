@@ -1,0 +1,53 @@
+{
+  "id": "inv-15",
+  "file": "inv-15.csv",
+  "file_type": "csv",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 198",
+    "invoice_date": "2025-12-14",
+    "due_date": "2026-01-13",
+    "supplier_name": "Northwind Office Supply Ltd",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "USD",
+    "subtotal": "13220.60",
+    "tax": "1975.59",
+    "total": "15146.19"
+  },
+  "line_items": [
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "10",
+      "unit_price": "19.64",
+      "line_total": "196.40"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "200",
+      "unit_price": "63.25",
+      "line_total": "12650.00"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "2",
+      "unit_price": "162.10",
+      "line_total": "324.20"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "field": "total"
+    },
+    {
+      "code": "LINE_ITEMS_SUM_MISMATCH",
+      "field": "subtotal"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "wrong subtotal (line items do not add up)"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "inv-38",
+  "file": "inv-38.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "RM-359",
+    "invoice_date": "2026-07-04",
+    "due_date": "2026-08-03",
+    "supplier_name": "Rheinland Maschinen GmbH",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "EUR",
+    "subtotal": "10894.60",
+    "tax": "1634.19",
+    "total": "12528.79"
+  },
+  "line_items": [
+    {
+      "description": "Maintenance visit",
+      "quantity": "20",
+      "unit_price": "181.03",
+      "line_total": "3620.60"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "5",
+      "unit_price": "3.11",
+      "line_total": "15.55"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "10",
+      "unit_price": "78.01",
+      "line_total": "780.10"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "4",
+      "unit_price": "112.55",
+      "line_total": "450.20"
+    },
+    {
+      "description": "Toner cartridge",
+      "quantity": "10",
+      "unit_price": "61.74",
+      "line_total": "617.40"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "5",
+      "unit_price": "1082.15",
+      "line_total": "5410.75"
+    }
+  ],
+  "ambiguous_fields": [
+    "invoice_date",
+    "due_date"
+  ],
+  "expected_flags": [
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "invoice_date"
+    },
+    {
+      "code": "MISSING_REQUIRED",
+      "field": "invoice_date"
+    },
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "due_date"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "ambiguous invoice date (dd/mm vs mm/dd)"
+  ]
+}

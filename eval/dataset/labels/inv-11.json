@@ -1,0 +1,42 @@
+{
+  "id": "inv-11",
+  "file": "inv-11.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2026-0170",
+    "invoice_date": "2026-05-19",
+    "due_date": "2026-06-18",
+    "supplier_name": "Meghna Traders Ltd",
+    "customer_name": "Example Trading Co.",
+    "currency": "BDT",
+    "subtotal": "306.18",
+    "tax": "15.31",
+    "total": "321.49"
+  },
+  "line_items": [
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "12",
+      "unit_price": "5.96",
+      "line_total": "71.52"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "1",
+      "unit_price": "174.65",
+      "line_total": "174.65"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "1",
+      "unit_price": "60.01",
+      "line_total": "60.01"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

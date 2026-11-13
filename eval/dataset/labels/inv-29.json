@@ -1,0 +1,65 @@
+{
+  "id": "inv-29",
+  "file": "batch-6-invoices.pdf",
+  "file_type": "pdf_batch",
+  "split": "test",
+  "segment": [
+    9,
+    9
+  ],
+  "fields": {
+    "invoice_number": "2025/BD/0296",
+    "invoice_date": "2025-10-16",
+    "due_date": "2025-10-30",
+    "supplier_name": "Lisboa Textiles Lda",
+    "customer_name": "Test Garments Ltd",
+    "currency": "EUR",
+    "subtotal": "5569.24",
+    "tax": "1058.16",
+    "total": "6627.40"
+  },
+  "line_items": [
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "1",
+      "unit_price": "8.55",
+      "line_total": "8.55"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "4",
+      "unit_price": "190.95",
+      "line_total": "763.80"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "50",
+      "unit_price": "32.63",
+      "line_total": "1631.50"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "50",
+      "unit_price": "2.29",
+      "line_total": "114.50"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "3",
+      "unit_price": "338.13",
+      "line_total": "1014.39"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "10",
+      "unit_price": "203.65",
+      "line_total": "2036.50"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "European number style 1.234,50"
+  ]
+}

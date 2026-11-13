@@ -1,0 +1,43 @@
+{
+  "id": "inv-20",
+  "file": "inv-20.xlsx",
+  "file_type": "xlsx",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 233",
+    "invoice_date": "2025-12-26",
+    "due_date": "2026-01-25",
+    "supplier_name": "Alpine Instruments AG",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": null,
+    "subtotal": "207.78",
+    "tax": "15.58",
+    "total": "223.36"
+  },
+  "line_items": [
+    {
+      "description": "Toner cartridge",
+      "quantity": "1",
+      "unit_price": "60.75",
+      "line_total": "60.75"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "1",
+      "unit_price": "147.03",
+      "line_total": "147.03"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "currency"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no currency printed anywhere"
+  ]
+}

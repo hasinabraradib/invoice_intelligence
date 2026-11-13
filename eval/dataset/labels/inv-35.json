@@ -1,0 +1,42 @@
+{
+  "id": "inv-35",
+  "file": "inv-35.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 338",
+    "invoice_date": "2026-10-15",
+    "due_date": "2026-11-14",
+    "supplier_name": "Northwind Office Supply Ltd",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "USD",
+    "subtotal": "89.50",
+    "tax": "17.01",
+    "total": "106.51"
+  },
+  "line_items": [
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "1",
+      "unit_price": "2.56",
+      "line_total": "2.56"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "12.5",
+      "unit_price": "4.45",
+      "line_total": "55.62"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "2",
+      "unit_price": "15.66",
+      "line_total": "31.32"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

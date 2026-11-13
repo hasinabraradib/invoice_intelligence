@@ -1,0 +1,543 @@
+{
+  "seed": 20261114,
+  "note": "Synthetic data only. Ground truth = printed values. Rebuild: make eval-dataset.",
+  "invoice_count": 41,
+  "files": [
+    {
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-19",
+        "inv-22",
+        "inv-23",
+        "inv-24",
+        "inv-26",
+        "inv-29"
+      ],
+      "expected_segments": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ],
+      "sha256": "ee06af89cf520a82512ef18fd2bd8f866e06a07af76d387223a38c8c23d6e191",
+      "size_bytes": 52456
+    },
+    {
+      "file": "inv-01-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-01"
+      ],
+      "expected_segments": null,
+      "sha256": "90a866113b723d59a8f8aaae4a053da5559381312b2e65d27f50c9c702a6f4b4",
+      "size_bytes": 376321
+    },
+    {
+      "file": "inv-02-purchase-order.pdf",
+      "file_type": "pdf_purchase_order",
+      "split": "dev",
+      "role": "purchase_order",
+      "invoices": [],
+      "expected_segments": null,
+      "sha256": "3b43236399caf3cd7b52f0ecc2b1d9e9cae333ba14bb51b1bb0fdfd64503c7a6",
+      "size_bytes": 2327
+    },
+    {
+      "file": "inv-02.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-02"
+      ],
+      "expected_segments": null,
+      "sha256": "1d690c54e3a65c05c3f0317d634848ee7bacc93958bc6853102dce734b5a50ce",
+      "size_bytes": 2341
+    },
+    {
+      "file": "inv-03.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-03"
+      ],
+      "expected_segments": null,
+      "sha256": "46000427b77453bd2542c8c5d53fa795f1cff1b893c851055b8f459f3dd6a4ac",
+      "size_bytes": 19269
+    },
+    {
+      "file": "inv-04.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-04"
+      ],
+      "expected_segments": null,
+      "sha256": "40ec156aa8334da9755886311384bfc73513272ed2222dd48288eb35db94a94f",
+      "size_bytes": 359
+    },
+    {
+      "file": "inv-05.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-05"
+      ],
+      "expected_segments": null,
+      "sha256": "3c4fff9931c2714a9a96af09d119e0598000fb6b1866fae0ab97a43547f3db18",
+      "size_bytes": 344
+    },
+    {
+      "file": "inv-06-copy.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "duplicate_copy",
+      "invoices": [
+        "inv-06-copy"
+      ],
+      "expected_segments": null,
+      "sha256": "b0c70323127af0af18a923919556b0a4de6af675e315a16adcbfdfe26397e5c6",
+      "size_bytes": 428227
+    },
+    {
+      "file": "inv-06.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-06"
+      ],
+      "expected_segments": null,
+      "sha256": "12c10403e50671fd4554fa759b4dd645edfa110169b4c58dbed72a804831d9e6",
+      "size_bytes": 43813
+    },
+    {
+      "file": "inv-07.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-07"
+      ],
+      "expected_segments": null,
+      "sha256": "9ebfb3a28ec8520150e028de235e53be420218ad425f1687a46bc5d5129fa729",
+      "size_bytes": 19668
+    },
+    {
+      "file": "inv-08.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-08"
+      ],
+      "expected_segments": null,
+      "sha256": "380c93880a3197058136f49b756a033849f8440fc563b2cacf139da6a22fd85f",
+      "size_bytes": 194256
+    },
+    {
+      "file": "inv-09.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-09"
+      ],
+      "expected_segments": null,
+      "sha256": "9dacbaa9d7cf3130d36585b16a4fab39e43cc1d86402a03da55975df4b90e0a0",
+      "size_bytes": 43739
+    },
+    {
+      "file": "inv-10.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-10"
+      ],
+      "expected_segments": null,
+      "sha256": "8c10ea817c6e354224eb114819b894e23d9e155e16f0b671c4c4fbb3e22480be",
+      "size_bytes": 19275
+    },
+    {
+      "file": "inv-11.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-11"
+      ],
+      "expected_segments": null,
+      "sha256": "08e878f38cf4dc1c884bc6972f9760d1c1d73edbc6a548cd885a25c4689cae78",
+      "size_bytes": 2229
+    },
+    {
+      "file": "inv-12.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-12"
+      ],
+      "expected_segments": null,
+      "sha256": "9ff057fa54b549fe570f18299b227f3991ed781ce9f18d0a74e84158ffed97ca",
+      "size_bytes": 43883
+    },
+    {
+      "file": "inv-13.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-13"
+      ],
+      "expected_segments": null,
+      "sha256": "232cbb170e6f32924d7acc559704c0c152f5086143d83ebe960c437d8bcb4d48",
+      "size_bytes": 2180
+    },
+    {
+      "file": "inv-14.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-14"
+      ],
+      "expected_segments": null,
+      "sha256": "9d2cba46ceb87bb572816693aae605a54511d12a36d9ccc095dba063f5a9e0d2",
+      "size_bytes": 320432
+    },
+    {
+      "file": "inv-15.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-15"
+      ],
+      "expected_segments": null,
+      "sha256": "8ec956aa2e37cbb19692b5f89edb1ad8b85b6d29cc416ae1155659b6c64914dd",
+      "size_bytes": 417
+    },
+    {
+      "file": "inv-16.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-16"
+      ],
+      "expected_segments": null,
+      "sha256": "6a559f67c9d47a6b74f6cb1ee73ad5855f1436cb580669df70264e562e07111c",
+      "size_bytes": 2067
+    },
+    {
+      "file": "inv-17.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-17"
+      ],
+      "expected_segments": null,
+      "sha256": "3bf002fbc83ac5813f0afa1d8048b23e2cd9e27e014af6a4c19379fc6dc8edeb",
+      "size_bytes": 2396
+    },
+    {
+      "file": "inv-18.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-18"
+      ],
+      "expected_segments": null,
+      "sha256": "6b2c64a3bd209bf733f99cb5e40a15d6f0ab16af08c51740b72907f4a86df423",
+      "size_bytes": 43873
+    },
+    {
+      "file": "inv-20.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-20"
+      ],
+      "expected_segments": null,
+      "sha256": "f3a49a7a93102e3ece21f54bb21a8a9014b94e23618178b2772ca65c33929aca",
+      "size_bytes": 19267
+    },
+    {
+      "file": "inv-21.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-21"
+      ],
+      "expected_segments": null,
+      "sha256": "46d14d6e3abe7f2ba98f43e2ffa3aa73ab8a0e7260aeb18138cc0bfdaa54c709",
+      "size_bytes": 418445
+    },
+    {
+      "file": "inv-25.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-25"
+      ],
+      "expected_segments": null,
+      "sha256": "d248d8b9d1af9aea6c2148dafc52d1b372cb68f2a8f4a280fb71c1f3f0be2fbc",
+      "size_bytes": 2037
+    },
+    {
+      "file": "inv-27.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-27"
+      ],
+      "expected_segments": null,
+      "sha256": "f989d6280d9c6f026e45aa71ecae05e50799d354415f7a87878aa0bac3953d36",
+      "size_bytes": 356941
+    },
+    {
+      "file": "inv-28.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-28"
+      ],
+      "expected_segments": null,
+      "sha256": "1042f80cfb23b899d501555d95bae86b26b913adf9b331ca60b76b17c53fd31a",
+      "size_bytes": 309205
+    },
+    {
+      "file": "inv-30.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-30"
+      ],
+      "expected_segments": null,
+      "sha256": "51105bcf782234adffdc462d5016868b426b018ee80e4d58c6a0613eb39d26bb",
+      "size_bytes": 43759
+    },
+    {
+      "file": "inv-31.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-31"
+      ],
+      "expected_segments": null,
+      "sha256": "b0bd5dfaa7914b646054de336e0ae4fe10a2085d5caf60d66cae891ef957a5ca",
+      "size_bytes": 285
+    },
+    {
+      "file": "inv-32.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-32"
+      ],
+      "expected_segments": null,
+      "sha256": "e1aa235e0ae0fe4bbc2c09b14aeed63417712af51603f9e5c3b9cf58a3a0cae4",
+      "size_bytes": 2179
+    },
+    {
+      "file": "inv-33.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-33"
+      ],
+      "expected_segments": null,
+      "sha256": "76d4c1446baf57adb0130fa58348997aca3d1270bdc4605e8f47f1998f4f42ad",
+      "size_bytes": 304269
+    },
+    {
+      "file": "inv-34-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-34"
+      ],
+      "expected_segments": null,
+      "sha256": "367d2d9b9e86a74c50d750d38319f5395b047215d2152d83c732108f88b39110",
+      "size_bytes": 431433
+    },
+    {
+      "file": "inv-35.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-35"
+      ],
+      "expected_segments": null,
+      "sha256": "ad58dfc73cbc6740e4e8181db78b1ffbe010112f1436b4719f9ef13078bcad99",
+      "size_bytes": 2255
+    },
+    {
+      "file": "inv-36.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-36"
+      ],
+      "expected_segments": null,
+      "sha256": "f7276d55ab95300593012b09f3f12113a2c8534c1fc117f4202e8db7e37997a3",
+      "size_bytes": 362
+    },
+    {
+      "file": "inv-37.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-37"
+      ],
+      "expected_segments": null,
+      "sha256": "b780ff2f1dcb287e9d4f1a17b8f38f390b7d46c39878ffed072f0f70735eba51",
+      "size_bytes": 309082
+    },
+    {
+      "file": "inv-38.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-38"
+      ],
+      "expected_segments": null,
+      "sha256": "8b19db65e28f897236800b5a732c77865e04b75c3e6d3360b8ae2645363d5a37",
+      "size_bytes": 2416
+    },
+    {
+      "file": "inv-39.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-39"
+      ],
+      "expected_segments": null,
+      "sha256": "179a8cfaf819fd2aafbba006c1a9de9b2bec53e093425fd3b4bb968a9898ccdc",
+      "size_bytes": 19832
+    },
+    {
+      "file": "inv-40.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "invoices": [
+        "inv-40"
+      ],
+      "expected_segments": null,
+      "sha256": "c4d8f5bcc2b042fe1d9acc0d9ec94219010188f3442843ec7dfc3eb7cc7d27a2",
+      "size_bytes": 2155
+    },
+    {
+      "file": "ledger-batch.xlsx",
+      "file_type": "xlsx_ledger",
+      "split": "test",
+      "role": "ledger",
+      "invoices": [],
+      "expected_segments": null,
+      "sha256": "f4164be5a519dcc7bb0210c76ec2a4bdffa2a77c260e9da95b188fd5c4ce3f8a",
+      "size_bytes": 19706
+    }
+  ],
+  "duplicates": [
+    {
+      "original": "inv-06",
+      "copy": "inv-06-copy"
+    }
+  ],
+  "cross_checks": [
+    {
+      "a": "batch-6-invoices.pdf",
+      "b": "ledger-batch.xlsx",
+      "mode": "invoices_vs_ledger",
+      "split": "test",
+      "expected_findings": [
+        {
+          "kind": "amount_mismatch",
+          "field": "total",
+          "invoice_number": "PE/0247"
+        },
+        {
+          "kind": "date_mismatch",
+          "field": "invoice_date",
+          "invoice_number": "KF-254"
+        },
+        {
+          "kind": "missing_in_ledger",
+          "field": null,
+          "invoice_number": "INV-2025-0275"
+        },
+        {
+          "kind": "missing_in_pdf",
+          "field": null,
+          "invoice_number": "INV-2026-9999"
+        }
+      ]
+    },
+    {
+      "a": "inv-02.pdf",
+      "b": "inv-02-purchase-order.pdf",
+      "mode": "invoices_vs_invoices",
+      "split": "dev",
+      "expected_findings": [
+        {
+          "kind": "line_item_mismatch",
+          "field": "line_items[2].quantity",
+          "invoice_number": "PE/0107"
+        },
+        {
+          "kind": "line_item_mismatch",
+          "field": "line_items[2].unit_price",
+          "invoice_number": "PE/0107"
+        }
+      ]
+    }
+  ]
+}

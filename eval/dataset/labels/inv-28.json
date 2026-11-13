@@ -1,0 +1,56 @@
+{
+  "id": "inv-28",
+  "file": "inv-28.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "RM-289",
+    "invoice_date": "2026-02-03",
+    "due_date": "2026-02-17",
+    "supplier_name": "Rheinland Maschinen GmbH",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "EUR",
+    "subtotal": "2875.41",
+    "tax": null,
+    "total": "2875.41"
+  },
+  "line_items": [
+    {
+      "description": "Freight charges",
+      "quantity": "12",
+      "unit_price": "96.01",
+      "line_total": "1152.12"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "1",
+      "unit_price": "481.88",
+      "line_total": "481.88"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "12",
+      "unit_price": "97.39",
+      "line_total": "1168.68"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "50",
+      "unit_price": "0.96",
+      "line_total": "48.00"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "1",
+      "unit_price": "24.73",
+      "line_total": "24.73"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no tax line"
+  ]
+}

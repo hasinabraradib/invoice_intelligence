@@ -1,0 +1,50 @@
+{
+  "id": "inv-18",
+  "file": "inv-18.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "RM-219",
+    "invoice_date": "2025-10-07",
+    "due_date": null,
+    "supplier_name": "Rheinland Maschinen GmbH",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "EUR",
+    "subtotal": "516.29",
+    "tax": "25.81",
+    "total": "542.10"
+  },
+  "line_items": [
+    {
+      "description": "LED panel 60x60",
+      "quantity": "1",
+      "unit_price": "36.70",
+      "line_total": "36.70"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "3",
+      "unit_price": "33.30",
+      "line_total": "99.90"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "1",
+      "unit_price": "14.05",
+      "line_total": "14.05"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "4",
+      "unit_price": "91.41",
+      "line_total": "365.64"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no due date"
+  ]
+}

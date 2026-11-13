@@ -1,0 +1,32 @@
+{
+  "id": "inv-09",
+  "file": "inv-09.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "2025/BD/0156",
+    "invoice_date": "2025-11-28",
+    "due_date": "2025-12-12",
+    "supplier_name": "Alpine Instruments AG",
+    "customer_name": "Test Garments Ltd",
+    "currency": "EUR",
+    "subtotal": "1176.20",
+    "tax": "223.48",
+    "total": "1399.68"
+  },
+  "line_items": [
+    {
+      "description": "Toner cartridge",
+      "quantity": "10",
+      "unit_price": "117.62",
+      "line_total": "1176.20"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "European number style 1.234,50"
+  ]
+}

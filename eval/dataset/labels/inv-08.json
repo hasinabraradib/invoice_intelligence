@@ -1,0 +1,67 @@
+{
+  "id": "inv-08",
+  "file": "inv-08.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "RM-149",
+    "invoice_date": "2026-01-03",
+    "due_date": "2026-02-02",
+    "supplier_name": "Rheinland Maschinen GmbH",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "EUR",
+    "subtotal": "13266.95",
+    "tax": "1990.04",
+    "total": "15356.99"
+  },
+  "line_items": [
+    {
+      "description": "Freight charges",
+      "quantity": "12",
+      "unit_price": "311.12",
+      "line_total": "3733.44"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "3",
+      "unit_price": "36.57",
+      "line_total": "109.71"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "10",
+      "unit_price": "164.10",
+      "line_total": "1641.00"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "10",
+      "unit_price": "45.46",
+      "line_total": "454.60"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "10",
+      "unit_price": "393.28",
+      "line_total": "3932.80"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "20",
+      "unit_price": "169.77",
+      "line_total": "3395.40"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "TOTAL_MISMATCH",
+      "field": "total"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "wrong total (subtotal + tax != total)"
+  ]
+}

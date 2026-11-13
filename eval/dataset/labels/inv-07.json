@@ -1,0 +1,50 @@
+{
+  "id": "inv-07",
+  "file": "inv-07.xlsx",
+  "file_type": "xlsx",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "CS/0142",
+    "invoice_date": "2026-02-18",
+    "due_date": "2026-04-04",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "USD",
+    "subtotal": "9383.22",
+    "tax": null,
+    "total": "9383.22"
+  },
+  "line_items": [
+    {
+      "description": "Software licence (annual)",
+      "quantity": "3",
+      "unit_price": "1997.63",
+      "line_total": "5992.89"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "12",
+      "unit_price": "235.13",
+      "line_total": "2821.56"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "5",
+      "unit_price": "32.32",
+      "line_total": "161.60"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "1",
+      "unit_price": "407.17",
+      "line_total": "407.17"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no tax line"
+  ]
+}

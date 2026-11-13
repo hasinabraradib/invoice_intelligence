@@ -1,0 +1,37 @@
+{
+  "id": "inv-31",
+  "file": "inv-31.csv",
+  "file_type": "csv",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2025-0310",
+    "invoice_date": "2025-09-08",
+    "due_date": "2025-10-23",
+    "supplier_name": "Meghna Traders Ltd",
+    "customer_name": null,
+    "currency": "BDT",
+    "subtotal": "1.97",
+    "tax": "0.37",
+    "total": "2.34"
+  },
+  "line_items": [
+    {
+      "description": "Steel bolts M8",
+      "quantity": "1",
+      "unit_price": "1.97",
+      "line_total": "1.97"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "customer_name"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no customer printed"
+  ]
+}

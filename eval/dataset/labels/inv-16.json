@@ -1,0 +1,44 @@
+{
+  "id": "inv-16",
+  "file": "inv-16.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2026-0205",
+    "invoice_date": "2026-03-30",
+    "due_date": "2026-04-29",
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": "USD",
+    "subtotal": "69441.40",
+    "tax": null,
+    "total": "69441.40"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "200",
+      "unit_price": "313.41",
+      "line_total": "62682.00"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "50",
+      "unit_price": "107.09",
+      "line_total": "5354.50"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "5",
+      "unit_price": "280.98",
+      "line_total": "1404.90"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no tax line"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "_instructions": [
+    "Label real invoices by hand in the same format as eval/dataset/labels/*.json.",
+    "Put the documents next to this file. They are git-ignored: real invoices contain personal and financial data.",
+    "Values are what is PRINTED, normalised: money as a plain decimal string ('1234.50'), dates as ISO 'YYYY-MM-DD', currency as an ISO code ('BDT', 'USD', 'EUR'). Use null for anything not printed.",
+    "List ambiguous numeric dates (e.g. 04/05/2026) in ambiguous_fields; the label holds the date you know is right.",
+    "expected_flags: the validation issues a correct system should raise (codes as in docs/evaluation.md).",
+    "split: 'dev' to tune on, 'test' to report on. Run with: make eval REAL=1"
+  ],
+  "invoices": [
+    {
+      "id": "real-01",
+      "file": "example-invoice.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "segment": null,
+      "fields": {
+        "invoice_number": "INV-0001",
+        "invoice_date": "2026-01-31",
+        "due_date": null,
+        "supplier_name": "Supplier name as printed",
+        "customer_name": null,
+        "currency": "BDT",
+        "subtotal": "1000.00",
+        "tax": "150.00",
+        "total": "1150.00"
+      },
+      "line_items": [
+        {"description": "Item as printed", "quantity": "1", "unit_price": "1000.00", "line_total": "1000.00"}
+      ],
+      "ambiguous_fields": [],
+      "expected_flags": [{"code": "MISSING_RECOMMENDED", "field": "customer_name"}],
+      "duplicate_of": null,
+      "notes": ["replace this example with your own invoices"]
+    }
+  ]
+}

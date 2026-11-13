@@ -1,0 +1,38 @@
+{
+  "id": "inv-03",
+  "file": "inv-03.xlsx",
+  "file_type": "xlsx",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "KF-114",
+    "invoice_date": "2026-10-03",
+    "due_date": null,
+    "supplier_name": "Karnaphuli Foods Ltd",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "227.04",
+    "tax": "17.03",
+    "total": "244.07"
+  },
+  "line_items": [
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "50",
+      "unit_price": "4.50",
+      "line_total": "225.00"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "2",
+      "unit_price": "1.02",
+      "line_total": "2.04"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no due date"
+  ]
+}

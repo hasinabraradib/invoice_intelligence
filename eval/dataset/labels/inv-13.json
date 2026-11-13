@@ -1,0 +1,66 @@
+{
+  "id": "inv-13",
+  "file": "inv-13.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "KF-184",
+    "invoice_date": "2025-12-04",
+    "due_date": "2026-01-03",
+    "supplier_name": "Karnaphuli Foods Ltd",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "8656.32",
+    "tax": "649.22",
+    "total": "9305.54"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "4",
+      "unit_price": "282.98",
+      "line_total": "1131.92"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "200",
+      "unit_price": "36.50",
+      "line_total": "7300.00"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "50",
+      "unit_price": "3.56",
+      "line_total": "178.00"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "4",
+      "unit_price": "11.60",
+      "line_total": "46.40"
+    }
+  ],
+  "ambiguous_fields": [
+    "invoice_date",
+    "due_date"
+  ],
+  "expected_flags": [
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "invoice_date"
+    },
+    {
+      "code": "MISSING_REQUIRED",
+      "field": "invoice_date"
+    },
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "due_date"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "ambiguous invoice date (dd/mm vs mm/dd)"
+  ]
+}

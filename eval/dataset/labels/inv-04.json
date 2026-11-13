@@ -1,0 +1,54 @@
+{
+  "id": "inv-04",
+  "file": "inv-04.csv",
+  "file_type": "csv",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "2026/BD/0121",
+    "invoice_date": "2026-07-04",
+    "due_date": "2026-08-03",
+    "supplier_name": "Jamuna Paper Mills",
+    "customer_name": "Test Garments Ltd",
+    "currency": "BDT",
+    "subtotal": "607.88",
+    "tax": "91.18",
+    "total": "699.06"
+  },
+  "line_items": [
+    {
+      "description": "Calibration certificate",
+      "quantity": "2",
+      "unit_price": "73.54",
+      "line_total": "147.08"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "20",
+      "unit_price": "23.04",
+      "line_total": "460.80"
+    }
+  ],
+  "ambiguous_fields": [
+    "invoice_date",
+    "due_date"
+  ],
+  "expected_flags": [
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "invoice_date"
+    },
+    {
+      "code": "MISSING_REQUIRED",
+      "field": "invoice_date"
+    },
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "due_date"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "ambiguous invoice date (dd/mm vs mm/dd)"
+  ]
+}

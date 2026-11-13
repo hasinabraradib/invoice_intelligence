@@ -1,0 +1,41 @@
+{
+  "id": "inv-06-copy",
+  "file": "inv-06-copy.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2025-0135",
+    "invoice_date": "2025-12-25",
+    "due_date": "2026-02-08",
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": "USD",
+    "subtotal": "193.40",
+    "tax": "14.51",
+    "total": "207.91"
+  },
+  "line_items": [
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "10",
+      "unit_price": "18.50",
+      "line_total": "185.00"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "10",
+      "unit_price": "0.84",
+      "line_total": "8.40"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "DUPLICATE_INVOICE",
+      "field": "invoice_number"
+    }
+  ],
+  "duplicate_of": "inv-06",
+  "notes": []
+}

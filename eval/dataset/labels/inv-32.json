@@ -1,0 +1,43 @@
+{
+  "id": "inv-32",
+  "file": "inv-32.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "PE/0317",
+    "invoice_date": "2025-12-10",
+    "due_date": "2025-12-05",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "BDT",
+    "subtotal": "625.64",
+    "tax": "118.87",
+    "total": "744.51"
+  },
+  "line_items": [
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "12",
+      "unit_price": "7.02",
+      "line_total": "84.24"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "20",
+      "unit_price": "27.07",
+      "line_total": "541.40"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "DUE_BEFORE_INVOICE_DATE",
+      "field": "due_date"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "due date before invoice date"
+  ]
+}

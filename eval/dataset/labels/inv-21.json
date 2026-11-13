@@ -1,0 +1,36 @@
+{
+  "id": "inv-21",
+  "file": "inv-21.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2026-0240",
+    "invoice_date": "2026-09-21",
+    "due_date": "2026-11-05",
+    "supplier_name": "Meghna Traders Ltd",
+    "customer_name": "Example Trading Co.",
+    "currency": "BDT",
+    "subtotal": "4261.30",
+    "tax": "809.65",
+    "total": "5070.95"
+  },
+  "line_items": [
+    {
+      "description": "LED panel 60x60",
+      "quantity": "5",
+      "unit_price": "19.10",
+      "line_total": "95.50"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "20",
+      "unit_price": "208.29",
+      "line_total": "4165.80"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

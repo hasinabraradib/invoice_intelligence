@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -71,3 +71,8 @@ batch-benchmark: env
 # (uses API credits) and report how many had the right number and citation.
 assistant-eval: env
 	$(COMPOSE) run --rm --build -v "$(CURDIR)/docs:/docs:ro" api python scripts/assistant_eval.py
+
+# Regenerate the synthetic labelled dataset (fixed seed, byte-identical) in eval/dataset/.
+eval-dataset: env
+	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/eval:/eval" api \
+		python /eval/dataset/generate.py

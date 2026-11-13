@@ -1,0 +1,43 @@
+{
+  "id": "inv-14",
+  "file": "inv-14.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "2026/BD/0191",
+    "invoice_date": "2026-03-13",
+    "due_date": "2026-03-27",
+    "supplier_name": "Jamuna Paper Mills",
+    "customer_name": null,
+    "currency": "BDT",
+    "subtotal": "5031.91",
+    "tax": "754.79",
+    "total": "5786.70"
+  },
+  "line_items": [
+    {
+      "description": "Software licence (annual)",
+      "quantity": "3",
+      "unit_price": "1475.07",
+      "line_total": "4425.21"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "10",
+      "unit_price": "60.67",
+      "line_total": "606.70"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "customer_name"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no customer printed"
+  ]
+}

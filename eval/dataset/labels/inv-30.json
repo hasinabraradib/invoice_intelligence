@@ -1,0 +1,48 @@
+{
+  "id": "inv-30",
+  "file": "inv-30.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 303",
+    "invoice_date": "2026-10-14",
+    "due_date": "2026-11-13",
+    "supplier_name": "Alpine Instruments AG",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "EUR",
+    "subtotal": null,
+    "tax": "43.42",
+    "total": "918.80"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "2",
+      "unit_price": "298.30",
+      "line_total": "596.60"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "1",
+      "unit_price": "271.78",
+      "line_total": "271.78"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "subtotal"
+    },
+    {
+      "code": "LINE_ITEMS_SUM_MISMATCH",
+      "field": "total"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no subtotal line",
+    "wrong total with no subtotal (lines do not add up)"
+  ]
+}

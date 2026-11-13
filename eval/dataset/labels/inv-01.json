@@ -1,0 +1,42 @@
+{
+  "id": "inv-01",
+  "file": "inv-01-scanned.pdf",
+  "file_type": "pdf_scanned",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2025-0100",
+    "invoice_date": "2025-10-03",
+    "due_date": "2025-11-17",
+    "supplier_name": "Meghna Traders Ltd",
+    "customer_name": "Example Trading Co.",
+    "currency": "BDT",
+    "subtotal": "10215.70",
+    "tax": "766.18",
+    "total": "10981.88"
+  },
+  "line_items": [
+    {
+      "description": "Freight charges",
+      "quantity": "20",
+      "unit_price": "389.30",
+      "line_total": "7786.00"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "12",
+      "unit_price": "146.66",
+      "line_total": "1759.92"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "3",
+      "unit_price": "223.26",
+      "line_total": "669.78"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

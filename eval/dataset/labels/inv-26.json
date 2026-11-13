@@ -1,0 +1,47 @@
+{
+  "id": "inv-26",
+  "file": "batch-6-invoices.pdf",
+  "file_type": "pdf_batch",
+  "split": "test",
+  "segment": [
+    8,
+    8
+  ],
+  "fields": {
+    "invoice_number": "INV-2025-0275",
+    "invoice_date": "2025-09-21",
+    "due_date": null,
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": "USD",
+    "subtotal": "20168.81",
+    "tax": "1008.44",
+    "total": "21177.25"
+  },
+  "line_items": [
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "3",
+      "unit_price": "36.82",
+      "line_total": "110.46"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "50",
+      "unit_price": "390.15",
+      "line_total": "19507.50"
+    },
+    {
+      "description": "Toner cartridge",
+      "quantity": "5",
+      "unit_price": "110.17",
+      "line_total": "550.85"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no due date"
+  ]
+}

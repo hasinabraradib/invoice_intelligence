@@ -1,0 +1,56 @@
+{
+  "id": "inv-39",
+  "file": "inv-39.xlsx",
+  "file_type": "xlsx",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "2026/BD/0366",
+    "invoice_date": "2026-07-30",
+    "due_date": null,
+    "supplier_name": "Lisboa Textiles Lda",
+    "customer_name": "Test Garments Ltd",
+    "currency": "EUR",
+    "subtotal": "9384.72",
+    "tax": "1407.71",
+    "total": "10792.43"
+  },
+  "line_items": [
+    {
+      "description": "Calibration certificate",
+      "quantity": "12",
+      "unit_price": "150.99",
+      "line_total": "1811.88"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "2",
+      "unit_price": "15.04",
+      "line_total": "30.08"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "50",
+      "unit_price": "133.16",
+      "line_total": "6658.00"
+    },
+    {
+      "description": "Toner cartridge",
+      "quantity": "12",
+      "unit_price": "48.09",
+      "line_total": "577.08"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "2",
+      "unit_price": "153.84",
+      "line_total": "307.68"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "no due date"
+  ]
+}

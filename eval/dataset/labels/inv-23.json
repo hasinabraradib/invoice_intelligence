@@ -1,0 +1,63 @@
+{
+  "id": "inv-23",
+  "file": "batch-6-invoices.pdf",
+  "file_type": "pdf_batch",
+  "split": "test",
+  "segment": [
+    4,
+    4
+  ],
+  "fields": {
+    "invoice_number": "KF-254",
+    "invoice_date": "2026-04-23",
+    "due_date": "2026-05-23",
+    "supplier_name": "Karnaphuli Foods Ltd",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "94116.87",
+    "tax": "14117.53",
+    "total": "108234.40"
+  },
+  "line_items": [
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "2",
+      "unit_price": "44.41",
+      "line_total": "88.82"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "50",
+      "unit_price": "1833.02",
+      "line_total": "91651.00"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "5",
+      "unit_price": "132.07",
+      "line_total": "660.35"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "12.5",
+      "unit_price": "3.72",
+      "line_total": "46.50"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "5",
+      "unit_price": "34.93",
+      "line_total": "174.65"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "5",
+      "unit_price": "299.11",
+      "line_total": "1495.55"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

@@ -1,0 +1,58 @@
+{
+  "id": "inv-22",
+  "file": "batch-6-invoices.pdf",
+  "file_type": "pdf_batch",
+  "split": "test",
+  "segment": [
+    2,
+    3
+  ],
+  "fields": {
+    "invoice_number": "PE/0247",
+    "invoice_date": "2026-01-23",
+    "due_date": "2026-02-22",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": null,
+    "currency": "BDT",
+    "subtotal": "94.70",
+    "tax": "4.74",
+    "total": "99.44"
+  },
+  "line_items": [
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "4",
+      "unit_price": "9.90",
+      "line_total": "39.60"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "1",
+      "unit_price": "35.10",
+      "line_total": "35.10"
+    },
+    {
+      "description": "A4 paper (box of 5 reams) (extra)",
+      "quantity": "1",
+      "unit_price": "10.00",
+      "line_total": "10.00"
+    },
+    {
+      "description": "Rice 25kg bag (extra)",
+      "quantity": "1",
+      "unit_price": "10.00",
+      "line_total": "10.00"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "customer_name"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no customer printed"
+  ]
+}

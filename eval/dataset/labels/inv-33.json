@@ -1,0 +1,36 @@
+{
+  "id": "inv-33",
+  "file": "inv-33.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "KF-324",
+    "invoice_date": "2026-05-26",
+    "due_date": "2026-06-09",
+    "supplier_name": "Karnaphuli Foods Ltd",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "610.37",
+    "tax": "30.52",
+    "total": "640.89"
+  },
+  "line_items": [
+    {
+      "description": "LED panel 60x60",
+      "quantity": "10",
+      "unit_price": "23.79",
+      "line_total": "237.90"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "1",
+      "unit_price": "372.47",
+      "line_total": "372.47"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

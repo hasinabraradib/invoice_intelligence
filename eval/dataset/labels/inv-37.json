@@ -1,0 +1,60 @@
+{
+  "id": "inv-37",
+  "file": "inv-37.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "CS/0352",
+    "invoice_date": "2026-07-08",
+    "due_date": "2026-08-07",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "USD",
+    "subtotal": "8579.37",
+    "tax": "643.45",
+    "total": "9222.82"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "12",
+      "unit_price": "130.54",
+      "line_total": "1566.48"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "20",
+      "unit_price": "109.25",
+      "line_total": "2185.00"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "20",
+      "unit_price": "180.37",
+      "line_total": "3607.40"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "2",
+      "unit_price": "307.07",
+      "line_total": "614.14"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "20",
+      "unit_price": "27.13",
+      "line_total": "542.60"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "12.5",
+      "unit_price": "5.10",
+      "line_total": "63.75"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

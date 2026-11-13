@@ -1,0 +1,36 @@
+{
+  "id": "inv-25",
+  "file": "inv-25.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "No. 268",
+    "invoice_date": "2025-10-28",
+    "due_date": "2025-11-11",
+    "supplier_name": "Northwind Office Supply Ltd",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "USD",
+    "subtotal": "377.57",
+    "tax": "18.88",
+    "total": "396.45"
+  },
+  "line_items": [
+    {
+      "description": "Freight charges",
+      "quantity": "1",
+      "unit_price": "193.57",
+      "line_total": "193.57"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "200",
+      "unit_price": "0.92",
+      "line_total": "184.00"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}

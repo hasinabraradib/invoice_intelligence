@@ -1,0 +1,48 @@
+{
+  "id": "inv-27",
+  "file": "inv-27.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "CS/0282",
+    "invoice_date": "2025-11-04",
+    "due_date": "2025-12-04",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "USD",
+    "subtotal": "3920.00",
+    "tax": "744.80",
+    "total": "4664.80"
+  },
+  "line_items": [
+    {
+      "description": "Calibration certificate",
+      "quantity": "50",
+      "unit_price": "78.40",
+      "line_total": "3920.00"
+    }
+  ],
+  "ambiguous_fields": [
+    "invoice_date",
+    "due_date"
+  ],
+  "expected_flags": [
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "invoice_date"
+    },
+    {
+      "code": "MISSING_REQUIRED",
+      "field": "invoice_date"
+    },
+    {
+      "code": "AMBIGUOUS_DATE",
+      "field": "due_date"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "ambiguous invoice date (dd/mm vs mm/dd)"
+  ]
+}

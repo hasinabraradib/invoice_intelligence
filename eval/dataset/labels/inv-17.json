@@ -1,0 +1,60 @@
+{
+  "id": "inv-17",
+  "file": "inv-17.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "CS/0212",
+    "invoice_date": "2026-05-26",
+    "due_date": "2026-06-09",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "USD",
+    "subtotal": "9580.41",
+    "tax": "1820.28",
+    "total": "11400.69"
+  },
+  "line_items": [
+    {
+      "description": "Office chair",
+      "quantity": "1",
+      "unit_price": "101.43",
+      "line_total": "101.43"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "3",
+      "unit_price": "1952.32",
+      "line_total": "5856.96"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "200",
+      "unit_price": "1.33",
+      "line_total": "266.00"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "2",
+      "unit_price": "226.17",
+      "line_total": "452.34"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "1",
+      "unit_price": "133.68",
+      "line_total": "133.68"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "50",
+      "unit_price": "55.40",
+      "line_total": "2770.00"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": []
+}
