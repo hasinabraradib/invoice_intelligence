@@ -5,6 +5,7 @@ Security: the API key travels in a request header (never in the URL, which could
 logged), and we never log prompts or responses.
 """
 
+import contextlib
 import json
 import logging
 import random
@@ -79,14 +80,16 @@ class TokenUsage:
     """
 
     calls: int = 0
-    input_tokens: int = 0
+    input_tokens: int = 0  # all prompt tokens, cached ones included
     output_tokens: int = 0
+    cached_input_tokens: int = 0  # prompt-cache hits (usually billed at a discount)
 
     def as_dict(self) -> dict[str, int]:
         return {
             "llm_calls": self.calls,
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
+            "cached_input_tokens": self.cached_input_tokens,
         }
 
 
@@ -190,6 +193,22 @@ def parse_json_object(text: str) -> dict[str, Any]:
     return data
 
 
+# ---------------------------------------------------------------- concurrency
+
+_SLOTS: dict[int, threading.BoundedSemaphore] = {}
+_SLOTS_LOCK = threading.Lock()
+
+
+def _request_slots(limit: int | None) -> threading.BoundedSemaphore | None:
+    """One semaphore per process and limit, shared by every client: the worker builds a
+    client per job, and jobs run side by side, so a per-client limit would not cap the
+    total requests in flight (LLM_MAX_CONCURRENT_REQUESTS)."""
+    if not limit:
+        return None
+    with _SLOTS_LOCK:
+        return _SLOTS.setdefault(limit, threading.BoundedSemaphore(limit))
+
+
 # ---------------------------------------------------------------- providers
 
 
@@ -205,6 +224,7 @@ class _HttpClient:
         max_attempts: int = 4,
         http_client: httpx.Client | None = None,
         sleep: Callable[[float], None] = time.sleep,
+        max_concurrent_requests: int | None = None,
     ) -> None:
         if not api_key:
             raise ValueError("an API key is required")
@@ -216,22 +236,27 @@ class _HttpClient:
         # One client is shared by worker threads, so updates take a lock.
         self.usage = TokenUsage()
         self._usage_lock = threading.Lock()
+        self._slots = _request_slots(max_concurrent_requests)
 
-    def _record_usage(self, input_tokens: Any, output_tokens: Any) -> None:
+    def _record_usage(self, input_tokens: Any, output_tokens: Any, cached: Any = 0) -> None:
         with self._usage_lock:
             self.usage.calls += 1
             self.usage.input_tokens += _int(input_tokens)
             self.usage.output_tokens += _int(output_tokens)
+            self.usage.cached_input_tokens += _int(cached)
 
     def _post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
-        response = post_with_retries(
-            self._http,
-            url,
-            headers=headers,
-            body=body,
-            max_attempts=self._max_attempts,
-            sleep=self._sleep,
-        )
+        # The slot is held through retries, so a rate-limited request doesn't let another
+        # one start meanwhile; that is what keeps free tiers from being hammered.
+        with self._slots or contextlib.nullcontext():
+            response = post_with_retries(
+                self._http,
+                url,
+                headers=headers,
+                body=body,
+                max_attempts=self._max_attempts,
+                sleep=self._sleep,
+            )
         try:
             return response.json()
         except ValueError as exc:
@@ -271,7 +296,9 @@ class GeminiClient(_HttpClient):
         meta = data.get("usageMetadata") or {}
         # Thinking tokens are billed as output tokens.
         output = _int(meta.get("candidatesTokenCount")) + _int(meta.get("thoughtsTokenCount"))
-        self._record_usage(meta.get("promptTokenCount"), output)
+        self._record_usage(
+            meta.get("promptTokenCount"), output, meta.get("cachedContentTokenCount")
+        )
 
     def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
@@ -349,7 +376,8 @@ class _ChatCompletionsClient(_HttpClient):
         """POST, record token usage, return the first choice's message."""
         data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
         usage = data.get("usage") or {}
-        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
+        cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
+        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"), cached)
         try:
             message = data["choices"][0]["message"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -575,5 +603,6 @@ def get_llm_client(settings: Settings) -> LLMClient:
         settings.llm_model or DEFAULT_MODELS[settings.llm_provider],
         timeout=settings.llm_timeout_seconds,
         max_attempts=settings.llm_max_attempts,
+        max_concurrent_requests=settings.llm_max_concurrent_requests,
         **extra,
     )

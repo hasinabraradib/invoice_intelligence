@@ -104,7 +104,12 @@ def test_token_usage_is_summed_over_successful_calls_only():
     client, _, _ = _client(GeminiClient, [(429, {}), ok, ok])
     client.complete_json("sys", "user", SCHEMA)
     client.complete_json("sys", "user", SCHEMA)
-    assert client.usage.as_dict() == {"llm_calls": 2, "input_tokens": 200, "output_tokens": 50}
+    assert client.usage.as_dict() == {
+        "llm_calls": 2,
+        "input_tokens": 200,
+        "output_tokens": 50,
+        "cached_input_tokens": 0,
+    }
 
     reply = {
         "choices": [{"message": {"content": "{}"}}],
@@ -118,4 +123,60 @@ def test_token_usage_is_summed_over_successful_calls_only():
 def test_missing_usage_counts_the_call_with_zero_tokens():
     client, _, _ = _client(GroqClient, [(200, {"choices": [{"message": {"content": "{}"}}]})])
     client.complete_json("sys", "user", SCHEMA)
-    assert client.usage.as_dict() == {"llm_calls": 1, "input_tokens": 0, "output_tokens": 0}
+    assert client.usage.as_dict() == {
+        "llm_calls": 1,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+    }
+
+
+def test_requests_in_flight_are_capped_across_clients():
+    """Two clients (two worker jobs) share one process-wide limit of 2 requests."""
+    import threading
+    import time as real_time
+
+    lock, active, peak = threading.Lock(), [0], [0]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        with lock:
+            active[0] += 1
+            peak[0] = max(peak[0], active[0])
+        real_time.sleep(0.05)
+        with lock:
+            active[0] -= 1
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    clients = [
+        GroqClient(
+            "k",
+            "m",
+            http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+            max_concurrent_requests=2,
+        )
+        for _ in range(2)
+    ]
+    threads = [
+        threading.Thread(target=clients[i % 2].complete_json, args=("s", "u", SCHEMA))
+        for i in range(8)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert peak[0] == 2
+    assert sum(c.usage.calls for c in clients) == 8
+
+
+def test_cached_prompt_tokens_are_recorded():
+    reply = {
+        "choices": [{"message": {"content": "{}"}}],
+        "usage": {
+            "prompt_tokens": 100,
+            "completion_tokens": 5,
+            "prompt_tokens_details": {"cached_tokens": 80},
+        },
+    }
+    client, _, _ = _client(GroqClient, [(200, reply)])
+    client.complete_json("sys", "user", SCHEMA)
+    assert client.usage.cached_input_tokens == 80

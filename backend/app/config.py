@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     llm_model: str | None = None  # empty = the provider's default model
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_attempts: int = Field(default=4, ge=1, le=10)
+    # Provider requests in flight at once per process (worker or API), over all jobs.
+    # Lower it for free tiers (e.g. 1-2); retries with backoff handle the 429s that remain.
+    llm_max_concurrent_requests: int = Field(default=4, ge=1, le=64)
     llm_chunk_tokens: int = Field(default=6000, ge=500)
 
     # Validation: amounts may differ by this much (rounding); fields below this

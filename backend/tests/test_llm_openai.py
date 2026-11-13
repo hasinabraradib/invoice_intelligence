@@ -70,7 +70,12 @@ def test_complete_json_request_shape_and_usage():
         "json_schema": {"name": "invoice_extraction", "schema": SCHEMA, "strict": True},
     }
     assert "tools" not in body
-    assert llm.usage.as_dict() == {"llm_calls": 1, "input_tokens": 120, "output_tokens": 30}
+    assert llm.usage.as_dict() == {
+        "llm_calls": 1,
+        "input_tokens": 120,
+        "output_tokens": 30,
+        "cached_input_tokens": 0,
+    }
 
 
 def test_429_is_retried_honouring_retry_after():
