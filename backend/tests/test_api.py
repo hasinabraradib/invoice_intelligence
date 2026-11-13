@@ -39,7 +39,7 @@ async def test_upload_then_job_gives_processed_result_with_evidence(api, run_job
 
     status = (await api.get(f"/documents/{doc_id}/status")).json()
     assert status["status"] == "processed" and status["job_status"] == "succeeded"
-    assert (status["stage"], status["pages_done"], status["pages_total"]) == ("saving", 2, 2)
+    assert (status["stage"], status["pages_done"], status["pages_total"]) == ("embedding", 2, 2)
     assert status["attempts"] == 1 and status["error"] is None
 
     result = (await api.get(f"/documents/{doc_id}/result")).json()
@@ -378,7 +378,7 @@ async def test_cors_allows_the_frontend_origin(api):
 
 
 def test_snippet_is_html_escaped_except_marks():
-    from app.search import _safe_snippet
+    from app.search.service import _safe_snippet
 
     raw = "Total \x02due\x03 <script>alert(1)</script> & co"
     assert _safe_snippet(raw) == (
