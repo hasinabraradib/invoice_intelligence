@@ -1,7 +1,7 @@
 {
   "seed": 20261114,
   "note": "Synthetic data only. Ground truth = printed values. Rebuild: make eval-dataset.",
-  "invoice_count": 41,
+  "invoice_count": 43,
   "files": [
     {
       "file": "batch-6-invoices.pdf",
@@ -476,6 +476,30 @@
       "size_bytes": 2155
     },
     {
+      "file": "inv-41.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-41"
+      ],
+      "expected_segments": null,
+      "sha256": "3ed2b897453966f581883d535eb0e4c874741c294be978165769c955195b028d",
+      "size_bytes": 43835
+    },
+    {
+      "file": "inv-42.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "inv-42"
+      ],
+      "expected_segments": null,
+      "sha256": "b7dbf8cf8d919baa90be7f191d5dd554bff5af1dfba47b2189a168d31609d831",
+      "size_bytes": 2059
+    },
+    {
       "file": "ledger-batch.xlsx",
       "file_type": "xlsx_ledger",
       "split": "test",
@@ -522,8 +546,8 @@
       ]
     },
     {
-      "a": "inv-02.pdf",
-      "b": "inv-02-purchase-order.pdf",
+      "a": "inv-42.pdf",
+      "b": "inv-42-purchase-order.pdf",
       "mode": "invoices_vs_invoices",
       "split": "dev",
       "expected_findings": [

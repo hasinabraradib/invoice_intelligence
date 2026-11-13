@@ -1,0 +1,49 @@
+{
+  "id": "inv-41",
+  "file": "inv-41.pdf",
+  "file_type": "pdf_digital",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "INV-2026-941",
+    "invoice_date": "2026-05-01",
+    "due_date": "2026-05-31",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "BDT",
+    "subtotal": null,
+    "tax": "139.02",
+    "total": "1065.85"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "2",
+      "unit_price": "173.07",
+      "line_total": "346.14"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "10",
+      "unit_price": "21.83",
+      "line_total": "218.30"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "1",
+      "unit_price": "362.39",
+      "line_total": "362.39"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [
+    {
+      "code": "MISSING_RECOMMENDED",
+      "field": "subtotal"
+    }
+  ],
+  "duplicate_of": null,
+  "notes": [
+    "no subtotal line, tax printed"
+  ]
+}

@@ -817,6 +817,37 @@ def main() -> None:
         },
     ]
 
+    # Dev-split cover for the no-subtotal line-sum rule, added after the first evaluation
+    # found the bug on the test split. Its own RNG keeps every earlier file byte-identical.
+    extra_rng = random.Random(SEED + 1)  # noqa: S311 (reproducible test data)
+    for n, (tax_rate, note) in enumerate(
+        ((Decimal("0.15"), "no subtotal line, tax printed"), (None, "no subtotal line, no tax")),
+        start=41,
+    ):
+        supplier, currency = SUPPLIERS[n % len(SUPPLIERS)]
+        lines = []
+        for item, (lo, hi) in extra_rng.sample(CATALOGUE, 3):
+            qty = Decimal(extra_rng.choice([1, 2, 5, 10]))
+            unit = Decimal(str(round(extra_rng.uniform(lo, hi), 2))).quantize(CENT)
+            lines.append(Line(item, qty, unit, (qty * unit).quantize(CENT)))
+        inv_date = date(2026, 3, 1) + timedelta(days=extra_rng.randrange(0, 200))
+        inv = Invoice(
+            id=f"inv-{n}",
+            invoice_number=f"INV-{inv_date.year}-{900 + n}",
+            invoice_date=inv_date,
+            due_date=inv_date + timedelta(days=30),
+            supplier_name=supplier,
+            customer_name=CUSTOMERS[n % len(CUSTOMERS)],
+            currency=currency,
+            lines=lines,
+            tax_rate=tax_rate,
+            show_subtotal=False,
+            notes=[note],
+        )
+        name = f"{inv.id}.pdf"
+        pdf = pdf_bytes(lambda c, inv=inv, n=n: draw_invoice(c, inv, n % 3, [inv.lines]))
+        add_file(name, pdf, "pdf_digital", "dev", [label(inv, name, "pdf_digital", "dev")])
+
     for lid, data in labels.items():
         (LABELS / f"{lid}.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     manifest = {
