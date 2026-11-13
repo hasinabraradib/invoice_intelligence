@@ -45,7 +45,7 @@ from app.invoices import (
 )
 from app.models import DocumentStatus, Invoice, JobStatus, ValidationIssue
 from app.ocr.engine import OcrOptions
-from app.ocr.pipeline import ocr_document
+from app.ocr.parallel import ocr_document_parallel
 from app.parsing.dispatch import parse_document
 from app.parsing.errors import DocumentError
 from app.parsing.models import ParseLimits
@@ -303,11 +303,12 @@ async def _read_pages(
     if settings.ocr_enabled and parsed.pages_needing_ocr:
         await stage("ocr")
 
-        def progress(done: int) -> None:  # called from the OCR thread
-            anyio.from_thread.run(functools.partial(stage, "ocr", pages_done=already + done))
+        async def progress(done: int) -> None:
+            await stage("ocr", pages_done=already + done)
 
-        parsed = await anyio.to_thread.run_sync(
-            ocr_document,
+        # Pages run in parallel worker processes; if the job times out, the cancellation
+        # reaches this await and the worker processes are killed.
+        parsed = await ocr_document_parallel(
             path,
             parsed,
             OcrOptions(
@@ -316,7 +317,8 @@ async def _read_pages(
                 page_timeout_seconds=settings.ocr_page_timeout_seconds,
                 dpi=settings.ocr_dpi,
             ),
-            progress,
+            workers=settings.ocr_workers,
+            on_page=progress,
         )
     await stage("segmenting", pages_done=len(parsed.pages))
     pages = source_pages(parsed)

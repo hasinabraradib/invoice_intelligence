@@ -4,6 +4,7 @@ Why pydantic-settings: values are type-checked at startup, so a typo such as
 MAX_UPLOAD_MB=abc crashes immediately with a clear error instead of failing later.
 """
 
+import os
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -11,6 +12,15 @@ from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def default_ocr_workers() -> int:
+    """CPU cores this process may use, minus one (left for the API/event loop), at least 1."""
+    try:
+        cores = len(os.sched_getaffinity(0))  # respects CPU pinning (Linux)
+    except AttributeError:  # macOS has no affinity API
+        cores = os.cpu_count() or 2
+    return max(cores - 1, 1)
 
 
 class Settings(BaseSettings):
@@ -84,6 +94,9 @@ class Settings(BaseSettings):
     ocr_min_confidence: float = Field(default=60, ge=0, le=100)
     ocr_page_timeout_seconds: int = Field(default=60, gt=0)
     ocr_dpi: int = Field(default=300, ge=72, le=600)
+    # Pages OCR'd in parallel, each in its own process (Tesseract is single-threaded here).
+    # Each worker holds one page image (~10-30 MB) plus Tesseract (~100 MB).
+    ocr_workers: int = Field(default_factory=default_ocr_workers, ge=1, le=64)
 
     @field_validator("database_url")
     @classmethod

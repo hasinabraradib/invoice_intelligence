@@ -1,5 +1,6 @@
 """Upload -> worker job -> status/result/corrections/search, through the real API."""
 
+import shutil
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -115,19 +116,12 @@ async def test_stuck_running_job_is_requeued(db_session, queue):
     assert job.status == m.JobStatus.QUEUED and "requeued" in job.error
 
 
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="tesseract missing")
 async def test_ocr_progress_is_recorded_page_by_page(db_session, tmp_path, settings, monkeypatch):
-    from app.ocr import pipeline as ocr_pipeline
-    from app.ocr.engine import OcrResult
     from app.pipeline import process_document
 
-    # Fast fake OCR (the real Tesseract is covered by test_ocr.py).
-    monkeypatch.setattr(
-        ocr_pipeline,
-        "ocr_page",
-        lambda image, options=None: OcrResult(
-            text="Invoice INV-2024-001", mean_confidence=90, word_count=2, psm_used=6
-        ),
-    )
+    # OCR runs in separate worker processes (real Tesseract on tiny blank frames), so it
+    # cannot be faked from here; progress is still reported once per finished page.
     seen: list[tuple[str, int]] = []
     real_update = Repository.update_job
 
