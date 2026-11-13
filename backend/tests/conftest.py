@@ -139,9 +139,13 @@ class FakeQueue:
 
     def __init__(self) -> None:
         self.job_ids: list = []
+        self.cross_check_ids: list = []
 
     async def enqueue(self, job_id, defer_seconds: float = 0) -> None:
         self.job_ids.append(job_id)
+
+    async def enqueue_cross_check(self, cross_check_id) -> None:
+        self.cross_check_ids.append(cross_check_id)
 
 
 @pytest.fixture

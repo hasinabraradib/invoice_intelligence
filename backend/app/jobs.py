@@ -20,10 +20,13 @@ from app.repository import Repository
 logger = logging.getLogger(__name__)
 
 TASK_NAME = "process_job"
+CROSS_CHECK_TASK = "run_cross_check_job"
 
 
 class JobQueue(Protocol):
     async def enqueue(self, job_id: uuid.UUID, defer_seconds: float = 0) -> None: ...
+
+    async def enqueue_cross_check(self, cross_check_id: uuid.UUID) -> None: ...
 
 
 class ArqQueue:
@@ -38,6 +41,11 @@ class ArqQueue:
         if self._pool is None:
             self._pool = await create_pool(self._settings)
         await self._pool.enqueue_job(TASK_NAME, str(job_id), _defer_by=defer_seconds or None)
+
+    async def enqueue_cross_check(self, cross_check_id: uuid.UUID) -> None:
+        if self._pool is None:
+            self._pool = await create_pool(self._settings)
+        await self._pool.enqueue_job(CROSS_CHECK_TASK, str(cross_check_id))
 
     async def close(self) -> None:
         if self._pool is not None:

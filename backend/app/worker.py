@@ -13,6 +13,7 @@ from arq.connections import RedisSettings
 from sqlalchemy import select
 
 from app.config import get_settings
+from app.crosscheck.service import run_cross_check
 from app.db import create_engine, create_sessionmaker
 from app.extraction.llm import get_llm_client
 from app.jobs import ArqQueue, job_timeout, requeue_stuck_jobs, retry_delay
@@ -99,11 +100,18 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
     return outcome.status
 
 
+async def run_cross_check_job(ctx: dict[str, Any], cross_check_id: str) -> str:
+    """Compare two documents (see app.crosscheck). Idempotent: re-running replaces results."""
+    async with ctx["sessionmaker"]() as session:
+        check = await run_cross_check(session, uuid.UUID(cross_check_id), ctx["settings"])
+        return check.status
+
+
 class WorkerSettings:
     """Read by the `arq` command."""
 
     _settings = get_settings()
-    functions = [process_job]
+    functions = [process_job, run_cross_check_job]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(_settings.redis_url)

@@ -357,3 +357,54 @@ class ColumnMappingUpdate(BaseModel):
     sheet: str = Field(min_length=1, max_length=255)
     columns: dict[LedgerField, str | None] = Field(default_factory=dict)
     is_ledger: bool | None = None  # None = decide from the mapping
+
+
+# ---------------------------------------------------------------- cross-checks
+
+
+class CrossCheckCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    document_a_id: uuid.UUID
+    document_b_id: uuid.UUID
+
+
+class DocumentRef(BaseModel):
+    id: uuid.UUID
+    filename: str
+
+
+class CrossCheckView(BaseModel):
+    id: uuid.UUID
+    document_a: DocumentRef  # always the invoices side
+    document_b: DocumentRef  # a ledger, or another document with invoices
+    mode: Literal["invoices_vs_ledger", "invoices_vs_invoices"] | None
+    status: JobStatus
+    error: str | None
+    summary: dict[str, int]  # matched, mismatched, missing_in_a, missing_in_b, ...
+    created_at: datetime
+    finished_at: datetime | None
+
+
+class FindingView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    kind: str  # matched, amount_mismatch, date_mismatch, missing_in_ledger, ...
+    severity: Literal["info", "warning", "error"]
+    field: str | None
+    value_a: str | None
+    value_b: str | None
+    message: str
+    # Evidence on each side: an invoice page, or a ledger sheet row.
+    invoice_a_id: uuid.UUID | None
+    invoice_b_id: uuid.UUID | None
+    segment_a: int | None
+    segment_b: int | None
+    page_a: int | None
+    page_b: int | None
+    sheet_b: str | None
+    row_b: int | None
+
+
+class CrossCheckDetail(CrossCheckView):
+    findings: list[FindingView]
