@@ -17,13 +17,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to content
         </a>
         <Providers>
-          {/* The nav reads the current URL, so it must sit inside a Suspense boundary. */}
-          <Suspense fallback={<Nav pathname="" />}>
-            <Nav />
-          </Suspense>
-          <main id="main" className="mx-auto max-w-7xl px-4 py-6">
-            {children}
-          </main>
+          <div className="md:flex">
+            {/* The nav reads the current URL, so it must sit inside a Suspense boundary. */}
+            <Suspense fallback={<Nav pathname="" />}>
+              <Nav />
+            </Suspense>
+            <main id="main" className="min-w-0 flex-1 px-4 py-6">
+              <div className="mx-auto max-w-6xl">{children}</div>
+            </main>
+          </div>
         </Providers>
       </body>
     </html>

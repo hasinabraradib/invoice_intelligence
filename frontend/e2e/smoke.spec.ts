@@ -53,7 +53,7 @@ test("upload, review, correct, approve, search", async ({ page, request }) => {
   ]);
 
   // Upload through the UI.
-  await page.goto("/");
+  await page.goto("/documents");
   await page.setInputFiles("#file-input", { name: `${token}.pdf`, mimeType: "application/pdf", buffer: pdf });
   const open = page.getByRole("link", { name: /Uploaded · open/ });
   await expect(open).toBeVisible({ timeout: 30_000 });

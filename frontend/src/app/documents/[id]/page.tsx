@@ -161,7 +161,7 @@ function Review() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm"><Link href="/" className="btn-link">← Documents</Link></p>
+          <p className="text-sm"><Link href="/documents" className="btn-link">← Documents</Link></p>
           <h1 className="truncate text-2xl font-semibold" title={doc.filename}>{doc.filename}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <StatusBadge status={s.status} />
