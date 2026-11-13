@@ -15,7 +15,7 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.crosscheck.service import run_cross_check
 from app.db import create_engine, create_sessionmaker
-from app.extraction.llm import get_llm_client
+from app.extraction.llm import UnconfiguredLLM, get_llm_client
 from app.jobs import ArqQueue, job_timeout, requeue_stuck_jobs, retry_delay
 from app.models import JobStatus, ProcessingJob
 from app.parsing.dispatch import count_pages
@@ -56,20 +56,9 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
         document = await repo.get_document(job.document_id)
         try:
             llm = ctx["llm_factory"]()
-        except ValueError as exc:  # LLM not configured: retrying will not help
-            # Invoices saved by an earlier job stay valid: keep "partially_failed" then.
-            saved = any(i.job_id for i in await repo.get_invoices(document.id))
-            outcome = await record_failure(
-                session,
-                document.id,
-                job.id,
-                str(exc),
-                temporary=False,
-                attempts=job.attempts + 1,
-                settings=settings,
-                partial=saved,
-            )
-            return outcome.status
+        except ValueError as exc:
+            # No LLM configured: ledgers still process; PDFs fail where the LLM is needed.
+            llm = UnconfiguredLLM(str(exc))
 
         pages = await anyio.to_thread.run_sync(count_pages, Path(document.storage_path))
         try:

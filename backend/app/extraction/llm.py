@@ -214,6 +214,20 @@ class GroqClient(_HttpClient):
         return parse_json_object(content)
 
 
+class UnconfiguredLLM:
+    """Stands in when no provider is configured. Work that never needs the LLM (ledger
+    spreadsheets) still runs; anything that does fails permanently with a clear message."""
+
+    name = "none"
+    model = "none"
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+        raise LLMError(self.reason, retryable=False)
+
+
 class FakeLLMClient:
     """For tests: replays scripted replies and records every call.
 

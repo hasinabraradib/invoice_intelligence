@@ -122,3 +122,11 @@ async def test_unmapping_the_invoice_number_turns_the_ledger_off(api, run_job, t
     ).json()
     assert entry["is_ledger"] is False
     assert (await api.get(f"/documents/{doc_id}/ledger")).json()["rows"]["total"] == 0
+
+
+async def test_ledger_processes_without_any_llm_configured(api, run_job, tmp_path):
+    data = ledger_xlsx(tmp_path / "l.xlsx", ROWS).read_bytes()
+    uploaded = (await api.post("/documents", files=[("files", ("l.xlsx", data))])).json()[
+        "results"
+    ][0]
+    assert await run_job(uploaded["job_id"], ValueError("LLM_PROVIDER is 'none'")) == "processed"
