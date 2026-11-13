@@ -27,6 +27,11 @@ def test_value_scoring():
     assert not value_ok("2000.00", "You spent 1,999.00 BDT.")
     assert value_ok("UT-5", "The invoice number is ut-5.")
     assert value_ok("2026-03-25", "It is due on 2026-03-25.")
+    # The same date written out is right (the first real run marked this wrong).
+    assert value_ok("2026-03-25", "The Dhaka Power invoice is due **March 25, 2026** (p. 1).")
+    assert value_ok("2026-03-25", "Due 25 March 2026.")
+    assert not value_ok("2026-03-25", "It is due on March 26, 2026.")
+    assert not value_ok("2026-03-05", "Due 03/05/2026.")  # ambiguous: not counted as right
     assert value_ok("NONE", "I found no invoices from Globex dated in March 2026.")
     assert not value_ok("NONE", "Globex billed 450.50 USD.")  # invented an amount
 

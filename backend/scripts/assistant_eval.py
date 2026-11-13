@@ -144,9 +144,21 @@ def value_ok(expected: str, answer: str) -> bool:
         )
         invented = [a for a in _amounts(answer) if a not in (Decimal(0), Decimal(2026)) and a > 31]
         return bool(said_none) and not invented
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", expected):  # a date, in whatever format it is written
+        from app.extraction.postprocess import parse_date
+
+        return any(parse_date(text)[0] == expected for text in _DATE_TEXT.findall(answer))
     if re.fullmatch(r"\d[\d,]*(\.\d+)?", expected):
         return Decimal(expected.replace(",", "")) in _amounts(answer)
     return expected.lower() in answer.lower()
+
+
+# Dates as an answer may write them: 2026-03-25, 25 March 2026, March 25, 2026, 25/03/2026.
+_DATE_TEXT = re.compile(
+    r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4}"
+    r"|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\.?,?\s+\d{4}"
+    r"|[A-Za-z]+\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}"
+)
 
 
 def citation_ok(expected: str, citations: list[dict]) -> bool:
