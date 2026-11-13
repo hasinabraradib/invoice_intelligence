@@ -37,6 +37,29 @@ make down
 `/health` returns HTTP 200 when everything is reachable and HTTP 503 (`"status": "degraded"`)
 when Postgres or Redis is down.
 
+### Web UI
+
+`make up` also starts the frontend: **http://localhost:3000**.
+
+| Page | What it is for |
+|---|---|
+| `/` Documents | Drag-and-drop upload with per-file progress, then a live table (it polls only while something is processing), with filters, reprocess and "Retry all failed" |
+| `/documents/{id}` Review | Page preview on the left; every field on the right with status, confidence, evidence (click it to jump to the page) and inline editing; line items, issues, duplicates, history, approve and reprocess |
+| `/review` Queue | Documents needing review, oldest first; "Next in queue" walks through them |
+| `/search` | Hybrid, keyword or semantic search with the same filters; results open the review page at the matching page |
+
+```bash
+make frontend        # rebuild and restart only the UI container
+make frontend-dev    # hot-reload dev server on :3000 (API must be running)
+make frontend-check  # lint + typecheck + unit tests
+make e2e             # browser smoke test against the running stack (skips if it is down,
+                     # or if no LLM is configured)
+cd frontend && API_URL=http://localhost:8000 npm run gen:api   # regenerate API types
+```
+
+`NEXT_PUBLIC_API_URL` (default `http://localhost:8000`) is the API address *as the browser
+sees it*. It's baked in when the image is built. Screenshots: [docs/screenshots/](docs/screenshots/).
+
 ### Background worker
 
 Processing (parse, OCR, AI extraction, validation) runs in the **arq worker**, not in the
@@ -135,6 +158,11 @@ Interactive docs: http://localhost:8000/docs. Every error has the same shape:
 | `POST` | `/documents/{id}/reprocess` | Queue again (409 if a job is already queued or running). Human corrections are kept |
 | `PATCH` | `/invoices/{id}` | Correct header fields or line items. Audited in `corrections`, then re-validated |
 | `GET` | `/search?q=` | Keyword search over page text, ranked, with a `<mark>`-highlighted snippet and page number. Same filters as the list |
+| `GET` | `/documents/{id}/file` | The original file, inline, with the detected content type |
+| `GET` | `/documents/{id}/pages` | Pages (or sheets) with their text |
+| `GET` | `/documents/{id}/pages/{n}/image` | PNG preview of a page or frame (cached; 404 for spreadsheets) |
+| `GET` | `/invoices/{id}/corrections` | Audit history of human changes |
+| `POST` | `/invoices/{id}/approve` | Approve after review; 409 while errors remain unless `override_reason` is given |
 | `POST` | `/jobs/retry-failed` | Queue every document whose last job failed; returns how many |
 | `GET` | `/health` | App, database and Redis status |
 
