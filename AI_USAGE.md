@@ -16,6 +16,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-13 | 5c follow-up: parallel OCR + partial results | Claude Code (Claude Opus 5.5) | OCR in a killable spawn process pool with bounded in-flight pages, page-order results and per-page progress; measured and found OpenCV already used all cores, so OpenCV threads are split per worker (small real gain, documented honestly); partially_failed status (migration) and resume jobs so retry-failed redoes only failed invoices; frontend badge, filter and retry button. | _To fill in after review_ |
 | 2026-11-13 | 5d: Cross-verification | Claude Code (Claude Opus 5.5) | Ledger detection with header synonyms and stored rows (sheet + row evidence), column-mapping override; migration for ledger_rows, cross_checks, findings; pure comparison (invoice number, then supplier+date+total; Decimal tolerance; duplicates; line items by description similarity) run as an arq job; CROSS_CHECK_MISMATCH issues that survive re-validation and set needs_review without changing values; Cross-check page and ledger row highlighting; ledgers processed without an LLM. | _To fill in after review_ |
 | 2026-11-14 | 5e: AI assistant | Claude Code (Claude Opus 5.5) | Native tool calling for Gemini/Groq; agent loop (max 6 tool steps) over read tools wrapping existing services and fixed SQL sums/counts per currency; write tools that only propose actions, confirmed by the user, with expiry and audit trail; code-level guard against injected instructions; conversations/messages/actions tables; SSE streaming with Stop; chat as home page with greeting, suggestions, tool trace, citations, confirmation cards, attachments; safe Markdown renderer; 15-question eval set and scoring script. Fixed an approval bug in batch documents found on the way. | _To fill in after review_ |
+| 2026-11-14 | 5f: OpenAI provider | Claude Code (Claude Opus 5.5) | Add OpenAI as a third LLM provider (LLM_PROVIDER=openai, OPENAI_API_KEY, default gpt-6-luna with reasoning effort none/low, temperature dropped only if the model rejects it) over httpx: strict JSON-schema extraction, native tool calling, temperature 0, same timeout/retry/backoff; record token usage for cost; mock-server tests (shapes, tool calls, 429 retry, invalid-JSON repair); live check on one synthetic invoice and one short assistant conversation; check that .env is ignored and no key is in git history. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -56,3 +57,31 @@ Why the extraction prompt looks the way it does:
   refuses write tools when the user's own message does not ask for a change. That is the
   second layer if a document's text manages to persuade the model.
 - **Untrusted-data delimiters** around tool results (hash-tagged, like the extraction prompt).
+
+
+## OpenAI provider (step 5f)
+
+- **Same rules as the other providers.** Chat Completions over `httpx`, temperature 0,
+  JSON schema for extraction, native tools for the assistant, shared retry/backoff code.
+  Groq speaks the same API, so both share one base class.
+- **Strict structured output.** Our schemas already require every key and forbid extra ones,
+  which is what OpenAI's `strict: true` needs, so the reply is guaranteed to match the schema.
+  A refusal is a permanent error, not a retry.
+- **Default model `gpt-6-luna` with `reasoning_effort: "none"`** (chosen by the project owner;
+  the first draft used gpt-4.1-mini). Probed the live API first: gpt-6-luna rejects
+  `temperature: 0` on its own and at effort `low`, but accepts it at effort `none`. So
+  `none` is the default, which keeps output repeatable. If OpenAI rejects `temperature` or
+  `reasoning_effort` with a 400, the client drops that parameter for OpenAI only, resends
+  once and remembers it, instead of failing.
+- **Separate key variable.** `OPENAI_API_KEY` is never filled from `LLM_API_KEY`, so a
+  Gemini/Groq key can't be sent to OpenAI by mistake.
+- **Token usage** from the provider's `usage` field is summed per client and printed by the
+  sample, eval and benchmark scripts. That gives cost from measured tokens, not estimates.
+- **Live check (2026-11-14, real key, gpt-6-luna, reasoning effort `none`, temperature 0 kept):**
+
+  | Check | Result | LLM calls | Input tokens | Output tokens |
+  |-------|--------|-----------|--------------|---------------|
+  | `make extract-sample` on a synthetic 1-page invoice (`samples/`, git-ignored) | All 9 fields and 2 line items found, values and evidence correct, 7.3 s | 1 | 2,286 | 915 |
+  | Assistant, 2 questions in one conversation (count + total per currency; largest supplier with citation) | Right tools (`count_invoices`, `sum_invoices`, `search_documents`), answers match the database (7 invoices / 130.00; Hooli 40.00, E-500), cited | 9 | 26,118 | 350 |
+
+  No parameter had to be dropped. Multiply the tokens by OpenAI's current gpt-6-luna price for cost.

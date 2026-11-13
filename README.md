@@ -75,7 +75,7 @@ page.
 - **Full trace:** every turn (your message, tool calls, tool results, answer) is stored,
   so any answer can be traced back to the data it used.
 
-Without `LLM_PROVIDER`/`LLM_API_KEY` the chat explains that the language model is not
+Without a configured provider (see [LLM providers](#llm-providers-bring-your-own-key)) the chat explains that the language model is not
 configured; everything else keeps working. `make assistant-eval` scores the assistant on
 the 15 questions in [docs/assistant-eval.md](docs/assistant-eval.md) with your real
 provider (right number, right citation).
@@ -249,16 +249,65 @@ warning.
 make ocr-sample FILE=samples/scanned-invoice.jpg LANGS=eng+ben
 ```
 
+### LLM providers (bring your own key)
+
+The LLM only extracts and quotes text; code does all parsing, arithmetic and validation.
+Three providers are supported, all called over plain HTTPS with `httpx` (no vendor SDKs)
+with the same rules: temperature 0 (see the OpenAI note below), JSON-schema output for extraction, native tool calling
+for the assistant, `LLM_TIMEOUT_SECONDS` per request, and up to `LLM_MAX_ATTEMPTS` tries on
+rate limits (429), server errors and network errors, with exponential backoff and jitter
+(a provider's `Retry-After` is honoured). Bad keys and bad requests are not retried.
+
+| `LLM_PROVIDER` | Key variable | Default `LLM_MODEL` | Get a key |
+|----------------|--------------|---------------------|-----------|
+| `gemini` | `LLM_API_KEY` | `gemini-2.5-flash` | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| `groq` | `LLM_API_KEY` | `openai/gpt-oss-120b` | [console.groq.com](https://console.groq.com/keys) |
+| `openai` | `OPENAI_API_KEY` | `gpt-6-luna` | [platform.openai.com](https://platform.openai.com/api-keys) |
+| `none` (default) | none | none | The stack runs; extraction and chat report that no LLM is set |
+
+**To use your own key (reviewers):**
+
+1. `make env` (creates `.env` from `.env.example` if it doesn't exist; `.env` is git-ignored).
+2. Edit `.env`, for example:
+   ```bash
+   LLM_PROVIDER=openai
+   OPENAI_API_KEY=sk-...your key...
+   LLM_MODEL=            # empty = the default above (gpt-6-luna for OpenAI)
+   OPENAI_REASONING_EFFORT=none   # none | low
+   ```
+3. `make up` (restarts the api and worker with the new settings).
+4. Try it: `make extract-sample FILE=samples/<your file>` or ask a question on the home page.
+
+Notes:
+
+- Keep keys in `.env` only. Never put them in `.env.example`, code, commits or issue text.
+  The key travels in a request header, never in the URL, and prompts and replies are never logged.
+- OpenAI has its own `OPENAI_API_KEY`, so switching providers can't send one provider's key
+  to another. Your key must be in `OPENAI_API_KEY`, not `LLM_API_KEY`.
+- `gpt-6-luna` is a reasoning model. Extraction and the assistant send
+  `reasoning_effort: "none"` by default (`OPENAI_REASONING_EFFORT`), because copying text
+  and choosing a tool need no long reasoning, and at `none` the model still accepts
+  `temperature: 0`. At `low` it rejects temperature 0. When OpenAI rejects `temperature`
+  (or `reasoning_effort`, for non-reasoning models), the OpenAI client drops that one
+  parameter, resends once and remembers it for the run. It logs a warning, so you know the
+  output is less repeatable. Other providers never drop anything.
+- OpenAI uses strict structured output: its reply is guaranteed to match the schema.
+  Gemini and Groq use their JSON-schema modes. Invalid JSON from any provider gets one repair
+  call, then a clean failure.
+- **Cost:** every client counts input and output tokens from the provider's own `usage`
+  numbers. `make extract-sample`, `make assistant-eval` and `make batch-benchmark ARGS="--llm real"`
+  print them. Multiply by your provider's current price per token.
+
 ### AI extraction (try it on a sample)
 
-Set `LLM_PROVIDER=gemini` or `groq` and `LLM_API_KEY` in `.env`, then:
+With a provider configured (above):
 
 ```bash
-make extract-sample FILE=samples/text-invoice.pdf   # prints fields, status, evidence, confidence
+make extract-sample FILE=samples/text-invoice.pdf   # prints fields, status, evidence, confidence, tokens
 ```
 
 This sends the document's text to that provider, so only use invoices you may share.
-Tests never call a real provider.
+Tests never call a real provider: they use a fake client or a mock HTTP server.
 
 ### Database
 
