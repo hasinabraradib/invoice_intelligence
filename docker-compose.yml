@@ -39,6 +39,18 @@ services:
     # arq worker: picks queued jobs from Redis and runs the processing pipeline.
     command: arq app.worker.WorkerSettings
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # The BROWSER calls the API, so this is the API address as seen from your machine.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
   postgres:
     # Official Postgres + the pgvector extension (needed later for semantic search).
     image: pgvector/pgvector:pg17

@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -42,3 +42,16 @@ extract-sample: env
 # Build semantic-search embeddings for documents processed before step 5 (safe to re-run).
 embed-backfill: env
 	$(COMPOSE) run --rm api python scripts/embed_backfill.py
+
+frontend: env  ## (Re)build and start only the web UI on http://localhost:3000
+	$(COMPOSE) up -d --build frontend
+
+frontend-dev:  ## Next.js dev server with hot reload (needs the API running)
+	cd frontend && npm install && npm run dev
+
+frontend-check:  ## Lint, typecheck and unit tests for the frontend
+	cd frontend && npm run lint && npm run typecheck && npm test
+
+# Browser smoke test against the running stack; skips itself if the stack is down.
+e2e:
+	cd frontend && npx playwright install chromium && npm run e2e

@@ -33,3 +33,8 @@ build/
 # Real sample invoices: keep only the README
 samples/*
 !samples/README.md
+
+# Frontend build and test output
+frontend/playwright-report/
+frontend/test-results/
+*.tsbuildinfo
