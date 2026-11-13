@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     worker_concurrency: int = Field(default=2, ge=1, le=32)
     stuck_job_minutes: int = Field(default=30, ge=1)
 
+    # Semantic search. Chunks of ~500 tokens with 50 overlap, never across pages.
+    embeddings_enabled: bool = True
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embed_chunk_tokens: int = Field(default=500, ge=50, le=510)  # model reads <= 512
+    embed_chunk_overlap: int = Field(default=50, ge=0)
+    # Semantic matches below this cosine similarity are dropped (unrelated text). Measured
+    # with all-MiniLM-L6-v2 on invoice-sized chunks: right match 0.25-0.38, wrong invoice
+    # 0.08-0.11, unrelated text <= 0.12. 0.20 sits between them.
+    semantic_min_similarity: float = Field(default=0.20, ge=-1, le=1)
+
     # Browsers may call the API from these origins (the Next.js dev server by default).
     cors_origins: list[str] = ["http://localhost:3000"]
 

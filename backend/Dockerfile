@@ -19,19 +19,25 @@ RUN apt-get update \
 # One thread per Tesseract process: we OCR page by page, and Tesseract's internal
 # multithreading makes small pages slower in containers (CPU oversubscription).
 ENV OMP_THREAD_LIMIT=1
+# The embedding model is downloaded on first use into /models, a Docker volume, so it is
+# not fetched again on every container start.
+ENV HF_HOME=/models/huggingface \
+    TOKENIZERS_PARALLELISM=false
 
 # Install dependencies BEFORE copying source code: this layer is cached and only
 # rebuilt when pyproject.toml changes, not on every code edit.
 # INSTALL_DEV=true also installs pytest/ruff (used by `make test` / `make lint`).
 ARG INSTALL_DEV=false
 COPY pyproject.toml ./
+# CPU-only torch first (for sentence-transformers): ~200 MB instead of several GB of CUDA.
+RUN uv pip install --system --no-cache --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
 RUN if [ "$INSTALL_DEV" = "true" ]; then EXTRA="--extra dev"; else EXTRA=""; fi \
     && uv pip install --system --no-cache -r pyproject.toml $EXTRA
 
 # Run as an unprivileged user: if the app is ever compromised it is not root in the container.
 RUN useradd --create-home --uid 10001 app \
-    && mkdir -p /data/uploads \
-    && chown -R app:app /data/uploads /app
+    && mkdir -p /data/uploads /models \
+    && chown -R app:app /data/uploads /models /app
 
 COPY --chown=app:app . .
 USER app

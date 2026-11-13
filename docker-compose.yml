@@ -11,6 +11,7 @@ x-backend: &backend
   env_file: .env
   volumes:
     - uploads:/data/uploads
+    - models:/models   # embedding model cache (downloaded once)
   depends_on:
     postgres:
       condition: service_healthy   # wait until pg_isready succeeds, not just "container started"
@@ -68,3 +69,4 @@ services:
 volumes:
   pgdata:
   uploads:
+  models:

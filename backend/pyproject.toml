@@ -26,6 +26,9 @@ dependencies = [
     "httpx>=0.27",               # HTTP client for the LLM providers' REST APIs
     "pgvector>=0.3",             # SQLAlchemy type for pgvector's vector column
     "arq>=0.26",                 # async job queue on Redis (fits our async SQLAlchemy)
+    # Local sentence embeddings for semantic search. The Dockerfile installs the CPU-only
+    # torch wheel first, so the GPU build (several GB) is never pulled in.
+    "sentence-transformers>=3.0",
 ]
 
 [project.optional-dependencies]
