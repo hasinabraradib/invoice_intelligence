@@ -115,6 +115,25 @@ def test_line_items_sum_against_total_when_no_subtotal():
     )
     issue = next(i for i in validate(r).issues if i.code == "LINE_ITEMS_SUM_MISMATCH")
     assert issue.field == "total" and issue.expected == "115.00"
+    # No subtotal and no tax: lines equal to the total are fine.
+    ok = result(
+        subtotal=F(None, status="missing"),
+        tax=F(None, status="missing"),
+        items=[item("1", "115.00", "115.00")],
+    )
+    assert "LINE_ITEMS_SUM_MISMATCH" not in codes(validate(ok))
+
+
+def test_no_subtotal_with_tax_compares_lines_with_total_minus_tax():
+    # Lines 100 + tax 15 = total 115: a correct invoice, not flagged (the old rule compared
+    # the lines with the total and raised a false LINE_ITEMS_SUM_MISMATCH).
+    correct = result(subtotal=F(None, status="missing"), items=[item("1", "100.00", "100.00")])
+    assert "LINE_ITEMS_SUM_MISMATCH" not in codes(validate(correct))
+    within = result(subtotal=F(None, status="missing"), items=[item("1", "100.004", "100.004")])
+    assert "LINE_ITEMS_SUM_MISMATCH" not in codes(validate(within))  # MONEY_TOLERANCE
+    wrong = result(subtotal=F(None, status="missing"), items=[item("1", "90.00", "90.00")])
+    issue = next(i for i in validate(wrong).issues if i.code == "LINE_ITEMS_SUM_MISMATCH")
+    assert issue.field == "total" and issue.expected == "100.00" and issue.actual == "90.00"
 
 
 def test_unreadable_line_total_skips_sum_with_warning():

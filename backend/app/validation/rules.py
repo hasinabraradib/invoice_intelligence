@@ -106,8 +106,14 @@ def check_line_items(result: ExtractionResult, tolerance: Decimal) -> list[Valid
     issues = []
     totals = [item.line_total.value for item in result.line_items]
     if result.line_items and all(isinstance(v, Decimal) for v in totals):
-        target_name = "subtotal" if _amount(result, "subtotal") is not None else "total"
-        target = _amount(result, target_name)
+        # Line items add up to the subtotal. Without a subtotal they add up to the total
+        # before tax: total - tax when a tax is printed, else the total itself.
+        subtotal, total, tax = (_amount(result, n) for n in ("subtotal", "total", "tax"))
+        if subtotal is not None:
+            target_name, target = "subtotal", subtotal
+        else:
+            target_name = "total"
+            target = None if total is None else total - (tax or Decimal(0))
         if target is not None and _differs(sum(totals, Decimal(0)), target, tolerance):
             issues.append(
                 ValidationIssue(
