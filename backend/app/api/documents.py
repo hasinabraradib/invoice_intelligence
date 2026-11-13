@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_queue
 from app.api.errors import ERRORS, ApiError, not_found
 from app.api.schemas import (
+    ColumnMappingUpdate,
     DocumentDetail,
     DocumentResult,
     DocumentStatusView,
@@ -25,6 +26,9 @@ from app.api.schemas import (
     JobAccepted,
     JobProgress,
     JobView,
+    LedgerRowView,
+    LedgerSheetView,
+    LedgerView,
     Page,
     PageInfo,
     UploadResponse,
@@ -35,6 +39,7 @@ from app.config import Settings, get_settings
 from app.db import get_session
 from app.filters import DocumentFilters
 from app.jobs import JobQueue
+from app.ledger.store import MappingError, ledger_rows, set_mapping
 from app.models import Document, DocumentStatus, JobStatus
 from app.parsing.errors import (
     CorruptFile,
@@ -433,3 +438,54 @@ async def get_page_image(
     return FileResponse(
         image, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"}
     )
+
+
+# ---------------------------------------------------------------- ledgers
+
+
+@router.get(
+    "/{document_id}/ledger",
+    response_model=LedgerView,
+    responses=ERRORS,
+    summary="Ledger sheets (lists of invoices): column mapping and rows",
+)
+async def get_ledger(
+    document_id: uuid.UUID,
+    session: Session,
+    sheet: Annotated[str | None, Query(max_length=255)] = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> LedgerView:
+    document = await _get_document(session, document_id)
+    # JSONB does not keep key order: list sheets in workbook order (by page).
+    entries = (document.ledger_mapping or {}).get("sheets", {})
+    sheets = sorted(
+        (LedgerSheetView(name=name, **entry) for name, entry in entries.items()),
+        key=lambda sheet: sheet.page,
+    )
+    rows = [r for r in await ledger_rows(session, document_id) if sheet in (None, r.sheet_name)]
+    page = [LedgerRowView.model_validate(r) for r in rows[offset : offset + limit]]
+    return LedgerView(
+        sheets=sheets,
+        rows=Page[LedgerRowView](items=page, total=len(rows), limit=limit, offset=offset),
+    )
+
+
+@router.put(
+    "/{document_id}/column-mapping",
+    response_model=LedgerSheetView,
+    responses=ERRORS,
+    summary="Fix how a sheet's columns map to invoice fields",
+)
+async def put_column_mapping(
+    document_id: uuid.UUID, body: ColumnMappingUpdate, session: Session
+) -> LedgerSheetView:
+    """Re-maps the stored rows at once (no re-processing). The mapping is marked manual and
+    kept when the document is processed again."""
+    document = await _get_document(session, document_id)
+    try:
+        entry = await set_mapping(session, document, body.sheet, dict(body.columns), body.is_ledger)
+    except MappingError as exc:
+        raise ApiError(422, "invalid_mapping", str(exc)) from exc
+    await session.commit()
+    return LedgerSheetView(name=body.sheet, **entry)

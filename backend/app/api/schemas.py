@@ -303,3 +303,57 @@ class DocumentResult(BaseModel):
 
     document_id: uuid.UUID
     invoices: list[InvoiceResult]
+
+
+# ---------------------------------------------------------------- ledgers
+
+LedgerField = Literal["invoice_number", "invoice_date", "supplier_name", "total", "tax", "currency"]
+
+
+class LedgerSheetView(BaseModel):
+    name: str
+    page: int  # the sheet's page number (as in /pages)
+    is_ledger: bool
+    source: Literal["auto", "manual"]
+    columns: dict[str, str | None]  # field -> column header (None = not mapped)
+    available_columns: list[str]
+    row_count: int
+
+
+class LedgerRowView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    sheet_name: str
+    row_number: int  # as shown in Excel
+    invoice_number: str | None
+    invoice_date: date | None
+    supplier_name: str | None
+    total: Decimal | None
+    tax: Decimal | None
+    currency: str | None
+    problems: list[str]
+    cells: dict[str, Any]
+
+
+class LedgerView(BaseModel):
+    sheets: list[LedgerSheetView]
+    rows: Page[LedgerRowView]  # rows of ledger sheets only
+
+
+class ColumnMappingUpdate(BaseModel):
+    """Fix a wrong mapping. Only the fields you send change; null un-maps a field."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "sheet": "Invoices",
+                "columns": {"total": "Gross (BDT)", "tax": None},
+            }
+        },
+    )
+
+    sheet: str = Field(min_length=1, max_length=255)
+    columns: dict[LedgerField, str | None] = Field(default_factory=dict)
+    is_ledger: bool | None = None  # None = decide from the mapping

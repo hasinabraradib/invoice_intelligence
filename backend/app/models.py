@@ -92,6 +92,9 @@ class Document(Base):
     # The job that last saved this document's page texts: a retry of that same job can
     # reuse them instead of parsing and OCR'ing a 1000-page file again.
     text_job_id: Mapped[uuid.UUID | None] = mapped_column()
+    # For spreadsheets: per sheet, whether it is a ledger (a list of invoices) and how its
+    # columns map to fields ({"sheets": {name: {...}}}). "source": auto or manual.
+    ledger_mapping: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = _now()
     updated_at: Mapped[datetime] = _now(onupdate=func.now())
 
@@ -205,6 +208,11 @@ class ValidationIssue(Base):
     message: Mapped[str] = mapped_column(Text)
     expected: Mapped[str | None] = mapped_column(Text)
     actual: Mapped[str | None] = mapped_column(Text)
+    # Set for issues raised by a cross-check: they are kept when validation re-runs and are
+    # replaced only when that cross-check runs again.
+    cross_check_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("cross_checks.id", ondelete="CASCADE"), index=True
+    )
 
 
 class Correction(Base):
@@ -275,3 +283,91 @@ class TextChunk(Base):
             postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
     )
+
+
+class LedgerRow(Base):
+    """One data row of a spreadsheet. For ledger sheets the mapped invoice fields are filled;
+    `cells` keeps the raw row so a corrected column mapping can be applied without re-parsing."""
+
+    __tablename__ = "ledger_rows"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    sheet_name: Mapped[str] = mapped_column(String(255))
+    row_number: Mapped[int] = mapped_column(Integer)  # as shown in Excel (evidence)
+    cells: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    invoice_number: Mapped[str | None] = mapped_column(String(100))
+    invoice_number_key: Mapped[str | None] = mapped_column(String(100), index=True)
+    invoice_date: Mapped[date | None] = mapped_column(Date)
+    supplier_name: Mapped[str | None] = mapped_column(Text)
+    supplier_key: Mapped[str | None] = mapped_column(String(255))
+    total: Mapped[Decimal | None] = mapped_column(Money)
+    tax: Mapped[Decimal | None] = mapped_column(Money)
+    currency: Mapped[str | None] = mapped_column(String(3))
+    problems: Mapped[list[str]] = mapped_column(JSONB, default=list)
+
+    __table_args__ = (UniqueConstraint("document_id", "sheet_name", "row_number"),)
+
+
+class CrossCheck(Base):
+    """Comparison of two documents (invoices vs a ledger, or invoices vs invoices). One row
+    per ordered pair: running it again replaces its findings (idempotent)."""
+
+    __tablename__ = "cross_checks"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    document_a_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    document_b_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    mode: Mapped[str | None] = mapped_column(
+        String(30)
+    )  # invoices_vs_ledger | invoices_vs_invoices
+    status: Mapped[JobStatus] = mapped_column(
+        _status(JobStatus, "cross_check_status"), default=JobStatus.QUEUED
+    )
+    error: Mapped[str | None] = mapped_column(Text)
+    summary: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)  # counts per kind
+    created_at: Mapped[datetime] = _now()
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (UniqueConstraint("document_a_id", "document_b_id"),)
+
+
+class CrossCheckFinding(Base):
+    """One result of a cross-check, with the evidence on each side (page or sheet row)."""
+
+    __tablename__ = "cross_check_findings"
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    cross_check_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cross_checks.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)  # display order
+    kind: Mapped[str] = mapped_column(String(40))  # matched, amount_mismatch, missing_in_b...
+    severity: Mapped[str] = mapped_column(String(10))  # info | warning | error
+    field: Mapped[str | None] = mapped_column(String(100))
+    value_a: Mapped[str | None] = mapped_column(Text)
+    value_b: Mapped[str | None] = mapped_column(Text)
+    message: Mapped[str] = mapped_column(Text)
+    invoice_a_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("invoices.id", ondelete="SET NULL")
+    )
+    invoice_b_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("invoices.id", ondelete="SET NULL")
+    )
+    ledger_row_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("ledger_rows.id", ondelete="SET NULL")
+    )
+    # Evidence kept as plain values too, so it survives re-processing of either document.
+    page_a: Mapped[int | None] = mapped_column(Integer)
+    page_b: Mapped[int | None] = mapped_column(Integer)
+    sheet_b: Mapped[str | None] = mapped_column(String(255))
+    row_b: Mapped[int | None] = mapped_column(Integer)
+    segment_a: Mapped[int | None] = mapped_column(Integer)
+    segment_b: Mapped[int | None] = mapped_column(Integer)

@@ -268,11 +268,24 @@ class Repository:
         return list(rows)
 
     async def replace_issues(self, invoice_id: uuid.UUID, issues: list[Issue]) -> None:
+        """Replace the validation issues. Cross-check issues are kept: only re-running that
+        cross-check replaces them."""
         await self.session.execute(
-            delete(ValidationIssue).where(ValidationIssue.invoice_id == invoice_id)
+            delete(ValidationIssue).where(
+                ValidationIssue.invoice_id == invoice_id, ValidationIssue.cross_check_id.is_(None)
+            )
         )
         for issue in issues:
             self.session.add(ValidationIssue(invoice_id=invoice_id, **issue.model_dump()))
+
+    async def get_cross_issues(self, invoice_id: uuid.UUID) -> list[ValidationIssue]:
+        rows = await self.session.scalars(
+            select(ValidationIssue).where(
+                ValidationIssue.invoice_id == invoice_id,
+                ValidationIssue.cross_check_id.is_not(None),
+            )
+        )
+        return list(rows)
 
     # ------------------------------------------------------------ job queue state
 

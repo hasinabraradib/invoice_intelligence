@@ -43,6 +43,7 @@ from app.invoices import (
     reconcile_segments,
     refresh_document_status,
 )
+from app.ledger.store import ledger_pages, save_ledgers
 from app.models import DocumentStatus, Invoice, JobStatus, ValidationIssue
 from app.ocr.engine import OcrOptions
 from app.ocr.parallel import ocr_document_parallel
@@ -145,9 +146,14 @@ async def process_document(
             await stage("resuming")
             pages = await repo.load_source_pages(document_id)
         else:
-            pages, page_count = await _read_pages(path, filename, settings, stage)
+            pages, page_count, sheets = await _read_pages(path, filename, settings, stage)
             await repo.save_page_texts(document_id, pages, page_count=page_count, job_id=job_id)
+            if sheets:  # spreadsheets: store rows, recognise ledgers (lists of invoices)
+                await save_ledgers(session, await repo.get_document(document_id), sheets)
             await session.commit()
+        # A ledger lists many invoices; it is not one invoice, so it is not sent to the LLM.
+        # Cross-checks use its rows instead.
+        skip_pages = ledger_pages(await repo.get_document(document_id))
         if not pages:
             raise PipelineError("the document has no text to extract from")
 
@@ -161,6 +167,11 @@ async def process_document(
             segments = await anyio.to_thread.run_sync(
                 segment_document, pages, page_count, classifier
             )
+            # A workbook with a ledger is a ledger document: its other sheets (notes, totals)
+            # are not invoices either.
+            segments = [] if skip_pages else segments
+            for index, segment in enumerate(segments):
+                segment.index = index
             await reconcile_segments(repo, document_id, segments)
             await repo.update_job(
                 job_id, segments=[s.to_dict() for s in segments], segments_total=len(segments)
@@ -290,8 +301,8 @@ async def process_document(
 
 async def _read_pages(
     path: Path, filename: str, settings: Settings, stage: Stage
-) -> tuple[list[SourcePage], int]:
-    """Parse, then OCR the pages without text. Returns (pages, page_count)."""
+) -> tuple[list[SourcePage], int, list]:
+    """Parse, then OCR the pages without text. Returns (pages, page_count, sheets)."""
     # CPU-heavy, synchronous work runs in a thread so the event loop stays free.
     await stage("parsing")
     parsed = await anyio.to_thread.run_sync(
@@ -332,7 +343,7 @@ async def _read_pages(
         )
     await stage("segmenting", pages_done=len(parsed.pages))
     pages = source_pages(parsed)
-    return pages, parsed.page_count or max((p.number for p in pages), default=0)
+    return pages, parsed.page_count or max((p.number for p in pages), default=0), parsed.sheets
 
 
 async def _extract_segments(
@@ -425,8 +436,11 @@ async def _save_segment(
         total=result.fields["total"].value,
     )
     issues = report.issues + duplicates
+    cross = await repo.get_cross_issues(invoice.id)  # earlier cross-check findings still apply
     needs_review = apply_review_state(
-        invoice, issues, report.needs_review or any(i.severity == "error" for i in duplicates)
+        invoice,
+        [*issues, *cross],
+        report.needs_review or any(i.severity == "error" for i in [*duplicates, *cross]),
     )
     if segment.recheck:  # boundaries moved: corrections were kept but must be re-checked
         issues.append(boundary_issue(segment))

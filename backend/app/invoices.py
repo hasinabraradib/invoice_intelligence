@@ -163,8 +163,11 @@ async def revalidate(
         total=invoice.total,
     )
     issues = report.issues + duplicates
+    cross = await repo.get_cross_issues(invoice.id)  # kept: only their cross-check replaces them
     invoice.needs_review = apply_review_state(
-        invoice, issues, report.needs_review or any(i.severity == "error" for i in duplicates)
+        invoice,
+        [*issues, *cross],
+        report.needs_review or any(i.severity == "error" for i in [*duplicates, *cross]),
     )
     await repo.replace_issues(invoice.id, issues)
     await repo.session.flush()
