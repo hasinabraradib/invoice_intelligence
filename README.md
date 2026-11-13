@@ -53,6 +53,32 @@ outages, timeouts, database hiccups) are retried with exponential backoff, up to
 `JOB_MAX_ATTEMPTS`. Permanent ones (corrupt file, password protected...) fail at once.
 Jobs left "running" by a crashed worker are requeued when the worker restarts.
 
+### Search modes
+
+`GET /search?q=...&mode=hybrid` (default). Every mode returns **one hit per document** (its
+best page or chunk) with the page number, a snippet, a score and `matched_by`.
+
+| Mode | How | Good at | Weak at |
+|---|---|---|---|
+| `keyword` | Postgres full-text search on page text (`tsvector`, ranked by `ts_rank`) | exact things: invoice numbers, supplier names, codes | synonyms ("power" will not find "electricity") |
+| `semantic` | nearest text chunks by cosine distance of local sentence embeddings (all-MiniLM-L6-v2 + pgvector HNSW) | meaning: "power charges" finds an electricity bill | exact codes and numbers |
+| `hybrid` | both lists merged with **reciprocal rank fusion** (k=60) | both at once | nothing worth noting; the default |
+
+**Why hybrid by default:** invoice searches mix both kinds ("ACME electricity March",
+"INV-2041"). The two scores are on different scales, so RRF combines *ranks* instead of raw
+scores. A document near the top of both lists beats one that is first in only one.
+`matched_by` says which side found it (`keyword`, `semantic` or `both`). If embeddings are
+off or failing, hybrid falls back to keyword-only and `mode=semantic` returns 503.
+
+Keyword snippets highlight matches with `<mark>`; semantic snippets are plain text. Both are
+HTML-escaped. The embedding model runs locally (no API key). It downloads once (~90 MB) into
+the `models` Docker volume. Documents processed before semantic search existed can be
+indexed with:
+
+```bash
+make embed-backfill   # safe to re-run: skips documents that already have chunks
+```
+
 ### OCR (scans and photos)
 
 Pages without a usable text layer (scanned PDFs, PNG/JPEG/TIFF) are OCR'd with Tesseract

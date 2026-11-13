@@ -8,6 +8,7 @@ erDiagram
     documents ||--o{ processing_jobs : "is processed by"
     documents ||--o| invoices : "yields"
     documents ||--o{ page_texts : "has"
+    documents ||--o{ text_chunks : "is split into"
     invoices ||--o{ line_items : "contains"
     invoices ||--o{ validation_issues : "has"
     invoices ||--o{ corrections : "is corrected by"
@@ -91,7 +92,14 @@ erDiagram
         text text
         float ocr_confidence
         tsvector search "generated, GIN index"
-        vector embedding "384, nullable"
+    }
+    text_chunks {
+        uuid id PK
+        uuid document_id FK
+        int page_number
+        int chunk_index
+        text text
+        vector embedding "384, HNSW cosine index"
     }
 ```
 
@@ -105,8 +113,9 @@ erDiagram
 | `line_items` | Invoice rows in printed order (`position`). They're replaced on every run, which keeps re-processing idempotent. |
 | `validation_issues` | What the rules flagged (errors and warnings) and why: the review queue reads this. |
 | `corrections` | Audit trail of human edits (who changed what, from what, and when). Never deleted on re-processing. |
-| `page_texts` | Text of every page or sheet, for keyword search (generated `tsvector` with a GIN index) and, in step 5, semantic search (`embedding`). |
+| `page_texts` | Text of every page or sheet, for keyword search (generated `tsvector` with a GIN index). |
+| `text_chunks` | Pieces of about 500 tokens from one page each (50-token overlap) with their 384-number embedding, for semantic search. An HNSW index makes nearest-neighbour lookups fast. They're replaced on every run (idempotent), and chunks never cross pages, so every hit has a page number. |
 
-Indexes: `invoices(supplier_key, invoice_number)` and `invoices(supplier_key, invoice_date, total)`
+Indexes: `invoices(supplier_key, invoice_number_key)` and `invoices(supplier_key, invoice_date, total)`
 for the duplicate checks, and `documents(status)` for listing by status. Foreign keys cascade
 on delete, so deleting a document removes everything derived from it.
