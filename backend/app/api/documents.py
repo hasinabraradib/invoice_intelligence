@@ -3,10 +3,13 @@
 import logging
 import uuid
 from datetime import date
-from typing import Annotated
+from pathlib import Path
+from typing import Annotated, Literal
 
 import anyio
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi import Path as FastApiPath
+from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,8 +23,10 @@ from app.api.schemas import (
     FileError,
     InvoiceResult,
     JobAccepted,
+    JobProgress,
     JobView,
     Page,
+    PageInfo,
     UploadResponse,
     UploadResult,
 )
@@ -41,6 +46,7 @@ from app.parsing.errors import (
 )
 from app.parsing.file_types import detect_file_kind, extension_warning
 from app.parsing.models import FileKind
+from app.previews import NoPreview, PageNotFound, page_preview
 from app.repository import Repository
 from app.storage import StoredFile, sanitize_filename, save_upload
 
@@ -207,20 +213,32 @@ async def list_documents(
     supplier: Annotated[str | None, Query(max_length=200)] = None,
     date_from: Annotated[date | None, Query(description="Invoice date from (inclusive)")] = None,
     date_to: Annotated[date | None, Query(description="Invoice date to (inclusive)")] = None,
+    order: Annotated[
+        Literal["newest", "oldest"], Query(description="oldest = review queue order")
+    ] = "newest",
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> Page[DocumentSummary]:
-    """Newest first. Invoice filters (supplier, dates, needs_review) only match documents
-    that already have an extracted invoice."""
+    """Newest first by default. Invoice filters (supplier, dates, needs_review) only match
+    documents that already have an extracted invoice. Each item has its latest job."""
     filters = DocumentFilters(status_, needs_review, supplier, date_from, date_to)
     base = filters.apply(
         select(Document, Invoice).outerjoin(Invoice, Invoice.document_id == Document.id)
     )
     total = await session.scalar(select(func.count()).select_from(base.subquery()))
-    rows = await session.execute(
-        base.order_by(Document.created_at.desc(), Document.id).limit(limit).offset(offset)
+    sort = (
+        (Document.created_at.desc(), Document.id)
+        if order == "newest"
+        else (Document.created_at.asc(), Document.id)
     )
-    items = [document_summary(doc, invoice) for doc, invoice in rows]
+    rows = (await session.execute(base.order_by(*sort).limit(limit).offset(offset))).all()
+    jobs = await Repository(session).latest_jobs([doc.id for doc, _ in rows])
+    items = []
+    for doc, invoice in rows:
+        item = document_summary(doc, invoice)
+        job = jobs.get(doc.id)
+        item.job = JobProgress.model_validate(job) if job else None
+        items.append(item)
     return Page[DocumentSummary](items=items, total=total or 0, limit=limit, offset=offset)
 
 
@@ -311,3 +329,85 @@ async def reprocess(document_id: uuid.UUID, session: Session, queue: Queue) -> J
     await session.commit()
     await _enqueue_or_mark_failed(repo, queue, job.id, document_id)
     return JobAccepted(document_id=document_id, job_id=job.id, status=JobStatus.QUEUED)
+
+
+# ---------------------------------------------------------------- files and previews
+
+
+async def _stored_file(document: Document, settings: Settings) -> Path:
+    """The document's file on disk, checked to be inside UPLOAD_DIR (defence in depth)."""
+    path = Path(await anyio.Path(document.storage_path).resolve())
+    root = Path(await anyio.Path(settings.upload_dir).resolve())
+    if not path.is_relative_to(root) or not await anyio.Path(path).is_file():
+        raise ApiError(404, "file_missing", "The stored file is not available.")
+    return path
+
+
+@router.get(
+    "/{document_id}/file",
+    response_class=FileResponse,
+    responses=ERRORS,
+    summary="Download the original file",
+)
+async def get_file(document_id: uuid.UUID, session: Session, settings: AppSettings):
+    """Served inline with the content type detected at upload (not the client's) and the
+    sanitised filename; `nosniff` stops browsers from guessing another type."""
+    document = await _get_document(session, document_id)
+    return FileResponse(
+        await _stored_file(document, settings),
+        media_type=document.mime_type,
+        filename=document.filename,
+        content_disposition_type="inline",
+        headers={"X-Content-Type-Options": "nosniff"},
+    )
+
+
+@router.get(
+    "/{document_id}/pages",
+    response_model=list[PageInfo],
+    responses=ERRORS,
+    summary="Pages (or sheets) with their text",
+)
+async def get_pages(document_id: uuid.UUID, session: Session) -> list[PageInfo]:
+    document = await _get_document(session, document_id)
+    has_image = document.mime_type in ("application/pdf", "image/png", "image/jpeg", "image/tiff")
+    pages = await Repository(session).get_page_texts(document_id)
+    return [
+        PageInfo(
+            page_number=p.page_number,
+            source=p.source,
+            ocr_confidence=p.ocr_confidence,
+            text=p.text,
+            has_image=has_image and p.source != "sheet",
+        )
+        for p in pages
+    ]
+
+
+@router.get(
+    "/{document_id}/pages/{page}/image",
+    response_class=FileResponse,
+    responses={**ERRORS, 200: {"content": {"image/png": {}}}},
+    summary="PNG preview of one page",
+)
+async def get_page_image(
+    document_id: uuid.UUID,
+    page: Annotated[int, FastApiPath(ge=1, le=100_000)],
+    session: Session,
+    settings: AppSettings,
+):
+    """Rendered once at 1200 px wide, then served from a disk cache. 404 for spreadsheets."""
+    document = await _get_document(session, document_id)
+    source = await _stored_file(document, settings)
+    cache_dir = settings.upload_dir / "previews" / str(document_id)
+    try:
+        image = await anyio.to_thread.run_sync(page_preview, source, page, cache_dir)
+    except NoPreview as exc:
+        raise ApiError(404, "no_preview", "Spreadsheets have no page images.") from exc
+    except PageNotFound as exc:
+        raise ApiError(404, "page_not_found", f"Page {page} does not exist.") from exc
+    except DocumentError as exc:
+        raise ApiError(422, exc.code, exc.message) from exc
+    return FileResponse(
+        image, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"}
+    )
