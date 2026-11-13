@@ -94,6 +94,21 @@ async def test_corrupt_file_fails_without_retry(api, run_job, tmp_path):
     assert await run_job(uploaded["job_id"], FakeLLMClient(GOOD_REPLY)) == "skipped"
 
 
+async def test_redelivered_running_job_is_taken_back(api, run_job, db_session, tmp_path):
+    # The worker was restarted mid-job: the row still says "running" and arq redelivers.
+    uploaded = await _upload(api, "inv.pdf", factories.text_pdf(tmp_path / "a.pdf", 1).read_bytes())
+    job_id = uuid.UUID(uploaded["job_id"])
+    await Repository(db_session).update_job(job_id, status=m.JobStatus.RUNNING, stage="extracting")
+    await db_session.commit()
+
+    # A first delivery of a running job is a duplicate: left alone.
+    assert await run_job(uploaded["job_id"], FakeLLMClient(GOOD_REPLY)) == "skipped"
+    # A redelivery (job_try > 1) means the attempt holding it died: run it again.
+    assert await run_job(uploaded["job_id"], FakeLLMClient(GOOD_REPLY), job_try=2) == "processed"
+    status = (await api.get(f"/documents/{uploaded['document_id']}/status")).json()
+    assert status["status"] == "processed" and status["job_status"] == "succeeded"
+
+
 async def test_stuck_running_job_is_requeued(db_session, queue):
     repo = Repository(db_session)
     doc = await repo.create_document(

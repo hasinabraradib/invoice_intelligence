@@ -51,6 +51,16 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
     async with ctx["sessionmaker"]() as session:
         repo = Repository(session)
         job = await repo.get_job(uuid.UUID(job_id))
+        if job is not None and job.status == JobStatus.RUNNING and ctx.get("job_try", 1) > 1:
+            # arq redelivers a message only when the attempt holding it died (worker
+            # restart, crash). The job row still says "running"; take it back now instead
+            # of waiting STUCK_JOB_MINUTES. Safe: processing is idempotent.
+            await repo.update_job(
+                job.id, status=JobStatus.QUEUED, stage=None, error="requeued: worker stopped"
+            )
+            await session.commit()
+            logger.warning("job %s was interrupted; running it again", job.id)
+            job = await repo.get_job(job.id)
         if job is None or job.status != JobStatus.QUEUED:
             return "skipped"  # duplicate message, or already handled: nothing to do
         document = await repo.get_document(job.document_id)
