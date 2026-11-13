@@ -1,0 +1,5981 @@
+{
+  "run_at": "2026-11-13T20:27:48+00:00",
+  "dataset": "synthetic",
+  "provider": "openai",
+  "model": "gpt-6-luna",
+  "prices": {
+    "input": "0.10",
+    "output": "0.50"
+  },
+  "wall_seconds": 310.9,
+  "results_file": "2026-11-13T20-27-48Z.json",
+  "headline_split": "test",
+  "invoice_scores": [
+    {
+      "dataset": "synthetic",
+      "id": "inv-01",
+      "file": "inv-01-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0100",
+          "predicted": "INV-2025-0100",
+          "evidence": "Invoice No: INV-2025-0100"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-10-03",
+          "predicted": "2025-10-03",
+          "evidence": "Invoice Date: 2025-10-03"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-11-17",
+          "predicted": "2025-11-17",
+          "evidence": "Due Date: 2025-11-17"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Meghna Traders Ltd",
+          "predicted": "Meghna Traders Ltd",
+          "evidence": "INVOICE Meghna Traders Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Subtotal Tk 10,215.70"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "10215.70",
+          "predicted": "10215.70",
+          "evidence": "Subtotal Tk 10,215.70"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "766.18",
+          "predicted": "766.18",
+          "evidence": "VAT 7.5% Tk 766.18"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "10981.88",
+          "predicted": "10981.88",
+          "evidence": "Total Tk 10,981.88"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-02",
+      "file": "inv-02.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "PE/0107",
+          "predicted": "PE/0107",
+          "evidence": "Invoice No: PE/0107"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-09-14",
+          "predicted": "2025-09-14",
+          "evidence": "Invoice Date: 14 Sep 2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-10-14",
+          "predicted": "2025-10-14",
+          "evidence": "Due Date: 14 Oct 2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Padma Electric Co.",
+          "predicted": "Padma Electric Co.",
+          "evidence": "Padma Electric Co."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "3698.51",
+          "predicted": "3698.51",
+          "evidence": "Subtotal 3,698.51"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "554.78",
+          "predicted": "554.78",
+          "evidence": "VAT 15% 554.78"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "4253.29",
+          "predicted": "4253.29",
+          "evidence": "Total (BDT) 4,253.29"
+        }
+      ],
+      "line_tp": 5,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": true
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-03",
+      "file": "inv-03.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "KF-114",
+          "predicted": "KF-114",
+          "evidence": "Invoice No | KF-114"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-10-03",
+          "predicted": "2026-10-03",
+          "evidence": "Invoice Date | 2026-10-03 00:00:00"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Karnaphuli Foods Ltd",
+          "predicted": "Karnaphuli Foods Ltd",
+          "evidence": "INVOICE | Karnaphuli Foods Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To | Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency | BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "227.04",
+          "predicted": "227.04",
+          "evidence": "Subtotal\t\t227.04"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "17.03",
+          "predicted": "17.03",
+          "evidence": "VAT\t\t17.03"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "244.07",
+          "predicted": "244.07",
+          "evidence": "Total\t\t244.07"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-04",
+      "file": "inv-04.csv",
+      "file_type": "csv",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2026/BD/0121",
+          "predicted": "2026/BD/0121",
+          "evidence": "Invoice No | 2026/BD/0121"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "abstained",
+          "truth": "2026-07-04",
+          "predicted": null,
+          "evidence": "Invoice Date | 04/07/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "abstained",
+          "truth": "2026-08-03",
+          "predicted": null,
+          "evidence": "Due Date | 03/08/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Jamuna Paper Mills",
+          "predicted": "Jamuna Paper Mills",
+          "evidence": "Supplier | Jamuna Paper Mills"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To | Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency | BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "607.88",
+          "predicted": "607.88",
+          "evidence": "Subtotal\t\t\t607.88"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "91.18",
+          "predicted": "91.18",
+          "evidence": "VAT\t\t\t91.18"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "699.06",
+          "predicted": "699.06",
+          "evidence": "Total\t\t\t699.06"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-05",
+      "file": "inv-05.csv",
+      "file_type": "csv",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 128",
+          "predicted": "No. 128",
+          "evidence": "Invoice No | No. 128"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-08-15",
+          "predicted": "2026-08-15",
+          "evidence": "Invoice Date | 15/08/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-09-14",
+          "predicted": "2026-09-14",
+          "evidence": "Due Date | 14/09/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Northwind Office Supply Ltd",
+          "predicted": "Northwind Office Supply Ltd",
+          "evidence": "Supplier | Northwind Office Supply Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency | USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "1363.48",
+          "predicted": "1363.48",
+          "evidence": "Subtotal\t\t\t1363.48"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "102.26",
+          "predicted": "102.26",
+          "evidence": "VAT\t\t\t102.26"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "1465.74",
+          "predicted": "1465.74",
+          "evidence": "Total\t\t\t1465.74"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-06-copy",
+      "file": "inv-06-copy.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0135",
+          "predicted": "INV-2025-0135",
+          "evidence": "Invoice No: INV-2025-0135"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-12-25",
+          "predicted": "2025-12-25",
+          "evidence": "Invoice Date: 2025-12-25"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-02-08",
+          "predicted": "2026-02-08",
+          "evidence": "Due Date: 2026-02-08"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Bluefin Logistics Inc.",
+          "predicted": "Bluefin Logistics Inc.",
+          "evidence": "INVOICE Bluefin Logistics Inc."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "193.40",
+          "predicted": "193.40",
+          "evidence": "Subtotal 193.40"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "14.51",
+          "predicted": "14.51",
+          "evidence": "VAT 7.5% 14.51"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "207.91",
+          "predicted": "207.91",
+          "evidence": "Total (USD) 207,91"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": true,
+      "duplicate_flagged": true
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-06",
+      "file": "inv-06.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0135",
+          "predicted": "INV-2025-0135",
+          "evidence": "Invoice No: INV-2025-0135"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-12-25",
+          "predicted": "2025-12-25",
+          "evidence": "Invoice Date: 2025-12-25"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-02-08",
+          "predicted": "2026-02-08",
+          "evidence": "Due Date: 2026-02-08"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Bluefin Logistics Inc.",
+          "predicted": "Bluefin Logistics Inc.",
+          "evidence": "INVOICE Bluefin Logistics Inc."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "193.40",
+          "predicted": "193.40",
+          "evidence": "Subtotal 193.40"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "14.51",
+          "predicted": "14.51",
+          "evidence": "VAT 7.5% 14.51"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "207.91",
+          "predicted": "207.91",
+          "evidence": "Total (USD) 207.91"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-07",
+      "file": "inv-07.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "CS/0142",
+          "predicted": "CS/0142",
+          "evidence": "Invoice No | CS/0142"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-02-18",
+          "predicted": "2026-02-18",
+          "evidence": "Invoice Date | 2026-02-18 00:00:00"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-04-04",
+          "predicted": "2026-04-04",
+          "evidence": "Due Date | 2026-04-04 00:00:00"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Cobalt Software LLC",
+          "predicted": "Cobalt Software LLC",
+          "evidence": "INVOICE | Cobalt Software LLC"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To | Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency | USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "9383.22",
+          "predicted": "9383.22",
+          "evidence": "Subtotal\t\t\t9383.22"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "9383.22",
+          "predicted": "9383.22",
+          "evidence": "Total\t\t\t9383.22"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-08",
+      "file": "inv-08.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "RM-149",
+          "predicted": "RM-149",
+          "evidence": "Invoice No: RM-149"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-01-03",
+          "predicted": "2026-01-03",
+          "evidence": "Invoice Date: January 3, 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-02-02",
+          "predicted": "2026-02-02",
+          "evidence": "Due Date: February 2, 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Rheinland Maschinen GmbH",
+          "predicted": "Rheinland Maschinen GmbH",
+          "evidence": "Rheinland Maschinen GmbH INVOICE"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "13266.95",
+          "predicted": "13266.95",
+          "evidence": "Subtotal 13,266.95"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1990.04",
+          "predicted": "1990.04",
+          "evidence": "VAT 15% 1,990.04"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "15356.99",
+          "predicted": "15356.99",
+          "evidence": "Total (EUR) 15,356.99"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-09",
+      "file": "inv-09.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2025/BD/0156",
+          "predicted": "2025/BD/0156",
+          "evidence": "Invoice No: 2025/BD/0156"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-11-28",
+          "predicted": "2025-11-28",
+          "evidence": "Invoice Date: 28.11.2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-12-12",
+          "predicted": "2025-12-12",
+          "evidence": "Due Date: 12.12.2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Alpine Instruments AG",
+          "predicted": "Alpine Instruments AG",
+          "evidence": "INVOICE Alpine Instruments AG"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To: Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "1176.20",
+          "predicted": "1176.20",
+          "evidence": "Subtotal 1.176,20"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "223.48",
+          "predicted": "223.48",
+          "evidence": "VAT 19% 223,48"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "1399.68",
+          "predicted": "1399.68",
+          "evidence": "Total (EUR) 1.399,68"
+        }
+      ],
+      "line_tp": 1,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-10",
+      "file": "inv-10.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 163",
+          "predicted": "No. 163",
+          "evidence": "Invoice No | No. 163"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-04-23",
+          "predicted": "2026-04-23",
+          "evidence": "Invoice Date | 2026-04-23 00:00:00"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Alpine Instruments AG",
+          "predicted": "Alpine Instruments AG",
+          "evidence": "INVOICE | Alpine Instruments AG"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To | Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency | EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "232.84",
+          "predicted": "232.84",
+          "evidence": "Subtotal\t\t\t232.84"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "17.46",
+          "predicted": "17.46",
+          "evidence": "VAT\t\t\t17.46"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "250.30",
+          "predicted": "250.3",
+          "evidence": "Total\t\t\t250.3"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-11",
+      "file": "inv-11.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2026-0170",
+          "predicted": "INV-2026-0170",
+          "evidence": "Invoice No: INV-2026-0170"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-05-19",
+          "predicted": "2026-05-19",
+          "evidence": "Invoice Date: 2026-05-19"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-06-18",
+          "predicted": "2026-06-18",
+          "evidence": "Due Date: 2026-06-18"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Meghna Traders Ltd",
+          "predicted": "Meghna Traders Ltd",
+          "evidence": "Meghna Traders Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "306.18",
+          "predicted": "306.18",
+          "evidence": "Subtotal 306.18"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "15.31",
+          "predicted": "15.31",
+          "evidence": "VAT 5% 15.31"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "321.49",
+          "predicted": "321.49",
+          "evidence": "Total (BDT) 321.49"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-12",
+      "file": "inv-12.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "PE/0177",
+          "predicted": "PE/0177",
+          "evidence": "Invoice No: PE/0177"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-04-16",
+          "predicted": "2026-04-16",
+          "evidence": "Invoice Date: 16 Apr 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-04-30",
+          "predicted": "2026-04-30",
+          "evidence": "Due Date: 30 Apr 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Padma Electric Co.",
+          "predicted": "Padma Electric Co.",
+          "evidence": "INVOICE Padma Electric Co."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "114.00",
+          "predicted": "114.00",
+          "evidence": "VAT 19% 114.00"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "714.00",
+          "predicted": "714.00",
+          "evidence": "Total (BDT) 714.00"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "subtotal"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "LINE_ITEMS_SUM_MISMATCH",
+          "total"
+        ],
+        [
+          "MISSING_RECOMMENDED",
+          "subtotal"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-13",
+      "file": "inv-13.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "KF-184",
+          "predicted": "KF-184",
+          "evidence": "Invoice No: KF-184"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "abstained",
+          "truth": "2025-12-04",
+          "predicted": null,
+          "evidence": "Invoice Date: 04/12/2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "abstained",
+          "truth": "2026-01-03",
+          "predicted": null,
+          "evidence": "Due Date: 03/01/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Karnaphuli Foods Ltd",
+          "predicted": "Karnaphuli Foods Ltd",
+          "evidence": "INVOICE Karnaphuli Foods Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Subtotal Tk 8,656.32"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "8656.32",
+          "predicted": "8656.32",
+          "evidence": "Subtotal Tk 8,656.32"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "649.22",
+          "predicted": "649.22",
+          "evidence": "VAT 7.5% Tk 649.22"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "9305.54",
+          "predicted": "9305.54",
+          "evidence": "Total Tk 9,305.54"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-14",
+      "file": "inv-14.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2026/BD/0191",
+          "predicted": "2026/BD/0191",
+          "evidence": "Invoice No: 2026/BD/0191"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-03-13",
+          "predicted": "2026-03-13",
+          "evidence": "Invoice Date: 13.03.2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-03-27",
+          "predicted": "2026-03-27",
+          "evidence": "Due Date: 27.03.2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Jamuna Paper Mills",
+          "predicted": "Jamuna Paper Mills",
+          "evidence": "Jamuna Paper Mills INVOICE"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "5031.91",
+          "predicted": "5031.91",
+          "evidence": "Subtotal 5,031.91"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "754.79",
+          "predicted": "754.79",
+          "evidence": "VAT 15% 754.79"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "5786.70",
+          "predicted": "5786.70",
+          "evidence": "Total (BDT) 5,786.70"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-15",
+      "file": "inv-15.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 198",
+          "predicted": "No. 198",
+          "evidence": "Invoice No | No. 198"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-12-14",
+          "predicted": "2025-12-14",
+          "evidence": "Invoice Date | 14/12/2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-01-13",
+          "predicted": "2026-01-13",
+          "evidence": "Due Date | 13/01/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Northwind Office Supply Ltd",
+          "predicted": "Northwind Office Supply Ltd",
+          "evidence": "Supplier | Northwind Office Supply Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To | Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency | USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "13220.60",
+          "predicted": "13220.60",
+          "evidence": "Subtotal\t\t\t13220.60"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1975.59",
+          "predicted": "1975.59",
+          "evidence": "VAT\t\t\t1975.59"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "15146.19",
+          "predicted": "15146.19",
+          "evidence": "Total\t\t\t15146.19"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "LINE_ITEMS_SUM_MISMATCH",
+          "subtotal"
+        ],
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "LINE_ITEMS_SUM_MISMATCH",
+          "subtotal"
+        ],
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-16",
+      "file": "inv-16.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2026-0205",
+          "predicted": "INV-2026-0205",
+          "evidence": "Invoice No: INV-2026-0205"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-03-30",
+          "predicted": "2026-03-30",
+          "evidence": "Invoice Date: 2026-03-30"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-04-29",
+          "predicted": "2026-04-29",
+          "evidence": "Due Date: 2026-04-29"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Bluefin Logistics Inc.",
+          "predicted": "Bluefin Logistics Inc.",
+          "evidence": "INVOICE Bluefin Logistics Inc."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Subtotal $ 69,441.40"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "69441.40",
+          "predicted": "69441.40",
+          "evidence": "Subtotal $ 69,441.40"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "69441.40",
+          "predicted": "69441.40",
+          "evidence": "Total $ 69,441.40"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-17",
+      "file": "inv-17.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "CS/0212",
+          "predicted": "CS/0212",
+          "evidence": "Invoice No: CS/0212"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-05-26",
+          "predicted": "2026-05-26",
+          "evidence": "Invoice Date: 26 May 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-06-09",
+          "predicted": "2026-06-09",
+          "evidence": "Due Date: 09 Jun 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Cobalt Software LLC",
+          "predicted": "Cobalt Software LLC",
+          "evidence": "Cobalt Software LLC"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "9580.41",
+          "predicted": "9580.41",
+          "evidence": "Subtotal 9,580.41"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1820.28",
+          "predicted": "1820.28",
+          "evidence": "VAT 19% 1,820.28"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "11400.69",
+          "predicted": "11400.69",
+          "evidence": "Total (USD) 11,400.69"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-18",
+      "file": "inv-18.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "RM-219",
+          "predicted": "RM-219",
+          "evidence": "Invoice No: RM-219"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-10-07",
+          "predicted": "2025-10-07",
+          "evidence": "Invoice Date: October 7, 2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Rheinland Maschinen GmbH",
+          "predicted": "Rheinland Maschinen GmbH",
+          "evidence": "INVOICE Rheinland Maschinen GmbH"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "516.29",
+          "predicted": "516.29",
+          "evidence": "Subtotal 516.29"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "25.81",
+          "predicted": "25.81",
+          "evidence": "VAT 5% 25.81"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "542.10",
+          "predicted": "542.10",
+          "evidence": "Total (EUR) 542.10"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-19",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2025/BD/0226",
+          "predicted": "2025/BD/0226",
+          "evidence": "Invoice No: 2025/BD/0226"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-10-20",
+          "predicted": "2025-10-20",
+          "evidence": "Invoice Date: 20.10.2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-11-19",
+          "predicted": "2025-11-19",
+          "evidence": "Due Date: 19.11.2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Lisboa Textiles Lda",
+          "predicted": "Lisboa Textiles Lda",
+          "evidence": "INVOICE Lisboa Textiles Lda"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To: Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Subtotal € 74824.58"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "74824.58",
+          "predicted": "74824.58",
+          "evidence": "Subtotal € 74824.58"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "3741.23",
+          "predicted": "3741.23",
+          "evidence": "VAT 5% € 3741.23"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "78565.81",
+          "predicted": "78565.81",
+          "evidence": "Total € 78565.81"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-20",
+      "file": "inv-20.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 233",
+          "predicted": "No. 233",
+          "evidence": "Invoice No | No. 233"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-12-26",
+          "predicted": "2025-12-26",
+          "evidence": "Invoice Date | 2025-12-26 00:00:00"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-01-25",
+          "predicted": "2026-01-25",
+          "evidence": "Due Date | 2026-01-25 00:00:00"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Alpine Instruments AG",
+          "predicted": "Alpine Instruments AG",
+          "evidence": "INVOICE | Alpine Instruments AG"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To | Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "207.78",
+          "predicted": "207.78",
+          "evidence": "Subtotal\t\t\t207.78"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "15.58",
+          "predicted": "15.58",
+          "evidence": "VAT\t\t\t15.58"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "223.36",
+          "predicted": "223.36",
+          "evidence": "Total\t\t\t223.36"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "currency"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "currency"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-21",
+      "file": "inv-21.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2026-0240",
+          "predicted": "INV-2026-0240",
+          "evidence": "Invoice No: INV-2026-0240"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-09-21",
+          "predicted": "2026-09-21",
+          "evidence": "Invoice Date: 2026-09-21"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-11-05",
+          "predicted": "2026-11-05",
+          "evidence": "Due Date: 2026-11-05"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Meghna Traders Ltd",
+          "predicted": "Meghna Traders Ltd",
+          "evidence": "INVOICE Meghna Traders Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "4261.30",
+          "predicted": "4261.30",
+          "evidence": "Subtotal 4,261.30"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "809.65",
+          "predicted": "809.65",
+          "evidence": "VAT 19% 809.65"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "5070.95",
+          "predicted": "5070.95",
+          "evidence": "Total (BDT) 5,070.95"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-22",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "PE/0247",
+          "predicted": "PE/0247",
+          "evidence": "Invoice No: PE/0247"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-01-23",
+          "predicted": "2026-01-23",
+          "evidence": "Invoice Date: 23 Jan 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-02-22",
+          "predicted": "2026-02-22",
+          "evidence": "Due Date: 22 Feb 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Padma Electric Co.",
+          "predicted": "Padma Electric Co.",
+          "evidence": "Padma Electric Co."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Subtotal Tk 94.70"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "94.70",
+          "predicted": "94.70",
+          "evidence": "Subtotal Tk 94.70"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "4.74",
+          "predicted": "4.74",
+          "evidence": "VAT 5% Tk 4.74"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "99.44",
+          "predicted": "99.44",
+          "evidence": "Total Tk 99.44"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-23",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "KF-254",
+          "predicted": "KF-254",
+          "evidence": "Invoice No: KF-254"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-04-23",
+          "predicted": "2026-04-23",
+          "evidence": "Invoice Date: April 23, 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-05-23",
+          "predicted": "2026-05-23",
+          "evidence": "Due Date: May 23, 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Karnaphuli Foods Ltd",
+          "predicted": "Karnaphuli Foods Ltd",
+          "evidence": "INVOICE Karnaphuli Foods Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "94116.87",
+          "predicted": "94116.87",
+          "evidence": "Subtotal 94,116.87"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "14117.53",
+          "predicted": "14117.53",
+          "evidence": "VAT 15% 14,117.53"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "108234.40",
+          "predicted": "108234.40",
+          "evidence": "Total (BDT) 108,234.40"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-24",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2026/BD/0261",
+          "predicted": "2026/BD/0261",
+          "evidence": "Invoice No: 2026/BD/0261"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-07-20",
+          "predicted": "2026-07-20",
+          "evidence": "Invoice Date: 20.07.2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-08-19",
+          "predicted": "2026-08-19",
+          "evidence": "Due Date: 19.08.2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Jamuna Paper Mills",
+          "predicted": "Jamuna Paper Mills",
+          "evidence": "INVOICE Jamuna Paper Mills"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To: Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "3573.50",
+          "predicted": "3573.50",
+          "evidence": "Subtotal 3,573.50"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "268.01",
+          "predicted": "268.01",
+          "evidence": "VAT 7.5% 268.01"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "3829.01",
+          "predicted": "3829.01",
+          "evidence": "Total (BDT) 3,829.01"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "TOTAL_MISMATCH",
+          "total"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-25",
+      "file": "inv-25.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 268",
+          "predicted": "No. 268",
+          "evidence": "Invoice No: No. 268"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-10-28",
+          "predicted": "2025-10-28",
+          "evidence": "Invoice Date: 28/10/2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-11-11",
+          "predicted": "2025-11-11",
+          "evidence": "Due Date: 11/11/2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Northwind Office Supply Ltd",
+          "predicted": "Northwind Office Supply Ltd",
+          "evidence": "INVOICE Northwind Office Supply Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To: Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Subtotal $ 377.57"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "377.57",
+          "predicted": "377.57",
+          "evidence": "Subtotal $ 377.57"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "18.88",
+          "predicted": "18.88",
+          "evidence": "VAT 5% $ 18.88"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "396.45",
+          "predicted": "396.45",
+          "evidence": "Total $ 396.45"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-26",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0275",
+          "predicted": "INV-2025-0275",
+          "evidence": "Invoice No: INV-2025-0275"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-09-21",
+          "predicted": "2025-09-21",
+          "evidence": "Invoice Date: 2025-09-21"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Bluefin Logistics Inc.",
+          "predicted": "Bluefin Logistics Inc.",
+          "evidence": "Bluefin Logistics Inc."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To: Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "20168.81",
+          "predicted": "20168.81",
+          "evidence": "Subtotal 20,168.81"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1008.44",
+          "predicted": "1008.44",
+          "evidence": "VAT 5% 1,008.44"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "21177.25",
+          "predicted": "21177.25",
+          "evidence": "Total (USD) 21,177.25"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-27",
+      "file": "inv-27.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "CS/0282",
+          "predicted": "CS/0282",
+          "evidence": "Invoice No: CS/0282"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "abstained",
+          "truth": "2025-11-04",
+          "predicted": null,
+          "evidence": "Invoice Date: 04/11/2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "abstained",
+          "truth": "2025-12-04",
+          "predicted": null,
+          "evidence": "Due Date: 04/12/2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Cobalt Software LLC",
+          "predicted": "Cobalt Software LLC",
+          "evidence": "INVOICE Cobalt Software LLC"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "3920.00",
+          "predicted": "3920.00",
+          "evidence": "Subtotal 3,920.00"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "744.80",
+          "predicted": "744.80",
+          "evidence": "VAT 19% 744.80"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "4664.80",
+          "predicted": "4664.80",
+          "evidence": "Total (USD) 4,664.80"
+        }
+      ],
+      "line_tp": 1,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-28",
+      "file": "inv-28.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "RM-289",
+          "predicted": "RM-289",
+          "evidence": "Invoice No: RM-289"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-02-03",
+          "predicted": "2026-02-03",
+          "evidence": "Invoice Date: February 3, 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-02-17",
+          "predicted": "2026-02-17",
+          "evidence": "Due Date: February 17, 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Rheinland Maschinen GmbH",
+          "predicted": "Rheinland Maschinen GmbH",
+          "evidence": "INVOICE Rheinland Maschinen GmbH"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Subtotal € 2,875.41"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "2875.41",
+          "predicted": "2875.41",
+          "evidence": "Subtotal € 2,875.41"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "2875.41",
+          "predicted": "2875.41",
+          "evidence": "Total € 2,875.41"
+        }
+      ],
+      "line_tp": 5,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-29",
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2025/BD/0296",
+          "predicted": "2025/BD/0296",
+          "evidence": "Invoice No: 2025/BD/0296"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-10-16",
+          "predicted": "2025-10-16",
+          "evidence": "Invoice Date: 16.10.2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-10-30",
+          "predicted": "2025-10-30",
+          "evidence": "Due Date: 30.10.2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Lisboa Textiles Lda",
+          "predicted": "Lisboa Textiles Lda",
+          "evidence": "INVOICE Lisboa Textiles Lda"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To: Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "5569.24",
+          "predicted": "5569.24",
+          "evidence": "Subtotal 5.569,24"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1058.16",
+          "predicted": "1058.16",
+          "evidence": "VAT 19% 1.058,16"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "6627.40",
+          "predicted": "6627.40",
+          "evidence": "Total (EUR) 6.627,40"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-30",
+      "file": "inv-30.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 303",
+          "predicted": "No. 303",
+          "evidence": "Invoice No: No. 303"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-10-14",
+          "predicted": "2026-10-14",
+          "evidence": "Invoice Date: 14/10/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-11-13",
+          "predicted": "2026-11-13",
+          "evidence": "Due Date: 13/11/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Alpine Instruments AG",
+          "predicted": "Alpine Instruments AG",
+          "evidence": "INVOICE Alpine Instruments AG"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To: Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "43.42",
+          "predicted": "43.42",
+          "evidence": "VAT 5% 43.42"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "918.80",
+          "predicted": "918.80",
+          "evidence": "Total (EUR) 918.80"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "LINE_ITEMS_SUM_MISMATCH",
+          "total"
+        ],
+        [
+          "MISSING_RECOMMENDED",
+          "subtotal"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "LINE_ITEMS_SUM_MISMATCH",
+          "total"
+        ],
+        [
+          "MISSING_RECOMMENDED",
+          "subtotal"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-31",
+      "file": "inv-31.csv",
+      "file_type": "csv",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0310",
+          "predicted": "INV-2025-0310",
+          "evidence": "Invoice No | INV-2025-0310"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-09-08",
+          "predicted": "2025-09-08",
+          "evidence": "Invoice Date | 2025-09-08"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-10-23",
+          "predicted": "2025-10-23",
+          "evidence": "Due Date | 2025-10-23"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Meghna Traders Ltd",
+          "predicted": "Meghna Traders Ltd",
+          "evidence": "Supplier | Meghna Traders Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency | BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "1.97",
+          "predicted": "1.97",
+          "evidence": "Subtotal\t\t\t1.97"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "0.37",
+          "predicted": "0.37",
+          "evidence": "VAT\t\t\t0.37"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "2.34",
+          "predicted": "2.34",
+          "evidence": "Total\t\t\t2.34"
+        }
+      ],
+      "line_tp": 1,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "customer_name"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-32",
+      "file": "inv-32.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "PE/0317",
+          "predicted": "PE/0317",
+          "evidence": "Invoice No: PE/0317"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-12-10",
+          "predicted": "2025-12-10",
+          "evidence": "Invoice Date: 10 Dec 2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-12-05",
+          "predicted": "2025-12-05",
+          "evidence": "Due Date: 05 Dec 2025"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Padma Electric Co.",
+          "predicted": "Padma Electric Co.",
+          "evidence": "Padma Electric Co."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "625.64",
+          "predicted": "625.64",
+          "evidence": "Subtotal 625.64"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "118.87",
+          "predicted": "118.87",
+          "evidence": "VAT 19% 118.87"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "744.51",
+          "predicted": "744.51",
+          "evidence": "Total (BDT) 744.51"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "DUE_BEFORE_INVOICE_DATE",
+          "due_date"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "DUE_BEFORE_INVOICE_DATE",
+          "due_date"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-33",
+      "file": "inv-33.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "KF-324",
+          "predicted": "KF-324",
+          "evidence": "Invoice No: KF-324"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-05-26",
+          "predicted": "2026-05-26",
+          "evidence": "Invoice Date: May 26, 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-06-09",
+          "predicted": "2026-06-09",
+          "evidence": "Due Date: June 9, 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Karnaphuli Foods Ltd",
+          "predicted": "Karnaphuli Foods Ltd",
+          "evidence": "INVOICE Karnaphuli Foods Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Currency: BDT"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "610.37",
+          "predicted": "610.37",
+          "evidence": "Subtotal 610.37"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "30.52",
+          "predicted": "30.52",
+          "evidence": "VAT 5% 30.52"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "640.89",
+          "predicted": "640.89",
+          "evidence": "Total (BDT) 640.89"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-34",
+      "file": "inv-34-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2025/BD/0331",
+          "predicted": "2025/BD/0331",
+          "evidence": "Invoice No: 2025/BD/0331"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-11-19",
+          "predicted": "2025-11-19",
+          "evidence": "Invoice Date: 19.11.2025"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Jamuna Paper Mills",
+          "predicted": "Jamuna Paper Mills",
+          "evidence": "INVOICE Jamuna Paper Mills"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To: Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "BDT",
+          "predicted": "BDT",
+          "evidence": "Subtotal Tk 4,282.42"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "4282.42",
+          "predicted": "4282.42",
+          "evidence": "Subtotal Tk 4,282.42"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "642.36",
+          "predicted": "642.36",
+          "evidence": "VAT 15% Tk 642.36"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "4924.78",
+          "predicted": "4924.78",
+          "evidence": "Total Tk 4,924.78"
+        }
+      ],
+      "line_tp": 5,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-35",
+      "file": "inv-35.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 338",
+          "predicted": "No. 338",
+          "evidence": "Invoice No: No. 338"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-10-15",
+          "predicted": "2026-10-15",
+          "evidence": "Invoice Date: 15/10/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-11-14",
+          "predicted": "2026-11-14",
+          "evidence": "Due Date: 14/11/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Northwind Office Supply Ltd",
+          "predicted": "Northwind Office Supply Ltd",
+          "evidence": "Northwind Office Supply Ltd"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To: Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Currency: USD"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "89.50",
+          "predicted": "89.50",
+          "evidence": "Subtotal 89.50"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "17.01",
+          "predicted": "17.01",
+          "evidence": "VAT 19% 17.01"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "106.51",
+          "predicted": "106.51",
+          "evidence": "Total (USD) 106.51"
+        }
+      ],
+      "line_tp": 3,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-36",
+      "file": "inv-36.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "INV-2025-0345",
+          "predicted": "INV-2025-0345",
+          "evidence": "Invoice No | INV-2025-0345"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2025-11-12",
+          "predicted": "2025-11-12",
+          "evidence": "Invoice Date | 2025-11-12"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2025-12-12",
+          "predicted": "2025-12-12",
+          "evidence": "Due Date | 2025-12-12"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Bluefin Logistics Inc.",
+          "predicted": "Bluefin Logistics Inc.",
+          "evidence": "Supplier | Bluefin Logistics Inc."
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Example Trading Co.",
+          "predicted": "Example Trading Co.",
+          "evidence": "Bill To | Example Trading Co."
+        },
+        {
+          "field": "currency",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "3147.41",
+          "predicted": "3147.41",
+          "evidence": "Subtotal\t\t\t3147.41"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "598.01",
+          "predicted": "598.01",
+          "evidence": "VAT\t\t\t598.01"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "3745.42",
+          "predicted": "3745.42",
+          "evidence": "Total\t\t\t3745.42"
+        }
+      ],
+      "line_tp": 2,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "MISSING_RECOMMENDED",
+          "currency"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "MISSING_RECOMMENDED",
+          "currency"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-37",
+      "file": "inv-37.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "CS/0352",
+          "predicted": "CS/0352",
+          "evidence": "Invoice No: CS/0352"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-07-08",
+          "predicted": "2026-07-08",
+          "evidence": "Invoice Date: 08 Jul 2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-08-07",
+          "predicted": "2026-08-07",
+          "evidence": "Due Date: 07 Aug 2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Cobalt Software LLC",
+          "predicted": "Cobalt Software LLC",
+          "evidence": "INVOICE Cobalt Software LLC"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Sample Retail Ltd",
+          "predicted": "Sample Retail Ltd",
+          "evidence": "Bill To: Sample Retail Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "USD",
+          "predicted": "USD",
+          "evidence": "Subtotal $ 8,579.37"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "8579.37",
+          "predicted": "8579.37",
+          "evidence": "Subtotal $ 8,579.37"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "643.45",
+          "predicted": "643.45",
+          "evidence": "VAT 7.5% $ 643.45"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "9222.82",
+          "predicted": "9222.82",
+          "evidence": "Total $ 9,222.82"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-38",
+      "file": "inv-38.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "RM-359",
+          "predicted": "RM-359",
+          "evidence": "Invoice No: RM-359"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "abstained",
+          "truth": "2026-07-04",
+          "predicted": null,
+          "evidence": "Invoice Date: 04/07/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "abstained",
+          "truth": "2026-08-03",
+          "predicted": null,
+          "evidence": "Due Date: 03/08/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Rheinland Maschinen GmbH",
+          "predicted": "Rheinland Maschinen GmbH",
+          "evidence": "Rheinland Maschinen GmbH"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Demo Hospital Trust",
+          "predicted": "Demo Hospital Trust",
+          "evidence": "Bill To: Demo Hospital Trust"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency: EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "10894.60",
+          "predicted": "10894.60",
+          "evidence": "Subtotal 10,894.60"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1634.19",
+          "predicted": "1634.19",
+          "evidence": "VAT 15% 1,634.19"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "12528.79",
+          "predicted": "12528.79",
+          "evidence": "Total (EUR) 12,528.79"
+        }
+      ],
+      "line_tp": 6,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "flags_predicted": [
+        [
+          "AMBIGUOUS_DATE",
+          "due_date"
+        ],
+        [
+          "AMBIGUOUS_DATE",
+          "invoice_date"
+        ],
+        [
+          "MISSING_REQUIRED",
+          "invoice_date"
+        ]
+      ],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-39",
+      "file": "inv-39.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "2026/BD/0366",
+          "predicted": "2026/BD/0366",
+          "evidence": "Invoice No | 2026/BD/0366"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-07-30",
+          "predicted": "2026-07-30",
+          "evidence": "Invoice Date | 2026-07-30 00:00:00"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct_null",
+          "truth": null,
+          "predicted": null,
+          "evidence": null
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Lisboa Textiles Lda",
+          "predicted": "Lisboa Textiles Lda",
+          "evidence": "INVOICE | Lisboa Textiles Lda"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Test Garments Ltd",
+          "predicted": "Test Garments Ltd",
+          "evidence": "Bill To | Test Garments Ltd"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Currency | EUR"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "9384.72",
+          "predicted": "9384.72",
+          "evidence": "Subtotal\t\t\t9384.72"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "1407.71",
+          "predicted": "1407.71",
+          "evidence": "VAT\t\t\t1407.71"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "10792.43",
+          "predicted": "10792.43",
+          "evidence": "Total\t\t\t10792.43"
+        }
+      ],
+      "line_tp": 5,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    },
+    {
+      "dataset": "synthetic",
+      "id": "inv-40",
+      "file": "inv-40.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "found": true,
+      "fields": [
+        {
+          "field": "invoice_number",
+          "outcome": "correct",
+          "truth": "No. 373",
+          "predicted": "No. 373",
+          "evidence": "Invoice No: No. 373"
+        },
+        {
+          "field": "invoice_date",
+          "outcome": "correct",
+          "truth": "2026-05-22",
+          "predicted": "2026-05-22",
+          "evidence": "Invoice Date: 22/05/2026"
+        },
+        {
+          "field": "due_date",
+          "outcome": "correct",
+          "truth": "2026-06-21",
+          "predicted": "2026-06-21",
+          "evidence": "Due Date: 21/06/2026"
+        },
+        {
+          "field": "supplier_name",
+          "outcome": "correct",
+          "truth": "Alpine Instruments AG",
+          "predicted": "Alpine Instruments AG",
+          "evidence": "INVOICE Alpine Instruments AG"
+        },
+        {
+          "field": "customer_name",
+          "outcome": "correct",
+          "truth": "Placeholder Bank PLC",
+          "predicted": "Placeholder Bank PLC",
+          "evidence": "Bill To: Placeholder Bank PLC"
+        },
+        {
+          "field": "currency",
+          "outcome": "correct",
+          "truth": "EUR",
+          "predicted": "EUR",
+          "evidence": "Subtotal € 3,206.36"
+        },
+        {
+          "field": "subtotal",
+          "outcome": "correct",
+          "truth": "3206.36",
+          "predicted": "3206.36",
+          "evidence": "Subtotal € 3,206.36"
+        },
+        {
+          "field": "tax",
+          "outcome": "correct",
+          "truth": "480.95",
+          "predicted": "480.95",
+          "evidence": "VAT 15% € 480.95"
+        },
+        {
+          "field": "total",
+          "outcome": "correct",
+          "truth": "3687.31",
+          "predicted": "3687.31",
+          "evidence": "Total € 3,687.31"
+        }
+      ],
+      "line_tp": 4,
+      "line_fp": 0,
+      "line_fn": 0,
+      "flags_expected": [],
+      "flags_predicted": [],
+      "duplicate_expected": false,
+      "duplicate_flagged": false
+    }
+  ],
+  "files": [
+    {
+      "file": "batch-6-invoices.pdf",
+      "file_type": "pdf_batch",
+      "split": "test",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 9,
+      "invoices_found": 6,
+      "seconds": 28.014258,
+      "seconds_per_page": 3.1126953333333334,
+      "llm_calls": 6,
+      "input_tokens": 14104,
+      "output_tokens": 9473,
+      "cached_input_tokens": 14086,
+      "segments": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ],
+      "expected_segments": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ]
+    },
+    {
+      "file": "inv-01-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 27.578192,
+      "seconds_per_page": 27.578192,
+      "llm_calls": 1,
+      "input_tokens": 2295,
+      "output_tokens": 1098,
+      "cached_input_tokens": 2292,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-02-purchase-order.pdf",
+      "file_type": "pdf_purchase_order",
+      "split": "dev",
+      "role": "purchase_order",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.894615,
+      "seconds_per_page": 9.894615,
+      "llm_calls": 1,
+      "input_tokens": 2303,
+      "output_tokens": 1463,
+      "cached_input_tokens": 2300,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-02.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.847329,
+      "seconds_per_page": 9.847329,
+      "llm_calls": 1,
+      "input_tokens": 2309,
+      "output_tokens": 1479,
+      "cached_input_tokens": 2306,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-03.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.371263,
+      "seconds_per_page": 7.371263,
+      "llm_calls": 1,
+      "input_tokens": 2270,
+      "output_tokens": 843,
+      "cached_input_tokens": 2267,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-04.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.414263,
+      "seconds_per_page": 7.414263,
+      "llm_calls": 1,
+      "input_tokens": 2282,
+      "output_tokens": 854,
+      "cached_input_tokens": 2279,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-05.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 8.031346,
+      "seconds_per_page": 8.031346,
+      "llm_calls": 1,
+      "input_tokens": 2265,
+      "output_tokens": 824,
+      "cached_input_tokens": 2262,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-06-copy.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "duplicate_copy",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 10.185327,
+      "seconds_per_page": 10.185327,
+      "llm_calls": 1,
+      "input_tokens": 2270,
+      "output_tokens": 885,
+      "cached_input_tokens": 2267,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-06.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.441717,
+      "seconds_per_page": 7.441717,
+      "llm_calls": 1,
+      "input_tokens": 2270,
+      "output_tokens": 885,
+      "cached_input_tokens": 2267,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-07.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.865108,
+      "seconds_per_page": 9.865108,
+      "llm_calls": 1,
+      "input_tokens": 2304,
+      "output_tokens": 1288,
+      "cached_input_tokens": 2301,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-08.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 15.974467,
+      "seconds_per_page": 15.974467,
+      "llm_calls": 1,
+      "input_tokens": 2335,
+      "output_tokens": 1744,
+      "cached_input_tokens": 2332,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-09.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 5.461703,
+      "seconds_per_page": 5.461703,
+      "llm_calls": 1,
+      "input_tokens": 2256,
+      "output_tokens": 655,
+      "cached_input_tokens": 2253,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-10.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.27284,
+      "seconds_per_page": 7.27284,
+      "llm_calls": 1,
+      "input_tokens": 2259,
+      "output_tokens": 837,
+      "cached_input_tokens": 2256,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-11.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 10.436229,
+      "seconds_per_page": 10.436229,
+      "llm_calls": 1,
+      "input_tokens": 2277,
+      "output_tokens": 1045,
+      "cached_input_tokens": 2274,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-12.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.953547,
+      "seconds_per_page": 9.953547,
+      "llm_calls": 1,
+      "input_tokens": 2292,
+      "output_tokens": 1299,
+      "cached_input_tokens": 2289,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-13.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 10.4346,
+      "seconds_per_page": 10.4346,
+      "llm_calls": 1,
+      "input_tokens": 2301,
+      "output_tokens": 1330,
+      "cached_input_tokens": 2298,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-14.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.07235,
+      "seconds_per_page": 9.07235,
+      "llm_calls": 1,
+      "input_tokens": 2264,
+      "output_tokens": 865,
+      "cached_input_tokens": 2261,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-15.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.956627,
+      "seconds_per_page": 7.956627,
+      "llm_calls": 1,
+      "input_tokens": 2291,
+      "output_tokens": 1079,
+      "cached_input_tokens": 2288,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-16.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.641865,
+      "seconds_per_page": 7.641865,
+      "llm_calls": 1,
+      "input_tokens": 2274,
+      "output_tokens": 1059,
+      "cached_input_tokens": 2271,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-17.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 8.324016,
+      "seconds_per_page": 8.324016,
+      "llm_calls": 1,
+      "input_tokens": 2329,
+      "output_tokens": 1111,
+      "cached_input_tokens": 2326,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-18.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.890309,
+      "seconds_per_page": 9.890309,
+      "llm_calls": 1,
+      "input_tokens": 2280,
+      "output_tokens": 1284,
+      "cached_input_tokens": 2277,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-20.xlsx",
+      "file_type": "xlsx",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 6.711266,
+      "seconds_per_page": 6.711266,
+      "llm_calls": 1,
+      "input_tokens": 2269,
+      "output_tokens": 847,
+      "cached_input_tokens": 2266,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-21.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.697659,
+      "seconds_per_page": 9.697659,
+      "llm_calls": 1,
+      "input_tokens": 2269,
+      "output_tokens": 872,
+      "cached_input_tokens": 2266,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-25.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.037239,
+      "seconds_per_page": 7.037239,
+      "llm_calls": 1,
+      "input_tokens": 2254,
+      "output_tokens": 845,
+      "cached_input_tokens": 2251,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-27.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 8.096575,
+      "seconds_per_page": 8.096575,
+      "llm_calls": 1,
+      "input_tokens": 2239,
+      "output_tokens": 642,
+      "cached_input_tokens": 2236,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-28.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 13.536563,
+      "seconds_per_page": 13.536563,
+      "llm_calls": 1,
+      "input_tokens": 2316,
+      "output_tokens": 1530,
+      "cached_input_tokens": 2313,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-30.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.367433,
+      "seconds_per_page": 7.367433,
+      "llm_calls": 1,
+      "input_tokens": 2247,
+      "output_tokens": 813,
+      "cached_input_tokens": 2244,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-31.csv",
+      "file_type": "csv",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 5.927652,
+      "seconds_per_page": 5.927652,
+      "llm_calls": 1,
+      "input_tokens": 2246,
+      "output_tokens": 633,
+      "cached_input_tokens": 2243,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-32.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 7.747683,
+      "seconds_per_page": 7.747683,
+      "llm_calls": 1,
+      "input_tokens": 2264,
+      "output_tokens": 864,
+      "cached_input_tokens": 2261,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-33.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.084436,
+      "seconds_per_page": 9.084436,
+      "llm_calls": 1,
+      "input_tokens": 2264,
+      "output_tokens": 849,
+      "cached_input_tokens": 2261,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-34-scanned.pdf",
+      "file_type": "pdf_scanned",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 14.531971,
+      "seconds_per_page": 14.531971,
+      "llm_calls": 1,
+      "input_tokens": 2308,
+      "output_tokens": 1509,
+      "cached_input_tokens": 2305,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-35.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 8.299436,
+      "seconds_per_page": 8.299436,
+      "llm_calls": 1,
+      "input_tokens": 2296,
+      "output_tokens": 1114,
+      "cached_input_tokens": 2293,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-36.csv",
+      "file_type": "csv",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 6.68752,
+      "seconds_per_page": 6.68752,
+      "llm_calls": 1,
+      "input_tokens": 2265,
+      "output_tokens": 847,
+      "cached_input_tokens": 2262,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-37.jpg",
+      "file_type": "image_scan",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 16.206866,
+      "seconds_per_page": 16.206866,
+      "llm_calls": 1,
+      "input_tokens": 2336,
+      "output_tokens": 1757,
+      "cached_input_tokens": 2333,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-38.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "status": "needs_review",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 11.723806,
+      "seconds_per_page": 11.723806,
+      "llm_calls": 1,
+      "input_tokens": 2335,
+      "output_tokens": 1694,
+      "cached_input_tokens": 2332,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-39.xlsx",
+      "file_type": "xlsx",
+      "split": "dev",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 14.796769,
+      "seconds_per_page": 14.796769,
+      "llm_calls": 1,
+      "input_tokens": 2318,
+      "output_tokens": 1483,
+      "cached_input_tokens": 2315,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "inv-40.pdf",
+      "file_type": "pdf_digital",
+      "split": "test",
+      "role": "invoice",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 1,
+      "seconds": 9.531227,
+      "seconds_per_page": 9.531227,
+      "llm_calls": 1,
+      "input_tokens": 2292,
+      "output_tokens": 1297,
+      "cached_input_tokens": 2289,
+      "segments": [
+        [
+          1,
+          1
+        ]
+      ],
+      "expected_segments": null
+    },
+    {
+      "file": "ledger-batch.xlsx",
+      "file_type": "xlsx_ledger",
+      "split": "test",
+      "role": "ledger",
+      "status": "processed",
+      "error": null,
+      "pages": 1,
+      "invoices_found": 0,
+      "seconds": 0.069814,
+      "seconds_per_page": 0.069814,
+      "llm_calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cached_input_tokens": 0,
+      "segments": [],
+      "expected_segments": null
+    }
+  ],
+  "segmentation": [
+    {
+      "file": "batch-6-invoices.pdf",
+      "split": "test",
+      "expected": 6,
+      "predicted": 6,
+      "exact": 6,
+      "precision": 1.0,
+      "recall": 1.0,
+      "count_right": true,
+      "predicted_segments": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ],
+      "expected_segments": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ]
+    }
+  ],
+  "splits": {
+    "test": {
+      "invoices": 26,
+      "overall": {
+        "field_accuracy": 1.0,
+        "false_fill_rate": 0.0,
+        "missing_rate": 0.0,
+        "wrong_rate": 0.0,
+        "line_item_precision": 1.0,
+        "line_item_recall": 1.0,
+        "line_item_f1": 1.0,
+        "flag_precision": 0.9375,
+        "flag_recall": 1.0,
+        "documents": 22,
+        "document_success_rate": 1.0,
+        "document_failure_rate": 0.0,
+        "p50_seconds_per_document": 9.302,
+        "p95_seconds_per_document": 27.01,
+        "p50_seconds_per_page": 8.698,
+        "p95_seconds_per_page": 16.195,
+        "llm_calls": 26,
+        "input_tokens": 59788,
+        "output_tokens": 30659,
+        "cached_input_tokens": 59710,
+        "cost_usd": 0.021308,
+        "cost_usd_per_document": 0.000969
+      },
+      "per_file_type": {
+        "csv": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 3,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 7.414,
+          "p95_seconds_per_document": 7.97,
+          "p50_seconds_per_page": 7.414,
+          "p95_seconds_per_page": 7.97,
+          "llm_calls": 3,
+          "input_tokens": 6793,
+          "output_tokens": 2311,
+          "cached_input_tokens": 6784,
+          "cost_usd": 0.001835,
+          "cost_usd_per_document": 0.000612
+        },
+        "image_scan": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 5,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 10.185,
+          "p95_seconds_per_document": 16.16,
+          "p50_seconds_per_page": 10.185,
+          "p95_seconds_per_page": 16.16,
+          "llm_calls": 5,
+          "input_tokens": 11474,
+          "output_tokens": 6123,
+          "cached_input_tokens": 11459,
+          "cost_usd": 0.004209,
+          "cost_usd_per_document": 0.000842
+        },
+        "pdf_batch": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 1,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 28.014,
+          "p95_seconds_per_document": 28.014,
+          "p50_seconds_per_page": 3.113,
+          "p95_seconds_per_page": 3.113,
+          "llm_calls": 6,
+          "input_tokens": 14104,
+          "output_tokens": 9473,
+          "cached_input_tokens": 14086,
+          "cost_usd": 0.006147,
+          "cost_usd_per_document": 0.006147
+        },
+        "pdf_digital": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 0.8333,
+          "flag_recall": 1.0,
+          "documents": 8,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 8.928,
+          "p95_seconds_per_document": 10.436,
+          "p50_seconds_per_page": 8.928,
+          "p95_seconds_per_page": 10.436,
+          "llm_calls": 8,
+          "input_tokens": 18279,
+          "output_tokens": 8676,
+          "cached_input_tokens": 18255,
+          "cost_usd": 0.006166,
+          "cost_usd_per_document": 0.000771
+        },
+        "pdf_scanned": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": null,
+          "flag_recall": null,
+          "documents": 1,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 27.578,
+          "p95_seconds_per_document": 27.578,
+          "p50_seconds_per_page": 27.578,
+          "p95_seconds_per_page": 27.578,
+          "llm_calls": 1,
+          "input_tokens": 2295,
+          "output_tokens": 1098,
+          "cached_input_tokens": 2292,
+          "cost_usd": 0.000779,
+          "cost_usd_per_document": 0.000779
+        },
+        "xlsx": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 3,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 7.371,
+          "p95_seconds_per_document": 9.616,
+          "p50_seconds_per_page": 7.371,
+          "p95_seconds_per_page": 9.616,
+          "llm_calls": 3,
+          "input_tokens": 6843,
+          "output_tokens": 2978,
+          "cached_input_tokens": 6834,
+          "cost_usd": 0.002173,
+          "cost_usd_per_document": 0.000724
+        }
+      },
+      "fields": {
+        "currency": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 25,
+            "correct_null": 1
+          }
+        },
+        "customer_name": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 22,
+            "correct_null": 4
+          }
+        },
+        "due_date": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 22,
+            "correct_null": 2,
+            "abstained": 2
+          }
+        },
+        "invoice_date": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 24,
+            "abstained": 2
+          }
+        },
+        "invoice_number": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 26
+          }
+        },
+        "subtotal": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 25,
+            "correct_null": 1
+          }
+        },
+        "supplier_name": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 26
+          }
+        },
+        "tax": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 25,
+            "correct_null": 1
+          }
+        },
+        "total": {
+          "n": 26,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 26
+          }
+        }
+      },
+      "flags": {
+        "precision": 0.9375,
+        "recall": 1.0,
+        "f1": 0.9677,
+        "tp": 15,
+        "fp": 1,
+        "fn": 0,
+        "per_code": {
+          "AMBIGUOUS_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 4,
+            "fp": 0,
+            "fn": 0
+          },
+          "DUE_BEFORE_INVOICE_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0
+          },
+          "LINE_ITEMS_SUM_MISMATCH": {
+            "precision": 0.0,
+            "recall": null,
+            "f1": null,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "MISSING_RECOMMENDED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "MISSING_REQUIRED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "TOTAL_MISMATCH": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "duplicates": {
+        "pairs": 1,
+        "detected": 1,
+        "false_alarms": 0
+      }
+    },
+    "dev": {
+      "invoices": 15,
+      "overall": {
+        "field_accuracy": 1.0,
+        "false_fill_rate": 0.0,
+        "missing_rate": 0.0,
+        "wrong_rate": 0.0,
+        "line_item_precision": 1.0,
+        "line_item_recall": 1.0,
+        "line_item_f1": 1.0,
+        "flag_precision": 1.0,
+        "flag_recall": 1.0,
+        "documents": 16,
+        "document_success_rate": 1.0,
+        "document_failure_rate": 0.0,
+        "p50_seconds_per_document": 8.692,
+        "p95_seconds_per_document": 14.598,
+        "p50_seconds_per_page": 8.692,
+        "p95_seconds_per_page": 14.598,
+        "llm_calls": 16,
+        "input_tokens": 36560,
+        "output_tokens": 18337,
+        "cached_input_tokens": 36512,
+        "cost_usd": 0.012825,
+        "cost_usd_per_document": 0.000802
+      },
+      "per_file_type": {
+        "csv": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 2,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 7.322,
+          "p95_seconds_per_document": 7.893,
+          "p50_seconds_per_page": 7.322,
+          "p95_seconds_per_page": 7.893,
+          "llm_calls": 2,
+          "input_tokens": 4556,
+          "output_tokens": 1926,
+          "cached_input_tokens": 4550,
+          "cost_usd": 0.001419,
+          "cost_usd_per_document": 0.000709
+        },
+        "image_scan": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 3,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 9.084,
+          "p95_seconds_per_document": 13.091,
+          "p50_seconds_per_page": 9.084,
+          "p95_seconds_per_page": 13.091,
+          "llm_calls": 3,
+          "input_tokens": 6819,
+          "output_tokens": 3021,
+          "cached_input_tokens": 6810,
+          "cost_usd": 0.002192,
+          "cost_usd_per_document": 0.000731
+        },
+        "pdf_digital": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 7,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 8.299,
+          "p95_seconds_per_document": 11.174,
+          "p50_seconds_per_page": 8.299,
+          "p95_seconds_per_page": 11.174,
+          "llm_calls": 7,
+          "input_tokens": 15997,
+          "output_tokens": 8098,
+          "cached_input_tokens": 15976,
+          "cost_usd": 0.005649,
+          "cost_usd_per_document": 0.000807
+        },
+        "pdf_scanned": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": null,
+          "flag_recall": null,
+          "documents": 1,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 14.532,
+          "p95_seconds_per_document": 14.532,
+          "p50_seconds_per_page": 14.532,
+          "p95_seconds_per_page": 14.532,
+          "llm_calls": 1,
+          "input_tokens": 2308,
+          "output_tokens": 1509,
+          "cached_input_tokens": 2305,
+          "cost_usd": 0.000985,
+          "cost_usd_per_document": 0.000985
+        },
+        "xlsx": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": null,
+          "flag_recall": null,
+          "documents": 2,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 11.035,
+          "p95_seconds_per_document": 14.421,
+          "p50_seconds_per_page": 11.035,
+          "p95_seconds_per_page": 14.421,
+          "llm_calls": 2,
+          "input_tokens": 4577,
+          "output_tokens": 2320,
+          "cached_input_tokens": 4571,
+          "cost_usd": 0.001618,
+          "cost_usd_per_document": 0.000809
+        }
+      },
+      "fields": {
+        "currency": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 14,
+            "correct_null": 1
+          }
+        },
+        "customer_name": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 15
+          }
+        },
+        "due_date": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 9,
+            "correct_null": 4,
+            "abstained": 2
+          }
+        },
+        "invoice_date": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 13,
+            "abstained": 2
+          }
+        },
+        "invoice_number": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 15
+          }
+        },
+        "subtotal": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 14,
+            "correct_null": 1
+          }
+        },
+        "supplier_name": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 15
+          }
+        },
+        "tax": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 13,
+            "correct_null": 2
+          }
+        },
+        "total": {
+          "n": 15,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 15
+          }
+        }
+      },
+      "flags": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 11,
+        "fp": 0,
+        "fn": 0,
+        "per_code": {
+          "AMBIGUOUS_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 4,
+            "fp": 0,
+            "fn": 0
+          },
+          "LINE_ITEMS_SUM_MISMATCH": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "MISSING_RECOMMENDED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "MISSING_REQUIRED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "TOTAL_MISMATCH": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "duplicates": {
+        "pairs": 0,
+        "detected": 0,
+        "false_alarms": 1
+      }
+    },
+    "all": {
+      "invoices": 41,
+      "overall": {
+        "field_accuracy": 1.0,
+        "false_fill_rate": 0.0,
+        "missing_rate": 0.0,
+        "wrong_rate": 0.0,
+        "line_item_precision": 1.0,
+        "line_item_recall": 1.0,
+        "line_item_f1": 1.0,
+        "flag_precision": 0.963,
+        "flag_recall": 1.0,
+        "documents": 38,
+        "document_success_rate": 1.0,
+        "document_failure_rate": 0.0,
+        "p50_seconds_per_document": 9.078,
+        "p95_seconds_per_document": 17.913,
+        "p50_seconds_per_page": 8.698,
+        "p95_seconds_per_page": 16.009,
+        "llm_calls": 42,
+        "input_tokens": 96348,
+        "output_tokens": 48996,
+        "cached_input_tokens": 96222,
+        "cost_usd": 0.034133,
+        "cost_usd_per_document": 0.000898
+      },
+      "per_file_type": {
+        "csv": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 5,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 7.414,
+          "p95_seconds_per_document": 8.016,
+          "p50_seconds_per_page": 7.414,
+          "p95_seconds_per_page": 8.016,
+          "llm_calls": 5,
+          "input_tokens": 11349,
+          "output_tokens": 4237,
+          "cached_input_tokens": 11334,
+          "cost_usd": 0.003253,
+          "cost_usd_per_document": 0.000651
+        },
+        "image_scan": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 8,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 9.941,
+          "p95_seconds_per_document": 16.126,
+          "p50_seconds_per_page": 9.941,
+          "p95_seconds_per_page": 16.126,
+          "llm_calls": 8,
+          "input_tokens": 18293,
+          "output_tokens": 9144,
+          "cached_input_tokens": 18269,
+          "cost_usd": 0.006401,
+          "cost_usd_per_document": 0.0008
+        },
+        "pdf_batch": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 1,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 28.014,
+          "p95_seconds_per_document": 28.014,
+          "p50_seconds_per_page": 3.113,
+          "p95_seconds_per_page": 3.113,
+          "llm_calls": 6,
+          "input_tokens": 14104,
+          "output_tokens": 9473,
+          "cached_input_tokens": 14086,
+          "cost_usd": 0.006147,
+          "cost_usd_per_document": 0.006147
+        },
+        "pdf_digital": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 0.9091,
+          "flag_recall": 1.0,
+          "documents": 15,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 8.324,
+          "p95_seconds_per_document": 10.823,
+          "p50_seconds_per_page": 8.324,
+          "p95_seconds_per_page": 10.823,
+          "llm_calls": 15,
+          "input_tokens": 34276,
+          "output_tokens": 16774,
+          "cached_input_tokens": 34231,
+          "cost_usd": 0.011815,
+          "cost_usd_per_document": 0.000788
+        },
+        "pdf_scanned": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": null,
+          "flag_recall": null,
+          "documents": 2,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 21.055,
+          "p95_seconds_per_document": 26.926,
+          "p50_seconds_per_page": 21.055,
+          "p95_seconds_per_page": 26.926,
+          "llm_calls": 2,
+          "input_tokens": 4603,
+          "output_tokens": 2607,
+          "cached_input_tokens": 4597,
+          "cost_usd": 0.001764,
+          "cost_usd_per_document": 0.000882
+        },
+        "xlsx": {
+          "field_accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "line_item_precision": 1.0,
+          "line_item_recall": 1.0,
+          "line_item_f1": 1.0,
+          "flag_precision": 1.0,
+          "flag_recall": 1.0,
+          "documents": 5,
+          "document_success_rate": 1.0,
+          "document_failure_rate": 0.0,
+          "p50_seconds_per_document": 7.371,
+          "p95_seconds_per_document": 13.81,
+          "p50_seconds_per_page": 7.371,
+          "p95_seconds_per_page": 13.81,
+          "llm_calls": 5,
+          "input_tokens": 11420,
+          "output_tokens": 5298,
+          "cached_input_tokens": 11405,
+          "cost_usd": 0.003791,
+          "cost_usd_per_document": 0.000758
+        }
+      },
+      "fields": {
+        "currency": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 39,
+            "correct_null": 2
+          }
+        },
+        "customer_name": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 37,
+            "correct_null": 4
+          }
+        },
+        "due_date": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 31,
+            "correct_null": 6,
+            "abstained": 4
+          }
+        },
+        "invoice_date": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 37,
+            "abstained": 4
+          }
+        },
+        "invoice_number": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 41
+          }
+        },
+        "subtotal": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 39,
+            "correct_null": 2
+          }
+        },
+        "supplier_name": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 41
+          }
+        },
+        "tax": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": 0.0,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 38,
+            "correct_null": 3
+          }
+        },
+        "total": {
+          "n": 41,
+          "accuracy": 1.0,
+          "false_fill_rate": null,
+          "missing_rate": 0.0,
+          "wrong_rate": 0.0,
+          "outcomes": {
+            "correct": 41
+          }
+        }
+      },
+      "flags": {
+        "precision": 0.963,
+        "recall": 1.0,
+        "f1": 0.9812,
+        "tp": 26,
+        "fp": 1,
+        "fn": 0,
+        "per_code": {
+          "AMBIGUOUS_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 8,
+            "fp": 0,
+            "fn": 0
+          },
+          "DUE_BEFORE_INVOICE_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0
+          },
+          "LINE_ITEMS_SUM_MISMATCH": {
+            "precision": 0.6667,
+            "recall": 1.0,
+            "f1": 0.8,
+            "tp": 2,
+            "fp": 1,
+            "fn": 0
+          },
+          "MISSING_RECOMMENDED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 8,
+            "fp": 0,
+            "fn": 0
+          },
+          "MISSING_REQUIRED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 4,
+            "fp": 0,
+            "fn": 0
+          },
+          "TOTAL_MISMATCH": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "duplicates": {
+        "pairs": 1,
+        "detected": 1,
+        "false_alarms": 1
+      }
+    }
+  },
+  "all_files": {
+    "field_accuracy": null,
+    "false_fill_rate": null,
+    "missing_rate": null,
+    "wrong_rate": null,
+    "line_item_precision": null,
+    "line_item_recall": null,
+    "line_item_f1": null,
+    "flag_precision": null,
+    "flag_recall": null,
+    "documents": 38,
+    "document_success_rate": 1.0,
+    "document_failure_rate": 0.0,
+    "p50_seconds_per_document": 9.078,
+    "p95_seconds_per_document": 17.913,
+    "p50_seconds_per_page": 8.698,
+    "p95_seconds_per_page": 16.009,
+    "llm_calls": 42,
+    "input_tokens": 96348,
+    "output_tokens": 48996,
+    "cached_input_tokens": 96222,
+    "cost_usd": 0.034133,
+    "cost_usd_per_document": 0.000898
+  },
+  "cross_checks": [
+    {
+      "a": "batch-6-invoices.pdf",
+      "b": "ledger-batch.xlsx",
+      "mode": "invoices_vs_ledger",
+      "split": "test",
+      "expected_findings": [
+        {
+          "kind": "amount_mismatch",
+          "field": "total",
+          "invoice_number": "PE/0247"
+        },
+        {
+          "kind": "date_mismatch",
+          "field": "invoice_date",
+          "invoice_number": "KF-254"
+        },
+        {
+          "kind": "missing_in_ledger",
+          "field": null,
+          "invoice_number": "INV-2025-0275"
+        },
+        {
+          "kind": "missing_in_pdf",
+          "field": null,
+          "invoice_number": "INV-2026-9999"
+        }
+      ],
+      "status": "succeeded",
+      "findings": [
+        {
+          "kind": "matched",
+          "severity": "info",
+          "field": "total",
+          "value_a": "78565.81",
+          "value_b": "78565.81",
+          "message": "Invoice 2025/BD/0226 matches.",
+          "invoice_a_id": "7f6f80ee-bed8-428e-b50b-0f1a873098df",
+          "invoice_b_id": null,
+          "segment_a": 0,
+          "segment_b": null,
+          "page_a": 1,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 2,
+          "invoice_number_a": "2025/BD/0226",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "amount_mismatch",
+          "severity": "error",
+          "field": "total",
+          "value_a": "99.44",
+          "value_b": "199.44",
+          "message": "Total differs for invoice PE/0247.",
+          "invoice_a_id": "c6225593-d4bf-4ef9-b1ea-9d9848bad5e4",
+          "invoice_b_id": null,
+          "segment_a": 1,
+          "segment_b": null,
+          "page_a": 3,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 3,
+          "invoice_number_a": "PE/0247",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "date_mismatch",
+          "severity": "error",
+          "field": "invoice_date",
+          "value_a": "2026-04-23",
+          "value_b": "2026-04-26",
+          "message": "Invoice date differs for invoice KF-254.",
+          "invoice_a_id": "6e74121d-12f7-421c-b5f1-9a5fa291b4c9",
+          "invoice_b_id": null,
+          "segment_a": 2,
+          "segment_b": null,
+          "page_a": 4,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 4,
+          "invoice_number_a": "KF-254",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "matched",
+          "severity": "info",
+          "field": "total",
+          "value_a": "3829.01",
+          "value_b": "3829.01",
+          "message": "Invoice 2026/BD/0261 matches.",
+          "invoice_a_id": "9b22d6a8-c9d1-444c-866d-5cccbb008719",
+          "invoice_b_id": null,
+          "segment_a": 3,
+          "segment_b": null,
+          "page_a": 7,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 5,
+          "invoice_number_a": "2026/BD/0261",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "matched",
+          "severity": "info",
+          "field": "total",
+          "value_a": "6627.40",
+          "value_b": "6627.40",
+          "message": "Invoice 2025/BD/0296 matches.",
+          "invoice_a_id": "8624f0bc-a880-40eb-93bb-12d4e836d713",
+          "invoice_b_id": null,
+          "segment_a": 5,
+          "segment_b": null,
+          "page_a": 9,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 6,
+          "invoice_number_a": "2025/BD/0296",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "missing_in_ledger",
+          "severity": "warning",
+          "field": "invoice_number",
+          "value_a": "INV-2025-0275",
+          "value_b": null,
+          "message": "Invoice INV-2025-0275 is not in the ledger.",
+          "invoice_a_id": "f83809d2-334f-4339-a4f2-8448a0abc9f8",
+          "invoice_b_id": null,
+          "segment_a": 4,
+          "segment_b": null,
+          "page_a": 8,
+          "page_b": null,
+          "sheet_b": null,
+          "row_b": null,
+          "invoice_number_a": "INV-2025-0275",
+          "invoice_number_b": null
+        },
+        {
+          "kind": "missing_in_pdf",
+          "severity": "warning",
+          "field": "invoice_number",
+          "value_a": null,
+          "value_b": "INV-2026-9999",
+          "message": "Invoice INV-2026-9999 is not in the PDF.",
+          "invoice_a_id": null,
+          "invoice_b_id": null,
+          "segment_a": null,
+          "segment_b": null,
+          "page_a": null,
+          "page_b": null,
+          "sheet_b": "Purchases ledger",
+          "row_b": 7,
+          "invoice_number_a": null,
+          "invoice_number_b": null
+        }
+      ],
+      "metrics": {
+        "expected": 4,
+        "found": 4,
+        "recall": 1.0,
+        "extra_findings": 0,
+        "details": [
+          {
+            "kind": "amount_mismatch",
+            "field": "total",
+            "invoice_number": "PE/0247",
+            "found": true
+          },
+          {
+            "kind": "date_mismatch",
+            "field": "invoice_date",
+            "invoice_number": "KF-254",
+            "found": true
+          },
+          {
+            "kind": "missing_in_ledger",
+            "field": null,
+            "invoice_number": "INV-2025-0275",
+            "found": true
+          },
+          {
+            "kind": "missing_in_pdf",
+            "field": null,
+            "invoice_number": "INV-2026-9999",
+            "found": true
+          }
+        ]
+      }
+    },
+    {
+      "a": "inv-02.pdf",
+      "b": "inv-02-purchase-order.pdf",
+      "mode": "invoices_vs_invoices",
+      "split": "dev",
+      "expected_findings": [
+        {
+          "kind": "line_item_mismatch",
+          "field": "line_items[2].quantity",
+          "invoice_number": "PE/0107"
+        },
+        {
+          "kind": "line_item_mismatch",
+          "field": "line_items[2].unit_price",
+          "invoice_number": "PE/0107"
+        }
+      ],
+      "status": "succeeded",
+      "findings": [
+        {
+          "kind": "line_item_mismatch",
+          "severity": "error",
+          "field": "line_items[2].quantity",
+          "value_a": "10.0000",
+          "value_b": "9.0000",
+          "message": "Line \"Express courier service\": quantity differs.",
+          "invoice_a_id": "8a1e751d-84f5-4c36-87ed-9bdf15e21600",
+          "invoice_b_id": "c38ed6f0-d733-49fe-b98a-38853942015b",
+          "segment_a": 0,
+          "segment_b": 0,
+          "page_a": 1,
+          "page_b": 1,
+          "sheet_b": null,
+          "row_b": null,
+          "invoice_number_a": "PE/0107",
+          "invoice_number_b": "PO-0107"
+        },
+        {
+          "kind": "line_item_mismatch",
+          "severity": "error",
+          "field": "line_items[2].unit_price",
+          "value_a": "45.0000",
+          "value_b": "50.0000",
+          "message": "Line \"Express courier service\": unit price differs.",
+          "invoice_a_id": "8a1e751d-84f5-4c36-87ed-9bdf15e21600",
+          "invoice_b_id": "c38ed6f0-d733-49fe-b98a-38853942015b",
+          "segment_a": 0,
+          "segment_b": 0,
+          "page_a": 1,
+          "page_b": 1,
+          "sheet_b": null,
+          "row_b": null,
+          "invoice_number_a": "PE/0107",
+          "invoice_number_b": "PO-0107"
+        }
+      ],
+      "metrics": {
+        "expected": 2,
+        "found": 2,
+        "recall": 1.0,
+        "extra_findings": 0,
+        "details": [
+          {
+            "kind": "line_item_mismatch",
+            "field": "line_items[2].quantity",
+            "invoice_number": "PE/0107",
+            "found": true
+          },
+          {
+            "kind": "line_item_mismatch",
+            "field": "line_items[2].unit_price",
+            "invoice_number": "PE/0107",
+            "found": true
+          }
+        ]
+      }
+    }
+  ],
+  "assistant_eval": {
+    "provider": "openai",
+    "model": "gpt-6-luna",
+    "questions": 15,
+    "right_number": 14,
+    "right_citation": 14,
+    "both_right": 14,
+    "llm_calls": 36,
+    "input_tokens": 62558,
+    "output_tokens": 4618,
+    "cached_input_tokens": 58493,
+    "results": [
+      {
+        "number": 1,
+        "question": "How much did we spend with ACME in total?",
+        "expected": "2000.00",
+        "answer": "You spent **BDT 2,000.00** with ACME across two invoices: INV-1001 (eval-acme-march.pdf, INV-1001, p. 1) and INV-1002 (eval-acme-late-march.pdf, INV-1002, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "sum_invoices"
+        ]
+      },
+      {
+        "number": 2,
+        "question": "How many invoices do we have from ACME Supplies?",
+        "expected": "2",
+        "answer": "We have **2 invoices** from ACME Supplies: INV-1001 (eval-acme-march.pdf, p. 1) and INV-1002 (eval-acme-late-march.pdf, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "count_invoices"
+        ]
+      },
+      {
+        "number": 3,
+        "question": "What is the total of invoice GX-77?",
+        "expected": "450.50",
+        "answer": "The total for invoice GX-77 is **USD 450.50** (eval-globex.pdf, GX-77, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "get_invoice"
+        ]
+      },
+      {
+        "number": 4,
+        "question": "How much was the electricity bill?",
+        "expected": "3400.00",
+        "answer": "The electricity bill was **3,400.00 BDT** (eval-power.pdf, DP-3, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "search_documents"
+        ]
+      },
+      {
+        "number": 5,
+        "question": "When is the Dhaka Power invoice due?",
+        "expected": "2026-03-25",
+        "answer": "The Dhaka Power invoice is due **March 25, 2026** (eval-power.pdf, DP-3, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "search_documents"
+        ]
+      },
+      {
+        "number": 6,
+        "question": "How much did we spend in USD altogether?",
+        "expected": "550.49",
+        "answer": "You spent **$550.49 USD** altogether across 2 invoices: IN-9 (eval-batch.pdf, p. 1) and GX-77 (eval-globex.pdf, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "sum_invoices"
+        ]
+      },
+      {
+        "number": 7,
+        "question": "What did we spend in BDT in March 2026?",
+        "expected": "7400.00",
+        "answer": "You spent **BDT 7,400.00** across four invoices in March 2026: ACME Supplies (eval-acme-march.pdf, INV-1001, p. 1; eval-acme-late-march.pdf, INV-1002, p. 1), Dhaka Power Co (eval-power.pdf, DP-3, p. 1), and Umbrella Trading (eval-batch.pdf, UT-5, p. 3).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "sum_invoices"
+        ]
+      },
+      {
+        "number": 8,
+        "question": "How many invoices are dated in March 2026?",
+        "expected": "4",
+        "answer": "There are **4 invoices** dated in March 2026: INV-1001 (eval-acme-march.pdf, INV-1001, p. 1), DP-3 (eval-power.pdf, DP-3, p. 1), INV-1002 (eval-acme-late-march.pdf, INV-1002, p. 1), and UT-5 (eval-batch.pdf, UT-5, p. 3).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "count_invoices"
+        ]
+      },
+      {
+        "number": 9,
+        "question": "What is the invoice number of the Umbrella Trading invoice?",
+        "expected": "UT-5",
+        "answer": "The Umbrella Trading invoice number is **UT-5** (eval-batch.pdf, UT-5, p. 2).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "search_documents"
+        ]
+      },
+      {
+        "number": 10,
+        "question": "On which page of eval-batch.pdf does the Umbrella Trading invoice start?",
+        "expected": "2",
+        "answer": "I found no matching Umbrella Trading invoice in the available documents.",
+        "value_ok": false,
+        "citation_ok": false,
+        "tools": [
+          "search_documents"
+        ]
+      },
+      {
+        "number": 11,
+        "question": "What was the total of the Initech invoice?",
+        "expected": "99.99",
+        "answer": "The Initech invoice total was **USD 99.99** (eval-batch.pdf, IN-9, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "search_documents"
+        ]
+      },
+      {
+        "number": 12,
+        "question": "What is the total of invoice UT-5?",
+        "expected": "2000.00",
+        "answer": "Invoice UT-5 totals **BDT 2,000.00** (eval-batch.pdf, UT-5, p. 3).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "get_invoice"
+        ]
+      },
+      {
+        "number": 13,
+        "question": "How many invoices are there in total?",
+        "expected": "6",
+        "answer": "There are **6 invoices** in total (eval-batch.pdf, IN-9, p. 1; eval-globex.pdf, GX-77, p. 1; eval-acme-march.pdf, INV-1001, p. 1; eval-power.pdf, DP-3, p. 1; eval-acme-late-march.pdf, INV-1002, p. 1; eval-batch.pdf, UT-5, p. 3).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "count_invoices"
+        ]
+      },
+      {
+        "number": 14,
+        "question": "What is the invoice date of INV-1001?",
+        "expected": "2026-03-02",
+        "answer": "The invoice date is **2026-03-02** (eval-acme-march.pdf, INV-1001, p. 1).",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "get_invoice"
+        ]
+      },
+      {
+        "number": 15,
+        "question": "How much did we spend with Globex in March 2026?",
+        "expected": "NONE",
+        "answer": "I found no Globex invoices dated March 2026, so there’s no spend to report.",
+        "value_ok": true,
+        "citation_ok": true,
+        "tools": [
+          "sum_invoices"
+        ]
+      }
+    ]
+  },
+  "failure_examples": [],
+  "headline": {
+    "field_accuracy": 1.0,
+    "false_fill_rate": 0.0,
+    "missing_rate": 0.0,
+    "line_item_f1": 1.0,
+    "flag_precision": 0.9375,
+    "flag_recall": 1.0,
+    "document_success_rate": 1.0,
+    "p50_seconds_per_document": 9.302,
+    "p95_seconds_per_document": 27.01,
+    "cost_usd_per_document": 0.000898,
+    "segmentation_exact": 1.0,
+    "crosscheck_recall": 1.0,
+    "duplicates_detected": 1,
+    "assistant_both_right": 0.9333333333333333
+  }
+}

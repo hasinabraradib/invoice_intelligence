@@ -17,6 +17,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-13 | 5d: Cross-verification | Claude Code (Claude Opus 5.5) | Ledger detection with header synonyms and stored rows (sheet + row evidence), column-mapping override; migration for ledger_rows, cross_checks, findings; pure comparison (invoice number, then supplier+date+total; Decimal tolerance; duplicates; line items by description similarity) run as an arq job; CROSS_CHECK_MISMATCH issues that survive re-validation and set needs_review without changing values; Cross-check page and ledger row highlighting; ledgers processed without an LLM. | _To fill in after review_ |
 | 2026-11-14 | 5e: AI assistant | Claude Code (Claude Opus 5.5) | Native tool calling for Gemini/Groq; agent loop (max 6 tool steps) over read tools wrapping existing services and fixed SQL sums/counts per currency; write tools that only propose actions, confirmed by the user, with expiry and audit trail; code-level guard against injected instructions; conversations/messages/actions tables; SSE streaming with Stop; chat as home page with greeting, suggestions, tool trace, citations, confirmation cards, attachments; safe Markdown renderer; 15-question eval set and scoring script. Fixed an approval bug in batch documents found on the way. | _To fill in after review_ |
 | 2026-11-14 | 5f: OpenAI provider | Claude Code (Claude Opus 5.5) | Add OpenAI as a third LLM provider (LLM_PROVIDER=openai, OPENAI_API_KEY, default gpt-6-luna with reasoning effort none/low, temperature dropped only if the model rejects it) over httpx: strict JSON-schema extraction, native tool calling, temperature 0, same timeout/retry/backoff; record token usage for cost; mock-server tests (shapes, tool calls, 429 retry, invalid-JSON repair); live check on one synthetic invoice and one short assistant conversation; check that .env is ignored and no key is in git history. | _To fill in after review_ |
+| 2026-11-14 | 6a: Real-provider check + evaluation | Claude Code (Claude Opus 5.5) | Confirm 5d and parallel OCR are complete; real OpenAI runs on synthetic samples and one assistant conversation (question, sum, proposed correction) over SSE; fix what they find; sanitised real replies as fixtures; concurrency cap for rate limits; fixed-seed labelled synthetic dataset (41 invoices, 7 file types, planted defects, dev/test split) with a real-data template; make eval end to end through API and worker with field, line item, flag, duplicate, segmentation, cross-check, timing and cost metrics; docs/evaluation.md; latest accuracy on the dashboard. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -85,3 +86,28 @@ Why the extraction prompt looks the way it does:
   | Assistant, 2 questions in one conversation (count + total per currency; largest supplier with citation) | Right tools (`count_invoices`, `sum_invoices`, `search_documents`), answers match the database (7 invoices / 130.00; Hooli 40.00, E-500), cited | 9 | 26,118 | 350 |
 
   No parameter had to be dropped. Multiply the tokens by OpenAI's current gpt-6-luna price for cost.
+
+## Real-provider check and evaluation (step 6a)
+
+- **Real runs found real bugs, fixed in small commits:**
+  - CSV invoices with a key/value block above the item table were rejected as an
+    unsupported type.
+  - A worker restart left jobs "running" for 30 minutes, because arq's redelivery was
+    skipped.
+  - Excel date cells (`2026-10-03 00:00:00`) were lost. `make eval` found this on the dev
+    split.
+- **Request/response formats held up.** Structured output, tool calls and the SSE stream
+  all worked first time against OpenAI. The recorded fixtures showed prompt caching (about
+  90% of input tokens), so cached tokens are now counted separately.
+- **Ground truth is independent of the code under test.** Expected validation flags come
+  from each document's planted design, not from the app's rules. That is how the
+  evaluation caught a real rule bug (a line-sum check that ignores tax when there is no
+  subtotal). It shows up only on the test split, so it is reported and not fixed, to
+  keep the test split untouched.
+- **Scorer bugs are not system bugs.** Two first-run "failures" were mistakes in the
+  scoring: the cross-check matching and the assistant's date comparison. They were fixed
+  in the scorer with tests, and both runs are kept so the history is visible.
+- **Isolation.** The evaluation runs in its own compose project with a fresh database,
+  because duplicate detection and the assistant see every document; it never touches dev
+  data.
+

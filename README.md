@@ -294,9 +294,17 @@ Notes:
 - OpenAI uses strict structured output: its reply is guaranteed to match the schema.
   Gemini and Groq use their JSON-schema modes. Invalid JSON from any provider gets one repair
   call, then a clean failure.
-- **Cost:** every client counts input and output tokens from the provider's own `usage`
-  numbers. `make extract-sample`, `make assistant-eval` and `make batch-benchmark ARGS="--llm real"`
-  print them. Multiply by your provider's current price per token.
+- **Cost:** every client counts input, output and prompt-cache-hit tokens from the
+  provider's own `usage` numbers. Each processing job stores them (shown in the document's
+  job), and `make extract-sample`, `make assistant-eval` and `make eval` print them. Set
+  `LLM_PRICE_INPUT_PER_MTOK` / `LLM_PRICE_OUTPUT_PER_MTOK` (USD per million tokens) to get
+  a cost estimate in `make eval`.
+- **Rate limits:** `LLM_MAX_CONCURRENT_REQUESTS` (default 4) caps the provider requests in
+  flight per process, over all jobs and invoices at once; a slot is held through retries.
+  Use 1-2 on free tiers.
+- **Real response fixtures:** `make capture-fixtures` records sanitised replies from your
+  provider on synthetic text (no headers, ids replaced) into `backend/tests/fixtures/llm/`.
+  The tests replay them, so the mocks match what the real API returns.
 
 ### AI extraction (try it on a sample)
 
@@ -383,7 +391,38 @@ _To be written._
 
 ## Evaluation
 
-_To be written._
+Measured end to end through the API and worker with the real provider (OpenAI
+`gpt-6-luna`), on 41 labelled **synthetic** invoices (digital and scanned PDFs, photos,
+XLSX, CSV, a 9-page batch, a ledger and a purchase order). Headline numbers for the
+**test split** (26 invoices); full tables, failure examples and limitations are in
+[docs/evaluation.md](docs/evaluation.md):
+
+| Metric | Test split |
+|---|---|
+| Field accuracy (9 header fields, correctly empty counts as right) | 100% |
+| Invented values (false fills) / missing values | 0% / 0% |
+| Line items F1 | 100% |
+| Validation flags precision / recall | 93.8% / 100% (1 false flag: a known rule bug) |
+| Batch segmentation (exact page ranges) | 6/6 |
+| Cross-check planted findings found | 6/6 (ledger and purchase order) |
+| Duplicate pair flagged | 1/1, no false alarms |
+| Assistant (15 questions, right number and citation) | 14/15 |
+| Time per document p50 / p95 | 9.3 s / 27.0 s |
+| Cost per document (at $0.10 / $0.50 per M tokens) | about $0.0009 |
+
+These are clean, machine-generated documents, so treat them as an **upper bound** for real
+invoices. The first run found a real bug (dates from Excel cells were lost), which was
+fixed on the dev split before this run. Label real invoices in `eval/dataset/real/` and run
+`make eval ARGS=--real` for numbers that mean more.
+
+```bash
+make eval-dataset   # regenerate the dataset (fixed seed, byte-identical)
+make eval           # isolated stack -> eval/results/<timestamp>.json, docs/evaluation.md, dashboard
+```
+
+`make eval` runs in its own compose project (`invoice-eval`) with a fresh database, so your
+documents never affect the results and the eval never touches your data. The headline then
+appears on the dashboard under "Latest evaluation".
 
 ## Design decisions
 
