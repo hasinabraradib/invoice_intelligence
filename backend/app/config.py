@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # SecretStr hides the value in repr()/logs: it prints as '**********'.
     llm_api_key: SecretStr | None = None  # Gemini or Groq
     openai_api_key: SecretStr | None = None  # used when LLM_PROVIDER=openai
+    # OpenAI reasoning models: "none" keeps temperature 0 working on gpt-6-luna.
+    openai_reasoning_effort: Literal["none", "low"] = "none"
     llm_model: str | None = None  # empty = the provider's default model
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_attempts: int = Field(default=4, ge=1, le=10)

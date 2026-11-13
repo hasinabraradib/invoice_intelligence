@@ -60,6 +60,7 @@ def test_complete_json_request_shape_and_usage():
     assert "sk-test" not in str(request.url)  # key never in the URL
     body = json.loads(request.content)
     assert body["model"] == "test-model" and body["temperature"] == 0
+    assert body["reasoning_effort"] == "none"
     assert body["messages"] == [
         {"role": "system", "content": "sys"},
         {"role": "user", "content": "user"},
@@ -181,6 +182,7 @@ def test_tool_request_shape_and_history_conversion():
     assert reply.text == "ACME billed 5.00." and reply.tool_calls == []
     body = json.loads(requests[0].content)
     assert body["temperature"] == 0 and body["tool_choice"] == "auto"
+    assert body["reasoning_effort"] == "none"
     assert "response_format" not in body
     assert body["tools"] == [
         {
@@ -244,11 +246,17 @@ def test_parallel_tool_calls_are_parsed_and_bad_arguments_become_none():
 
 def test_get_llm_client_uses_openai_api_key_and_default_model():
     llm = get_llm_client(Settings(llm_provider="openai", openai_api_key="sk-x", llm_model=""))
-    assert isinstance(llm, OpenAIClient) and llm.model == "gpt-4.1-mini"
+    assert isinstance(llm, OpenAIClient) and llm.model == "gpt-6-luna"
+    assert llm.reasoning_effort == "none"
     custom = get_llm_client(
-        Settings(llm_provider="openai", openai_api_key="sk-x", llm_model="gpt-4.1-nano")
+        Settings(
+            llm_provider="openai",
+            openai_api_key="sk-x",
+            llm_model="gpt-4.1-nano",
+            openai_reasoning_effort="low",
+        )
     )
-    assert custom.model == "gpt-4.1-nano"
+    assert custom.model == "gpt-4.1-nano" and custom.reasoning_effort == "low"
     # LLM_API_KEY is for Gemini/Groq; OpenAI must not silently use another provider's key.
     with pytest.raises(ValueError, match="OPENAI_API_KEY is not set"):
         get_llm_client(Settings(llm_provider="openai", llm_api_key="k", openai_api_key=""))
@@ -257,3 +265,79 @@ def test_get_llm_client_uses_openai_api_key_and_default_model():
 def test_openai_key_is_hidden_in_settings_repr():
     settings = Settings(llm_provider="openai", openai_api_key="sk-very-secret")
     assert "sk-very-secret" not in repr(settings)
+
+
+def _rejects(param: str) -> httpx.Response:
+    """OpenAI's 400 for an unsupported parameter value (shape copied from a real reply)."""
+    return httpx.Response(
+        400,
+        json={
+            "error": {
+                "message": f"Unsupported value: '{param}' does not support 0 with this model. "
+                "Only the default (1) value is supported.",
+                "type": "invalid_request_error",
+                "param": param,
+                "code": "unsupported_value",
+            }
+        },
+    )
+
+
+def test_rejected_temperature_is_dropped_once_and_remembered():
+    llm, requests, sleeps = _openai([_rejects("temperature"), _text("{}"), _text("{}")])
+
+    assert llm.complete_json("sys", "user", SCHEMA) == {}
+    first, second = (json.loads(r.content) for r in requests)
+    assert first["temperature"] == 0
+    assert "temperature" not in second and second["reasoning_effort"] == "none"
+    assert sleeps == []  # not a rate limit: resent at once
+
+    llm.chat_with_tools([{"role": "user", "content": "hi"}], TOOLS)
+    assert len(requests) == 3 and "temperature" not in json.loads(requests[2].content)
+    assert llm.dropped_params == {"temperature"} and llm.usage.calls == 2
+
+
+def test_rejected_reasoning_effort_is_dropped_for_non_reasoning_models():
+    unsupported = httpx.Response(
+        400,
+        json={
+            "error": {
+                "message": "Unrecognized request argument supplied: reasoning_effort",
+                "param": "reasoning_effort",
+            }
+        },
+    )
+    llm, requests, _ = _openai([unsupported, _text("{}")])
+
+    assert llm.complete_json("sys", "user", SCHEMA) == {}
+    second = json.loads(requests[1].content)
+    assert "reasoning_effort" not in second and second["temperature"] == 0
+
+
+def test_both_parameters_can_be_dropped_then_other_400s_still_fail():
+    llm, requests, _ = _openai(
+        [_rejects("temperature"), _rejects("reasoning_effort"), _rejects("temperature")]
+    )
+    # Third reply names a parameter that is already gone: a real error, not a loop.
+    with pytest.raises(LLMError, match="HTTP 400") as info:
+        llm.complete_json("sys", "user", SCHEMA)
+    assert len(requests) == 3 and info.value.status_code == 400 and not info.value.retryable
+
+
+def test_other_bad_requests_are_not_resent():
+    bad = httpx.Response(400, json={"error": {"message": "Invalid schema for response_format"}})
+    llm, requests, _ = _openai([bad])
+    with pytest.raises(LLMError, match="Invalid schema"):
+        llm.complete_json("sys", "user", SCHEMA)
+    assert len(requests) == 1 and llm.dropped_params == set()
+
+
+def test_reasoning_effort_can_be_turned_off():
+    seen: list[httpx.Request] = []
+    transport = httpx.MockTransport(lambda request: seen.append(request) or _text("{}"))
+    http = httpx.Client(transport=transport)
+    llm = OpenAIClient("sk-test", "m", http_client=http, reasoning_effort=None)
+
+    llm.complete_json("sys", "user", SCHEMA)
+
+    assert "reasoning_effort" not in json.loads(seen[0].content)

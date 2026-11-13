@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODELS = {
     "gemini": "gemini-2.5-flash",
     "groq": "openai/gpt-oss-120b",
-    "openai": "gpt-4.1-mini",  # small and cheap; accepts temperature 0
+    "openai": "gpt-6-luna",  # reasoning model; with reasoning_effort "none" takes temperature 0
 }
 
 
@@ -36,9 +36,12 @@ class LLMError(Exception):
     trouble. A later job retry may succeed; a bad key or bad request will not.
     """
 
-    def __init__(self, message: str, *, retryable: bool = False) -> None:
+    def __init__(
+        self, message: str, *, retryable: bool = False, status_code: int | None = None
+    ) -> None:
         super().__init__(message)
         self.retryable = retryable
+        self.status_code = status_code  # HTTP status when the provider rejected the request
 
 
 class LLMInvalidJSON(LLMError):
@@ -148,7 +151,10 @@ def post_with_retries(
             sleep(_backoff(attempt, response.headers.get("retry-after"), base_delay, max_delay))
             continue
         if response.is_error:
-            raise LLMError(f"HTTP {response.status_code}: {_error_message(response)}")
+            raise LLMError(
+                f"HTTP {response.status_code}: {_error_message(response)}",
+                status_code=response.status_code,
+            )
         return response
     raise AssertionError("unreachable")
 
@@ -440,14 +446,49 @@ class GroqClient(_ChatCompletionsClient):
 class OpenAIClient(_ChatCompletionsClient):
     """OpenAI Chat Completions with strict json_schema output and native tool calling.
 
-    The default model takes temperature 0; OpenAI's reasoning models (o-series, GPT-5
-    family) reject it, so pick a non-reasoning model if you change LLM_MODEL.
+    Sends `reasoning_effort` (default "none": extraction and tool choice need no long
+    reasoning, and gpt-6-luna then still accepts temperature 0). Some models reject
+    temperature 0 (gpt-6-luna at effort "low") or reasoning_effort (non-reasoning models).
+    When OpenAI answers 400 naming one of these two parameters, it is dropped and the
+    request sent once more; the client remembers this for later calls. Any other 400 fails.
     """
 
     name = "openai"
     LABEL = "OpenAI"
     URL = "https://api.openai.com/v1/chat/completions"
     STRICT_SCHEMA = True
+    DROPPABLE = ("temperature", "reasoning_effort")
+
+    def __init__(self, *args: Any, reasoning_effort: str | None = "none", **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.reasoning_effort = reasoning_effort
+        self.dropped_params: set[str] = set()
+
+    def _send(self, body: dict[str, Any]) -> dict[str, Any]:
+        body = dict(body)
+        if self.reasoning_effort:
+            body["reasoning_effort"] = self.reasoning_effort
+        for _ in range(len(self.DROPPABLE) + 1):
+            for param in self.dropped_params:
+                body.pop(param, None)
+            try:
+                return super()._send(body)
+            except LLMError as exc:
+                param = self._rejected_param(exc, body)
+                if param is None:
+                    raise
+                logger.warning("OpenAI model %s rejects %s; sending without it", self.model, param)
+                self.dropped_params.add(param)
+        raise AssertionError("unreachable")
+
+    def _rejected_param(self, exc: LLMError, body: dict[str, Any]) -> str | None:
+        if exc.status_code != 400:
+            return None
+        message = str(exc)
+        for param in self.DROPPABLE:
+            if param in body and param in message:
+                return param
+        return None
 
 
 class UnconfiguredLLM:
@@ -526,9 +567,13 @@ def get_llm_client(settings: Settings) -> LLMClient:
         key, key_name = settings.llm_api_key, "LLM_API_KEY"
     if key is None:
         raise ValueError(f"{key_name} is not set")
+    extra: dict[str, Any] = {}
+    if settings.llm_provider == "openai":
+        extra["reasoning_effort"] = settings.openai_reasoning_effort
     return classes[settings.llm_provider](
         key.get_secret_value(),
         settings.llm_model or DEFAULT_MODELS[settings.llm_provider],
         timeout=settings.llm_timeout_seconds,
         max_attempts=settings.llm_max_attempts,
+        **extra,
     )
