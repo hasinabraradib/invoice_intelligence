@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -38,6 +38,12 @@ ocr-sample: env
 extract-sample: env
 	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/samples:/samples:ro" api \
 		python scripts/extract_sample.py "/samples/$(notdir $(FILE))"
+
+# Record sanitised real-provider replies (synthetic text only) as test fixtures.
+# Uses API credits; needs LLM_PROVIDER and its key in .env.
+capture-fixtures: env
+	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/backend/tests/fixtures:/fixtures" api \
+		python scripts/capture_llm_fixtures.py --out /fixtures/llm
 
 # Build semantic-search embeddings for documents processed before step 5 (safe to re-run).
 embed-backfill: env

@@ -1,0 +1,58 @@
+{
+  "provider": "openai",
+  "model": "gpt-6-luna",
+  "request_keys": [
+    "messages",
+    "model",
+    "reasoning_effort",
+    "temperature",
+    "tool_choice",
+    "tools"
+  ],
+  "response": {
+    "id": "fixture-response-id",
+    "object": "chat.completion",
+    "created": 0,
+    "model": "gpt-6-luna",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_fixture_1",
+              "type": "function",
+              "function": {
+                "name": "sum_invoices",
+                "arguments": "{}"
+              }
+            }
+          ],
+          "refusal": null,
+          "annotations": []
+        },
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1449,
+      "completion_tokens": 14,
+      "total_tokens": 1463,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 1446,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "service_tier": "default",
+    "system_fingerprint": "fp_fixture"
+  }
+}

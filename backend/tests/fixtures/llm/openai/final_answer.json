@@ -1,0 +1,48 @@
+{
+  "provider": "openai",
+  "model": "gpt-6-luna",
+  "request_keys": [
+    "messages",
+    "model",
+    "reasoning_effort",
+    "temperature",
+    "tool_choice",
+    "tools"
+  ],
+  "response": {
+    "id": "fixture-response-id",
+    "object": "chat.completion",
+    "created": 0,
+    "model": "gpt-6-luna",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "The total is **USD 302.00** (synthetic-invoice.xlsx, PE-2211, p. 1).",
+          "refusal": null,
+          "annotations": []
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1611,
+      "completion_tokens": 30,
+      "total_tokens": 1641,
+      "prompt_tokens_details": {
+        "cached_tokens": 1446,
+        "cache_write_tokens": 162,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "service_tier": "default",
+    "system_fingerprint": "fp_fixture"
+  }
+}
