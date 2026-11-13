@@ -22,7 +22,11 @@ from app.config import Settings
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODELS = {"gemini": "gemini-2.5-flash", "groq": "openai/gpt-oss-120b"}
+DEFAULT_MODELS = {
+    "gemini": "gemini-2.5-flash",
+    "groq": "openai/gpt-oss-120b",
+    "openai": "gpt-4.1-mini",  # small and cheap; accepts temperature 0
+}
 
 
 class LLMError(Exception):
@@ -197,7 +201,7 @@ class _HttpClient:
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         if not api_key:
-            raise ValueError("LLM_API_KEY is required")
+            raise ValueError("an API key is required")
         self._api_key = api_key
         self.model = model
         self._max_attempts = max_attempts
@@ -326,13 +330,34 @@ class GeminiClient(_HttpClient):
         return reply
 
 
-class GroqClient(_HttpClient):
-    """Groq's OpenAI-compatible chat API with json_schema structured output."""
+class _ChatCompletionsClient(_HttpClient):
+    """The OpenAI Chat Completions API shape, which Groq also speaks."""
 
-    name = "groq"
-    URL = "https://api.groq.com/openai/v1/chat/completions"
+    URL = ""
+    LABEL = ""
+    # OpenAI's strict mode guarantees the reply matches the schema; our schemas already
+    # meet its rules (every key required, no extra keys).
+    STRICT_SCHEMA = False
+
+    def _send(self, body: dict[str, Any]) -> dict[str, Any]:
+        """POST, record token usage, return the first choice's message."""
+        data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
+        usage = data.get("usage") or {}
+        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
+        try:
+            message = data["choices"][0]["message"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMError(f"{self.LABEL} returned no answer") from exc
+        if not isinstance(message, dict):
+            raise LLMError(f"{self.LABEL} returned no answer")
+        if message.get("refusal"):  # safety refusal instead of an answer; retrying won't help
+            raise LLMError(f"{self.LABEL} refused to answer")
+        return message
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+        json_schema: dict[str, Any] = {"name": "invoice_extraction", "schema": schema}
+        if self.STRICT_SCHEMA:
+            json_schema["strict"] = True
         body = {
             "model": self.model,
             "temperature": 0,
@@ -340,19 +365,9 @@ class GroqClient(_HttpClient):
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {"name": "invoice_extraction", "schema": schema},
-            },
+            "response_format": {"type": "json_schema", "json_schema": json_schema},
         }
-        data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
-        usage = data.get("usage") or {}
-        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
-        try:
-            content = data["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise LLMError("Groq returned no answer") from exc
-        return parse_json_object(content)
+        return parse_json_object(self._send(body).get("content") or "")
 
     def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
         converted: list[dict[str, Any]] = []
@@ -395,13 +410,7 @@ class GroqClient(_HttpClient):
                 for t in tools
             ]
             body["tool_choice"] = "auto"
-        data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
-        usage = data.get("usage") or {}
-        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"))
-        try:
-            message = data["choices"][0]["message"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise LLMError("Groq returned no answer") from exc
+        message = self._send(body)
         reply = ChatReply(text=message.get("content") or "")
         for call in message.get("tool_calls") or []:
             raw = (call.get("function") or {}).get("arguments") or ""
@@ -418,6 +427,27 @@ class GroqClient(_HttpClient):
                 )
             )
         return reply
+
+
+class GroqClient(_ChatCompletionsClient):
+    """Groq's OpenAI-compatible chat API with json_schema structured output."""
+
+    name = "groq"
+    LABEL = "Groq"
+    URL = "https://api.groq.com/openai/v1/chat/completions"
+
+
+class OpenAIClient(_ChatCompletionsClient):
+    """OpenAI Chat Completions with strict json_schema output and native tool calling.
+
+    The default model takes temperature 0; OpenAI's reasoning models (o-series, GPT-5
+    family) reject it, so pick a non-reasoning model if you change LLM_MODEL.
+    """
+
+    name = "openai"
+    LABEL = "OpenAI"
+    URL = "https://api.openai.com/v1/chat/completions"
+    STRICT_SCHEMA = True
 
 
 class UnconfiguredLLM:
@@ -483,14 +513,21 @@ class FakeLLMClient:
 
 
 def get_llm_client(settings: Settings) -> LLMClient:
-    """Build the client chosen by LLM_PROVIDER."""
-    classes = {"gemini": GeminiClient, "groq": GroqClient}
+    """Build the client chosen by LLM_PROVIDER.
+
+    OpenAI reads its own OPENAI_API_KEY; Gemini and Groq read LLM_API_KEY.
+    """
+    classes = {"gemini": GeminiClient, "groq": GroqClient, "openai": OpenAIClient}
     if settings.llm_provider not in classes:
-        raise ValueError("LLM_PROVIDER is 'none'; set it to 'gemini' or 'groq'")
-    if settings.llm_api_key is None:
-        raise ValueError("LLM_API_KEY is not set")
+        raise ValueError("LLM_PROVIDER is 'none'; set it to 'gemini', 'groq' or 'openai'")
+    if settings.llm_provider == "openai":
+        key, key_name = settings.openai_api_key, "OPENAI_API_KEY"
+    else:
+        key, key_name = settings.llm_api_key, "LLM_API_KEY"
+    if key is None:
+        raise ValueError(f"{key_name} is not set")
     return classes[settings.llm_provider](
-        settings.llm_api_key.get_secret_value(),
+        key.get_secret_value(),
         settings.llm_model or DEFAULT_MODELS[settings.llm_provider],
         timeout=settings.llm_timeout_seconds,
         max_attempts=settings.llm_max_attempts,

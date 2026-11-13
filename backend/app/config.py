@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     redis_url: str
 
     # Which LLM backend to use; "none" lets the app boot without any API key.
-    llm_provider: Literal["none", "gemini", "groq"] = "none"
+    llm_provider: Literal["none", "gemini", "groq", "openai"] = "none"
     # SecretStr hides the value in repr()/logs: it prints as '**********'.
-    llm_api_key: SecretStr | None = None
+    llm_api_key: SecretStr | None = None  # Gemini or Groq
+    openai_api_key: SecretStr | None = None  # used when LLM_PROVIDER=openai
     llm_model: str | None = None  # empty = the provider's default model
     llm_timeout_seconds: float = Field(default=60, gt=0)
     llm_max_attempts: int = Field(default=4, ge=1, le=10)
@@ -73,7 +74,7 @@ class Settings(BaseSettings):
     # Browsers may call the API from these origins (the Next.js dev server by default).
     cors_origins: list[str] = ["http://localhost:3000"]
 
-    @field_validator("llm_model", "llm_api_key", mode="before")
+    @field_validator("llm_model", "llm_api_key", "openai_api_key", mode="before")
     @classmethod
     def _blank_is_none(cls, value):
         # "LLM_MODEL=" in .env gives "", which should mean "not set".
