@@ -132,6 +132,11 @@ class ProcessingJob(Base):
     # "Retry failed": continue from this earlier job (reuse its page texts, boundaries and
     # finished invoices) instead of starting over.
     resume_job_id: Mapped[uuid.UUID | None] = mapped_column()
+    # LLM usage summed over all attempts of this job (for cost reporting).
+    llm_calls: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    llm_input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    llm_output_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    llm_cached_input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -1155,6 +1155,26 @@ export interface components {
             started_at: string | null;
             /** Finished At */
             finished_at: string | null;
+            /**
+             * Llm Calls
+             * @default 0
+             */
+            llm_calls: number;
+            /**
+             * Llm Input Tokens
+             * @default 0
+             */
+            llm_input_tokens: number;
+            /**
+             * Llm Output Tokens
+             * @default 0
+             */
+            llm_output_tokens: number;
+            /**
+             * Llm Cached Input Tokens
+             * @default 0
+             */
+            llm_cached_input_tokens: number;
         };
         /** LedgerRowView */
         LedgerRowView: {

@@ -109,6 +109,23 @@ async def test_redelivered_running_job_is_taken_back(api, run_job, db_session, t
     assert status["status"] == "processed" and status["job_status"] == "succeeded"
 
 
+async def test_llm_usage_is_saved_on_the_job_and_summed_over_attempts(api, run_job, tmp_path):
+    uploaded = await _upload(api, "inv.pdf", factories.text_pdf(tmp_path / "a.pdf", 1).read_bytes())
+    flaky = FakeLLMClient(LLMError("HTTP 503 after 4 attempts", retryable=True))
+    flaky.usage.calls, flaky.usage.input_tokens = 1, 50  # billed before it failed
+    with pytest.raises(Retry):
+        await run_job(uploaded["job_id"], flaky)
+
+    llm = FakeLLMClient(GOOD_REPLY)
+    llm.usage.calls, llm.usage.input_tokens, llm.usage.output_tokens = 1, 900, 120
+    llm.usage.cached_input_tokens = 800
+    assert await run_job(uploaded["job_id"], llm) == "processed"
+
+    job = (await api.get(f"/documents/{uploaded['document_id']}")).json()["latest_job"]
+    assert (job["llm_calls"], job["llm_input_tokens"], job["llm_output_tokens"]) == (2, 950, 120)
+    assert job["llm_cached_input_tokens"] == 800
+
+
 async def test_stuck_running_job_is_requeued(db_session, queue):
     repo = Repository(db_session)
     doc = await repo.create_document(

@@ -10,7 +10,7 @@ from typing import Any
 import anyio
 from arq import Retry
 from arq.connections import RedisSettings
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.config import get_settings
 from app.crosscheck.service import run_cross_check
@@ -93,10 +93,30 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
             )
         except TEMPORARY_ERRORS as exc:  # e.g. the database went away mid-job
             raise Retry(defer=retry_delay(job.attempts + 1, settings)) from exc
+        await _save_llm_usage(session, job.id, llm)
 
     if outcome.retry:
         raise Retry(defer=retry_delay(outcome.attempts, settings))
     return outcome.status
+
+
+async def _save_llm_usage(session: Any, job_id: uuid.UUID, llm: Any) -> None:
+    """Add this attempt's provider usage to the job (summed over retries)."""
+    usage = getattr(llm, "usage", None)
+    if usage is None or not usage.calls:
+        return
+    await session.execute(
+        update(ProcessingJob)
+        .where(ProcessingJob.id == job_id)
+        .values(
+            llm_calls=ProcessingJob.llm_calls + usage.calls,
+            llm_input_tokens=ProcessingJob.llm_input_tokens + usage.input_tokens,
+            llm_output_tokens=ProcessingJob.llm_output_tokens + usage.output_tokens,
+            llm_cached_input_tokens=ProcessingJob.llm_cached_input_tokens
+            + usage.cached_input_tokens,
+        )
+    )
+    await session.commit()
 
 
 async def run_cross_check_job(ctx: dict[str, Any], cross_check_id: str) -> str:

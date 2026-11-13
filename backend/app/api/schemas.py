@@ -81,6 +81,11 @@ class JobView(BaseModel):
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
+    # LLM usage over all attempts (tokens as reported by the provider; cached included)
+    llm_calls: int = 0
+    llm_input_tokens: int = 0
+    llm_output_tokens: int = 0
+    llm_cached_input_tokens: int = 0
 
 
 class InvoiceSummary(BaseModel):
