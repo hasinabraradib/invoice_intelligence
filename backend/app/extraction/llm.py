@@ -10,7 +10,9 @@ import logging
 import random
 import re
 import time
+import uuid
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 import httpx
@@ -38,11 +40,45 @@ class LLMInvalidJSON(LLMError):
     """The provider answered, but not with a JSON object."""
 
 
+@dataclass
+class ToolSpec:
+    """A function the model may call: name, what it does, and a JSON schema of arguments."""
+
+    name: str
+    description: str
+    parameters: dict[str, Any]
+
+
+@dataclass
+class ToolCall:
+    id: str
+    name: str
+    arguments: dict[str, Any] | None  # None if the model sent arguments that are not JSON
+    raw_arguments: str = ""
+
+
+@dataclass
+class ChatReply:
+    text: str = ""
+    tool_calls: list[ToolCall] = field(default_factory=list)
+
+
+# Chat messages are provider-neutral dicts:
+#   {"role": "system" | "user", "content": str}
+#   {"role": "assistant", "content": str, "tool_calls": [{"id", "name", "arguments"}]}
+#   {"role": "tool", "tool_call_id": str, "name": str, "content": str}
+Message = dict[str, Any]
+
+
 class LLMClient(Protocol):
     name: str
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Send the prompts, return the parsed JSON object (raise LLMError otherwise)."""
+        ...
+
+    def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
+        """One model turn: either text, or tool calls for us to run (raise LLMError)."""
         ...
 
 
@@ -186,6 +222,67 @@ class GeminiClient(_HttpClient):
             raise LLMError(f"Gemini returned no answer ({reason})") from exc
         return parse_json_object("".join(part.get("text", "") for part in parts))
 
+    def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        contents: list[dict[str, Any]] = []
+        for m in messages:
+            if m["role"] == "user":
+                contents.append({"role": "user", "parts": [{"text": m["content"]}]})
+            elif m["role"] == "assistant":
+                parts = [{"text": m["content"]}] if m.get("content") else []
+                parts += [
+                    {"functionCall": {"name": c["name"], "args": c.get("arguments") or {}}}
+                    for c in m.get("tool_calls") or []
+                ]
+                contents.append({"role": "model", "parts": parts or [{"text": ""}]})
+            elif m["role"] == "tool":
+                part = {
+                    "functionResponse": {"name": m["name"], "response": {"result": m["content"]}}
+                }
+                # All results of one model turn go back together, in one user turn.
+                if contents and contents[-1].get("_tool_results"):
+                    contents[-1]["parts"].append(part)
+                else:
+                    contents.append({"role": "user", "parts": [part], "_tool_results": True})
+        for content in contents:
+            content.pop("_tool_results", None)
+        body: dict[str, Any] = {
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": contents,
+            "generationConfig": {"temperature": 0},
+        }
+        if tools:
+            body["tools"] = [
+                {
+                    "functionDeclarations": [
+                        {"name": t.name, "description": t.description, "parameters": t.parameters}
+                        for t in tools
+                    ]
+                }
+            ]
+            body["toolConfig"] = {"functionCallingConfig": {"mode": "AUTO"}}
+        data = self._post(
+            f"{self.BASE_URL}/{self.model}:generateContent", {"x-goog-api-key": self._api_key}, body
+        )
+        try:
+            parts = data["candidates"][0]["content"].get("parts", [])
+        except (KeyError, IndexError, TypeError) as exc:
+            reason = (data.get("promptFeedback") or {}).get("blockReason", "no candidates")
+            raise LLMError(f"Gemini returned no answer ({reason})") from exc
+        reply = ChatReply(text="".join(p.get("text", "") for p in parts))
+        for part in parts:
+            if call := part.get("functionCall"):
+                args = call.get("args")
+                reply.tool_calls.append(
+                    ToolCall(
+                        id=call.get("id") or f"call_{uuid.uuid4().hex[:12]}",
+                        name=call.get("name", ""),
+                        arguments=args if isinstance(args, dict) else None,
+                        raw_arguments=json.dumps(args) if args is not None else "",
+                    )
+                )
+        return reply
+
 
 class GroqClient(_HttpClient):
     """Groq's OpenAI-compatible chat API with json_schema structured output."""
@@ -213,6 +310,69 @@ class GroqClient(_HttpClient):
             raise LLMError("Groq returned no answer") from exc
         return parse_json_object(content)
 
+    def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
+        converted: list[dict[str, Any]] = []
+        for m in messages:
+            if m["role"] == "assistant" and m.get("tool_calls"):
+                converted.append(
+                    {
+                        "role": "assistant",
+                        "content": m.get("content") or None,
+                        "tool_calls": [
+                            {
+                                "id": c["id"],
+                                "type": "function",
+                                "function": {
+                                    "name": c["name"],
+                                    "arguments": json.dumps(c.get("arguments") or {}),
+                                },
+                            }
+                            for c in m["tool_calls"]
+                        ],
+                    }
+                )
+            elif m["role"] == "tool":
+                converted.append(
+                    {"role": "tool", "tool_call_id": m["tool_call_id"], "content": m["content"]}
+                )
+            else:
+                converted.append({"role": m["role"], "content": m.get("content") or ""})
+        body: dict[str, Any] = {"model": self.model, "temperature": 0, "messages": converted}
+        if tools:
+            body["tools"] = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": t.name,
+                        "description": t.description,
+                        "parameters": t.parameters,
+                    },
+                }
+                for t in tools
+            ]
+            body["tool_choice"] = "auto"
+        data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
+        try:
+            message = data["choices"][0]["message"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMError("Groq returned no answer") from exc
+        reply = ChatReply(text=message.get("content") or "")
+        for call in message.get("tool_calls") or []:
+            raw = (call.get("function") or {}).get("arguments") or ""
+            try:
+                args = json.loads(raw) if raw else {}
+            except json.JSONDecodeError:
+                args = None  # reported back to the model as a tool error, never a crash
+            reply.tool_calls.append(
+                ToolCall(
+                    id=call.get("id") or f"call_{uuid.uuid4().hex[:12]}",
+                    name=(call.get("function") or {}).get("name", ""),
+                    arguments=args if isinstance(args, dict) else None,
+                    raw_arguments=raw,
+                )
+            )
+        return reply
+
 
 class UnconfiguredLLM:
     """Stands in when no provider is configured. Work that never needs the LLM (ledger
@@ -227,6 +387,9 @@ class UnconfiguredLLM:
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         raise LLMError(self.reason, retryable=False)
 
+    def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
+        raise LLMError(self.reason, retryable=False)
+
 
 class FakeLLMClient:
     """For tests: replays scripted replies and records every call.
@@ -238,9 +401,26 @@ class FakeLLMClient:
     name = "fake"
     model = "fake"
 
-    def __init__(self, *replies: Any) -> None:
+    def __init__(self, *replies: Any, chat: list[Any] | None = None) -> None:
         self._replies = list(replies)
         self.calls: list[dict[str, Any]] = []
+        # Scripted chat turns: ChatReply, Exception, or function(messages, tools) -> reply.
+        # The last one repeats when the script runs out.
+        self._chat = list(chat or [])
+        self.chat_calls: list[dict[str, Any]] = []
+
+    def chat_with_tools(self, messages: list[Message], tools: list[ToolSpec]) -> ChatReply:
+        self.chat_calls.append(
+            {"messages": [dict(m) for m in messages], "tools": [t.name for t in tools]}
+        )
+        if not self._chat:
+            return ChatReply(text="(no scripted reply)")
+        reply = self._chat.pop(0) if len(self._chat) > 1 else self._chat[0]
+        if callable(reply):
+            reply = reply(messages, tools)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         self.calls.append({"system": system, "user": user, "schema": schema})
