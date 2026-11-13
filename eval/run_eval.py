@@ -197,6 +197,7 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
                 "file": f["file"],
                 "file_type": f["file_type"],
                 "split": f["split"],
+                "subset": f.get("subset", "clean"),
                 "role": f["role"],
                 "status": doc.get("status") or ("rejected" if doc.get("upload") else "missing"),
                 "error": doc.get("error") or (doc.get("upload") or {}).get("error"),
@@ -213,9 +214,16 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
             }
         )
 
-    def group(split: str | None) -> dict[str, Any]:
-        chosen = [s for label, s in invoice_scores if split in (None, label["split"])]
-        files = [r for r in file_rows if split in (None, r["split"])]
+    def group(split: str | None, subset: str | None = None) -> dict[str, Any]:
+        """Invoices and files of one split (None: all) and subset ("clean", "hard")."""
+
+        def keep(item_split: str, item_subset: str) -> bool:
+            return split in (None, item_split) and subset in (None, item_subset)
+
+        chosen = [
+            s for label, s in invoice_scores if keep(label["split"], label.get("subset", "clean"))
+        ]
+        files = [r for r in file_rows if keep(r["split"], r["subset"])]
         by_type: dict[str, list] = defaultdict(list)
         for s in chosen:
             by_type[s.file_type].append(s)
@@ -242,14 +250,41 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
         for r in file_rows
         if r["expected_segments"]
     ]
+    hard_kinds: dict[str, list] = defaultdict(list)
+    for label, s in invoice_scores:
+        if label.get("hard_kind"):
+            hard_kinds[label["hard_kind"]].append(s)
     return {
         "invoice_scores": [
-            {"dataset": label.get("dataset"), **scoring.as_dict(s)} for label, s in invoice_scores
+            {
+                "dataset": label.get("dataset"),
+                "subset": label.get("subset", "clean"),
+                "hard_kind": label.get("hard_kind"),
+                **scoring.as_dict(s),
+            }
+            for label, s in invoice_scores
         ],
         "files": file_rows,
         "segmentation": segments,
-        "splits": {"test": group("test"), "dev": group("dev"), "all": group(None)},
+        # "test" is the clean test invoices (comparable across runs); the hard subset,
+        # also held out, is reported next to it, never mixed in.
+        "splits": {
+            "test": group("test", "clean"),
+            "test_hard": group("test", "hard"),
+            "dev": group("dev"),
+            "all": group(None),
+        },
+        "hard_kinds": {
+            kind: {
+                **{k: v for k, v in summary(items, [], prices).items() if k in HARD_KEYS},
+                "invoices": len(items),
+            }
+            for kind, items in sorted(hard_kinds.items())
+        },
     }
+
+
+HARD_KEYS = ("field_accuracy", "false_fill_rate", "missing_rate", "wrong_rate", "line_item_f1")
 
 
 def summary(scores: list, files: list[dict], prices: dict) -> dict[str, Any]:
@@ -311,12 +346,12 @@ def prf(m: dict) -> str:
     return " / ".join(pct(m[k]) for k in keys)
 
 
-def failure_examples(report: dict, limit: int = 12) -> list[dict]:
-    """Real mistakes on the test split, most informative kinds first."""
+def failure_examples(report: dict, subset: str = "clean", limit: int = 12) -> list[dict]:
+    """Real mistakes on the test split (one subset), most informative kinds first."""
     order = {"false_fill": 0, "wrong": 1, "missing": 2}
     out = []
     for inv in report["invoice_scores"]:
-        if inv["split"] != "test":
+        if inv["split"] != "test" or inv.get("subset", "clean") != subset:
             continue
         for f in inv["fields"]:
             if f["outcome"] in order:
@@ -334,66 +369,80 @@ def failure_examples(report: dict, limit: int = 12) -> list[dict]:
     return picked
 
 
+def _headline_rows(m: dict) -> list[tuple[str, str]]:
+    o = m["overall"]
+    return [
+        ("Invoices scored", str(m["invoices"])),
+        ("Field accuracy", pct(o["field_accuracy"])),
+        ("False-fill rate (value given, truth null)", pct(o["false_fill_rate"])),
+        ("Missing rate (truth has a value, none given)", pct(o["missing_rate"])),
+        ("Wrong value rate", pct(o["wrong_rate"])),
+        ("Line items precision / recall / F1", prf(o)),
+        (
+            "Validation flags precision / recall",
+            f"{pct(o['flag_precision'])} / {pct(o['flag_recall'])}",
+        ),
+        ("Documents processed (not failed)", pct(o["document_success_rate"])),
+        (
+            "Time per document p50 / p95 (s)",
+            f"{num(o['p50_seconds_per_document'], 1)} / {num(o['p95_seconds_per_document'], 1)}",
+        ),
+        (
+            "Time per page p50 / p95 (s)",
+            f"{num(o['p50_seconds_per_page'], 1)} / {num(o['p95_seconds_per_page'], 1)}",
+        ),
+    ]
+
+
+def _failure_table(examples: list[dict], empty: str) -> list[str]:
+    if not examples:
+        return [empty]
+    lines = [
+        "| Invoice | File type | Field | Outcome | Truth | Predicted | Evidence quoted |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for x in examples:
+        ev = " ".join(str(x.get("evidence") or "").split())[:60].replace("|", "/")
+        lines.append(
+            f"| {x['invoice']} | {x['file_type']} | {x['field']} | {x['outcome']} | "
+            f"{x['truth']} | {x['predicted']} | {ev} |"
+        )
+    return lines
+
+
 def render(report: dict) -> str:
-    test, dev = report["splits"]["test"], report["splits"]["dev"]
-    t = test["overall"]
+    test = report["splits"]["test"]
+    columns = [("Test, clean", test), ("Dev", report["splits"]["dev"])]
+    if report["splits"].get("test_hard", {}).get("invoices"):
+        columns.insert(1, ("Test, hard subset", report["splits"]["test_hard"]))
     lines = [
         BEGIN,
         f"_Generated by `make eval` on {report['run_at'][:16].replace('T', ' ')} UTC with "
         f"`{report['provider']}` / `{report['model']}`. Raw results: "
         f"`eval/results/{report['results_file']}`._",
         "",
-        "### Headline (test split, synthetic data)",
+        "### Summary of this run (synthetic data)",
         "",
-        "| Metric | Test | Dev |",
-        "|---|---|---|",
+        "| Metric | " + " | ".join(name for name, _ in columns) + " |",
+        "|---" * (len(columns) + 1) + "|",
     ]
-    d = dev["overall"]
-    rows = [
-        ("Invoices scored", test["invoices"], dev["invoices"], str),
-        ("Field accuracy", t["field_accuracy"], d["field_accuracy"], pct),
-        (
-            "False-fill rate (value given, truth null)",
-            t["false_fill_rate"],
-            d["false_fill_rate"],
-            pct,
-        ),
-        ("Missing rate (truth has a value, none given)", t["missing_rate"], d["missing_rate"], pct),
-        ("Wrong value rate", t["wrong_rate"], d["wrong_rate"], pct),
-        (
-            "Line items precision / recall / F1",
-            prf(t),
-            prf(d),
-            str,
-        ),
-        (
-            "Validation flags precision / recall",
-            f"{pct(t['flag_precision'])} / {pct(t['flag_recall'])}",
-            f"{pct(d['flag_precision'])} / {pct(d['flag_recall'])}",
-            str,
-        ),
-        (
-            "Documents processed (not failed)",
-            t["document_success_rate"],
-            d["document_success_rate"],
-            pct,
-        ),
-        (
-            "Time per document p50 / p95 (s)",
-            f"{num(t['p50_seconds_per_document'], 1)} / {num(t['p95_seconds_per_document'], 1)}",
-            f"{num(d['p50_seconds_per_document'], 1)} / {num(d['p95_seconds_per_document'], 1)}",
-            str,
-        ),
-        (
-            "Time per page p50 / p95 (s)",
-            f"{num(t['p50_seconds_per_page'], 1)} / {num(t['p95_seconds_per_page'], 1)}",
-            f"{num(d['p50_seconds_per_page'], 1)} / {num(d['p95_seconds_per_page'], 1)}",
-            str,
-        ),
-    ]
-    for label, a, b, fmt in rows:
-        lines.append(f"| {label} | {fmt(a)} | {fmt(b)} |")
-
+    table = [_headline_rows(m) for _, m in columns]
+    for i, (label, _) in enumerate(table[0]):
+        lines.append(f"| {label} | " + " | ".join(rows[i][1] for rows in table) + " |")
+    if report.get("hard_kinds"):
+        lines += [
+            "",
+            "### Hard subset by kind (test split)",
+            "",
+            "| Kind | Invoices | Field acc. | False fill | Missing | Wrong | Line F1 |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for kind, m in report["hard_kinds"].items():
+            lines.append(
+                f"| {kind} | {m['invoices']} | {pct(m['field_accuracy'])} | "
+                f"{pct(m['false_fill_rate'])} | {pct(m['missing_rate'])} | "
+                f"{pct(m['wrong_rate'])} | {pct(m['line_item_f1'])} |"
+            )
     lines += [
         "",
         "### Per file type (test split)",
@@ -404,7 +453,7 @@ def render(report: dict) -> str:
     ]
     counts = defaultdict(int)
     for inv in report["invoice_scores"]:
-        if inv["split"] == "test":
+        if inv["split"] == "test" and inv.get("subset", "clean") == "clean":
             counts[inv["file_type"]] += 1
     for ftype, m in test["per_file_type"].items():
         lines.append(
@@ -500,23 +549,16 @@ def render(report: dict) -> str:
                 f'  - Q{r["number"]} "{r["question"]}": expected {r["expected"]}; answer: '
                 f'"{" ".join(str(r["answer"]).split())[:160]}"'
             )
-    lines += [
-        "",
-        "### Failure examples (test split, from this run)",
-        "",
-    ]
-    if not report["failure_examples"]:
-        lines.append("No wrong, missing or invented field values on the test split in this run.")
-    else:
-        lines += [
-            "| Invoice | File type | Field | Outcome | Truth | Predicted | Evidence quoted |",
-            "|---|---|---|---|---|---|---|",
-        ]
-    for x in report["failure_examples"]:
-        ev = " ".join(str(x.get("evidence") or "").split())[:60].replace("|", "/")
-        lines.append(
-            f"| {x['invoice']} | {x['file_type']} | {x['field']} | {x['outcome']} | "
-            f"{x['truth']} | {x['predicted']} | {ev} |"
+    lines += ["", "### Failure examples (clean test invoices, from this run)", ""]
+    lines += _failure_table(
+        report["failure_examples"],
+        "No wrong, missing or invented field values on the clean test invoices in this run.",
+    )
+    if report.get("hard_kinds"):
+        lines += ["", "### Failure examples (hard subset, from this run)", ""]
+        lines += _failure_table(
+            report.get("failure_examples_hard", []),
+            "No wrong, missing or invented field values on the hard subset in this run.",
         )
     failed = [r for r in report["files"] if r["status"] not in ("processed", "needs_review")]
     if failed:
@@ -611,7 +653,9 @@ def main() -> int:
         "assistant_eval": assistant,
     }
     report["failure_examples"] = failure_examples(report)
+    report["failure_examples_hard"] = failure_examples(report, subset="hard")
     t = report["splits"]["test"]["overall"]
+    hard = report["splits"]["test_hard"]["overall"]
     ae = assistant or {}
     report["headline"] = {
         **{
@@ -629,6 +673,11 @@ def main() -> int:
             )
         },
         "cost_usd_per_document": report["all_files"]["cost_usd_per_document"],
+        # The realistic counterpart of the clean numbers (None if the subset is absent).
+        "hard_field_accuracy": hard["field_accuracy"],
+        "hard_false_fill_rate": hard["false_fill_rate"],
+        "hard_missing_rate": hard["missing_rate"],
+        "hard_line_item_f1": hard["line_item_f1"],
         "segmentation_exact": (
             sum(s["exact"] for s in scored["segmentation"])
             / max(1, sum(s["expected"] for s in scored["segmentation"]))
