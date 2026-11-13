@@ -32,7 +32,13 @@ class LocalEmbedder:
         if self._model is None:
             from sentence_transformers import SentenceTransformer  # heavy: import lazily
 
-            model = SentenceTransformer(self.model_name, device="cpu")
+            # Eager attention, not torch's fused SDPA kernel: on CPU (torch 2.15, aarch64)
+            # SDPA with more than one thread never returns for inputs over ~128 tokens,
+            # e.g. a crowded invoice page. Eager gives the same vectors (0.25 s for such a
+            # page); a hung encode cannot be cancelled and blocked every later job.
+            model = SentenceTransformer(
+                self.model_name, device="cpu", model_kwargs={"attn_implementation": "eager"}
+            )
             # The model stops at 256 word-pieces by default; its BERT backbone accepts 512,
             # so raise the limit or the second half of a 500-token chunk would be ignored.
             model.max_seq_length = self._max_seq_length
