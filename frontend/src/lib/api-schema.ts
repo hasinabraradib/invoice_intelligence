@@ -30,8 +30,9 @@ export interface paths {
         };
         /**
          * List documents
-         * @description Newest first by default. Invoice filters (supplier, dates, needs_review) only match
-         *     documents that already have an extracted invoice. Each item has its latest job.
+         * @description Newest first by default. One row per document, with its invoice count and latest
+         *     job. Invoice filters (supplier, dates, needs_review) match documents that have at least
+         *     one matching invoice.
          */
         get: operations["list_documents_documents_get"];
         put?: never;
@@ -89,7 +90,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Extracted invoice with evidence, issues and duplicates */
+        /**
+         * Every invoice in the document, with evidence, issues and duplicates
+         * @description A single invoice for most files; one entry per invoice for batch PDFs, in page order
+         *     (`page_start`/`page_end` say where each one is).
+         */
         get: operations["get_result_documents__document_id__result_get"];
         put?: never;
         post?: never;
@@ -362,6 +367,16 @@ export interface components {
              */
             created_at: string;
             invoice?: components["schemas"]["InvoiceSummary"] | null;
+            /**
+             * Invoice Count
+             * @default 0
+             */
+            invoice_count: number;
+            /**
+             * Needs Review
+             * @default false
+             */
+            needs_review: boolean;
             job?: components["schemas"]["JobProgress"] | null;
             /** Sha256 */
             sha256: string;
@@ -373,6 +388,19 @@ export interface components {
              */
             updated_at: string;
             latest_job?: components["schemas"]["JobView"] | null;
+        };
+        /**
+         * DocumentResult
+         * @description Every invoice found in one document, in page order.
+         */
+        DocumentResult: {
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Invoices */
+            invoices: components["schemas"]["InvoiceResult"][];
         };
         /**
          * DocumentStatus
@@ -405,6 +433,13 @@ export interface components {
             /** Pages Total */
             pages_total?: number | null;
             /**
+             * Segments Done
+             * @default 0
+             */
+            segments_done: number;
+            /** Segments Total */
+            segments_total?: number | null;
+            /**
              * Attempts
              * @default 0
              */
@@ -432,6 +467,16 @@ export interface components {
              */
             created_at: string;
             invoice?: components["schemas"]["InvoiceSummary"] | null;
+            /**
+             * Invoice Count
+             * @default 0
+             */
+            invoice_count: number;
+            /**
+             * Needs Review
+             * @default false
+             */
+            needs_review: boolean;
             job?: components["schemas"]["JobProgress"] | null;
         };
         /** DuplicateLink */
@@ -566,6 +611,14 @@ export interface components {
              * Format: uuid
              */
             document_id: string;
+            /** Segment Index */
+            segment_index: number;
+            /** Page Start */
+            page_start: number | null;
+            /** Page End */
+            page_end: number | null;
+            /** Extracted */
+            extracted: boolean;
             /** Needs Review */
             needs_review: boolean;
             /** Reviewed By */
@@ -599,6 +652,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Segment Index */
+            segment_index: number;
+            /** Page Start */
+            page_start: number | null;
+            /** Page End */
+            page_end: number | null;
             /** Invoice Number */
             invoice_number: string | null;
             /** Invoice Date */
@@ -654,6 +713,10 @@ export interface components {
             pages_done: number;
             /** Pages Total */
             pages_total: number | null;
+            /** Segments Done */
+            segments_done: number;
+            /** Segments Total */
+            segments_total: number | null;
             /** Attempts */
             attempts: number;
         };
@@ -678,6 +741,10 @@ export interface components {
             pages_done: number;
             /** Pages Total */
             pages_total: number | null;
+            /** Segments Done */
+            segments_done: number;
+            /** Segments Total */
+            segments_total: number | null;
             /** Error */
             error: string | null;
             /**
@@ -778,6 +845,15 @@ export interface components {
              */
             matched_by: "keyword" | "semantic" | "both";
             status: components["schemas"]["DocumentStatus"];
+            /** Invoice Id */
+            invoice_id?: string | null;
+            /** Segment Index */
+            segment_index?: number | null;
+            /**
+             * Invoice Count
+             * @default 1
+             */
+            invoice_count: number;
             /** Supplier Name */
             supplier_name?: string | null;
             /** Invoice Number */
@@ -1048,7 +1124,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InvoiceResult"];
+                    "application/json": components["schemas"]["DocumentResult"];
                 };
             };
             /** @description Not found */

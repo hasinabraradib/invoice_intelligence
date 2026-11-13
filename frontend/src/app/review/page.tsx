@@ -45,8 +45,9 @@ export default function ReviewQueuePage() {
                       {offset + i + 1}. {doc.filename}
                     </Link>
                     <p className="text-xs text-slate-600">
-                      {doc.invoice?.supplier_name ?? "Unknown supplier"} · {doc.invoice?.invoice_number ?? "no number"} ·{" "}
-                      {formatMoney(doc.invoice?.total, doc.invoice?.currency)}
+                      {doc.invoice_count > 1
+                        ? `${doc.invoice_count} invoices in this document`
+                        : `${doc.invoice?.supplier_name ?? "Unknown supplier"} · ${doc.invoice?.invoice_number ?? "no number"} · ${formatMoney(doc.invoice?.total, doc.invoice?.currency)}`}
                     </p>
                   </div>
                   <span className="text-xs text-slate-500">uploaded {formatDateTime(doc.created_at)}</span>

@@ -91,7 +91,7 @@ function Search() {
               {results.data.items.map((hit) => (
                 <li key={hit.document_id} className="card space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Link href={`/documents/${hit.document_id}?page=${hit.page_number}`} className="btn-link text-base">
+                    <Link href={`/documents/${hit.document_id}?invoice=${hit.segment_index ?? 0}&page=${hit.page_number}`} className="btn-link text-base">
                       {hit.filename} · page {hit.page_number}
                     </Link>
                     <span className="flex items-center gap-2">
@@ -100,6 +100,7 @@ function Search() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-600">
+                    {hit.invoice_count > 1 && hit.segment_index != null ? `Invoice ${hit.segment_index + 1} of ${hit.invoice_count} · ` : ""}
                     {hit.supplier_name ?? "Unknown supplier"} · {hit.invoice_number ?? "no number"} · {formatMoney(hit.total, hit.currency)}
                   </p>
                   <Snippet text={hit.snippet} />

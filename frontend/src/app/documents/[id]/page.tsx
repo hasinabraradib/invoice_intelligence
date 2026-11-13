@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, isActive, type InvoicePatch, type InvoiceResult } from "@/lib/api";
+import { api, ApiError, isActive, type DocumentResult, type InvoicePatch, type InvoiceResult } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { ApproveDialog } from "@/components/ApproveDialog";
 import { StatusBadge } from "@/components/Badges";
@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/Modal";
 import { errorMessage, useToast } from "@/components/Toast";
 import { FieldList } from "@/components/review/FieldList";
 import { CorrectionsHistory, DuplicateLinks, IssuesPanel } from "@/components/review/IssuesPanel";
+import { InvoiceSwitcher } from "@/components/review/InvoiceSwitcher";
 import { LineItems } from "@/components/review/LineItems";
 import { PageViewer } from "@/components/review/PageViewer";
 import { useReviewer } from "@/components/review/useReviewer";
@@ -36,11 +37,13 @@ function Review() {
   const [reprocessOpen, setReprocessOpen] = useState(false);
   const viewer = useRef<HTMLElement>(null);
   const page = Number(params.get("page") ?? "1") || 1;
+  const selected = Number(params.get("invoice") ?? "0") || 0; // segment_index
 
-  const setPage = (n: number, scroll = false) => {
-    router.replace(`/documents/${id}?page=${n}`, { scroll: false });
+  const go = (invoice: number, n: number, scroll = false) => {
+    router.replace(`/documents/${id}?invoice=${invoice}&page=${n}`, { scroll: false });
     if (scroll) viewer.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const setPage = (n: number, scroll = false) => go(selected, n, scroll);
 
   const document = useQuery({ queryKey: ["document", id], queryFn: () => api.getDocument(id) });
   const status = useQuery({
@@ -66,7 +69,14 @@ function Review() {
     },
   });
   const pages = useQuery({ queryKey: ["pages", id, state], queryFn: () => api.getPages(id) });
-  const invoiceId = result.data?.invoice_id;
+  const invoices = result.data?.invoices ?? [];
+  const invoice = invoices.find((i) => i.segment_index === selected) ?? invoices[0];
+  const invoiceId = invoice?.invoice_id;
+  // Picking another invoice of a batch PDF jumps the page viewer to its first page.
+  const selectInvoice = (segmentIndex: number) => {
+    const next = invoices.find((i) => i.segment_index === segmentIndex);
+    go(segmentIndex, next?.page_start ?? 1, true);
+  };
   const corrections = useQuery({
     queryKey: ["corrections", invoiceId],
     enabled: Boolean(invoiceId),
@@ -74,7 +84,10 @@ function Review() {
   });
 
   const afterChange = (data: InvoiceResult) => {
-    queryClient.setQueryData(["result", id, state], data);
+    // Replace just this invoice in the document's list of invoices.
+    queryClient.setQueryData<DocumentResult | null>(["result", id, state], (old) =>
+      old ? { ...old, invoices: old.invoices.map((i) => (i.invoice_id === data.invoice_id ? data : i)) } : old,
+    );
     void queryClient.invalidateQueries({ queryKey: ["corrections", data.invoice_id] });
     void queryClient.invalidateQueries({ queryKey: ["status", id] });
     void queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -125,7 +138,6 @@ function Review() {
 
   const doc = document.data;
   const s = status.data;
-  const invoice = result.data;
   const errorCount = invoice?.issues.filter((i) => i.severity === "error").length ?? 0;
   const canEdit = Boolean(invoice) && reviewer.trim() !== "" && !patch.isPending;
   const busy = s ? isActive({ status: s.status, job: s.job_status ? { status: s.job_status } : null }) : false;
@@ -141,7 +153,14 @@ function Review() {
           <h1 className="truncate text-2xl font-semibold" title={doc.filename}>{doc.filename}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <StatusBadge status={s.status} />
-            {busy ? <span>{s.stage ?? s.job_status}{s.pages_total ? ` · page ${s.pages_done} of ${s.pages_total}` : ""}</span> : null}
+            {busy ? (
+              <span>
+                {s.stage ?? s.job_status}
+                {s.pages_total ? ` · page ${s.pages_done} of ${s.pages_total}` : ""}
+                {s.segments_total ? ` · invoice ${s.segments_done} of ${s.segments_total}` : ""}
+              </span>
+            ) : null}
+            {invoices.length > 1 ? <span>{invoices.length} invoices in this document</span> : null}
             {invoice?.reviewed_by ? (
               <span>Approved by {invoice.reviewed_by} · {formatDateTime(invoice.reviewed_at)}
                 {invoice.review_override_reason ? ` (override: ${invoice.review_override_reason})` : ""}</span>
@@ -184,6 +203,12 @@ function Review() {
         </div>
 
         <div className="min-w-0 space-y-4">
+          <InvoiceSwitcher invoices={invoices} selected={invoice?.segment_index ?? 0} onSelect={selectInvoice} />
+          {invoice && !invoice.extracted ? (
+            <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">
+              This invoice has not been extracted yet{busy ? "; processing is still running" : ""}.
+            </p>
+          ) : null}
           {invoice ? (
             <>
               <section aria-labelledby="fields-heading" className="card" id="fields">

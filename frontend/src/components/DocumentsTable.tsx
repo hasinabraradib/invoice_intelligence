@@ -73,6 +73,7 @@ export function DocumentsTable() {
                   <th scope="col" className="py-2 pr-3">Progress</th>
                   <th scope="col" className="py-2 pr-3">Supplier</th>
                   <th scope="col" className="py-2 pr-3">Invoice no.</th>
+                  <th scope="col" className="py-2 pr-3 text-right">Invoices</th>
                   <th scope="col" className="py-2 pr-3 text-right">Total</th>
                   <th scope="col" className="py-2 pr-3">Review</th>
                   <th scope="col" className="py-2 pr-3">Uploaded</th>
@@ -88,15 +89,22 @@ export function DocumentsTable() {
                     <td className="py-2 pr-3"><StatusBadge status={doc.status} /></td>
                     <td className="py-2 pr-3 text-slate-600">
                       {doc.job && isActive(doc)
-                        ? `${doc.job.stage ?? doc.job.status}${doc.job.pages_total ? ` · ${doc.job.pages_done}/${doc.job.pages_total}` : ""}`
+                        ? [
+                            doc.job.stage ?? doc.job.status,
+                            doc.job.pages_total ? `pages ${doc.job.pages_done}/${doc.job.pages_total}` : null,
+                            doc.job.segments_total ? `invoices ${doc.job.segments_done}/${doc.job.segments_total}` : null,
+                          ].filter(Boolean).join(" · ")
                         : "—"}
                     </td>
                     <td className="py-2 pr-3">{doc.invoice?.supplier_name ?? "—"}</td>
-                    <td className="py-2 pr-3">{doc.invoice?.invoice_number ?? "—"}</td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {formatMoney(doc.invoice?.total, doc.invoice?.currency)}
+                    <td className="py-2 pr-3">
+                      {doc.invoice_count > 1 ? `${doc.invoice?.invoice_number ?? "—"} +${doc.invoice_count - 1} more` : (doc.invoice?.invoice_number ?? "—")}
                     </td>
-                    <td className="py-2 pr-3">{doc.invoice?.needs_review ? "⚑ Needs review" : "—"}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{doc.invoice_count || "—"}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">
+                      {doc.invoice_count > 1 ? "several" : formatMoney(doc.invoice?.total, doc.invoice?.currency)}
+                    </td>
+                    <td className="py-2 pr-3">{doc.needs_review ? "⚑ Needs review" : "—"}</td>
                     <td className="py-2 pr-3 whitespace-nowrap text-slate-600">{formatDateTime(doc.created_at)}</td>
                     <td className="py-2 text-right">
                       <button type="button" className="btn-secondary px-2 py-1 text-xs"

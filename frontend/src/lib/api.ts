@@ -7,6 +7,7 @@ export type DocumentSummary = S["DocumentSummary"];
 export type DocumentDetail = S["DocumentDetail"];
 export type DocumentStatusView = S["DocumentStatusView"];
 export type InvoiceResult = S["InvoiceResult"];
+export type DocumentResult = S["DocumentResult"];
 export type FieldView = S["FieldView"];
 export type LineItemView = S["LineItemView"];
 export type IssueView = S["IssueView"];
@@ -82,7 +83,7 @@ export const api = {
   ) => request<Paged<DocumentSummary>>(`/documents${query(filters)}`),
   getDocument: (id: string) => request<DocumentDetail>(`/documents/${id}`),
   getStatus: (id: string) => request<DocumentStatusView>(`/documents/${id}/status`),
-  getResult: (id: string) => request<InvoiceResult>(`/documents/${id}/result`),
+  getResult: (id: string) => request<DocumentResult>(`/documents/${id}/result`),
   getPages: (id: string) => request<PageInfo[]>(`/documents/${id}/pages`),
   getCorrections: (invoiceId: string) =>
     request<CorrectionView[]>(`/invoices/${invoiceId}/corrections`),
