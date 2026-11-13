@@ -46,6 +46,9 @@ class ParsedSheet(BaseModel):
     header_row_index: int | None
     columns: list[str]
     rows: list[dict[str, str]]
+    # 1-based row number in the original sheet for each entry of `rows` (row 7 in Excel = 7),
+    # so a ledger row can be cited as evidence.
+    row_numbers: list[int] = Field(default_factory=list)
     # Non-empty rows ABOVE the header (e.g. "ACME Ltd", "Invoice no: 42"). Invoices often
     # keep key facts there, so we keep them instead of throwing them away.
     preamble_rows: list[list[str]] = Field(default_factory=list)

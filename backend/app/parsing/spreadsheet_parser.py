@@ -256,6 +256,7 @@ def _build_sheet(
         header_row_index=header_row_index,
         columns=columns,
         rows=[dict(zip(columns, cells, strict=True)) for _, cells in data],
+        row_numbers=[index + 1 for index, _ in data],
         preamble_rows=preamble,
         warnings=warnings,
     )

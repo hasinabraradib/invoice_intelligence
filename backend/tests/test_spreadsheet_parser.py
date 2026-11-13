@@ -23,6 +23,7 @@ def test_xlsx_reads_all_sheets_and_finds_header_below_title_rows(tmp_path):
         {"Description": "Nuts M8", "Qty": "10", "Unit price": "0.10", "Amount": "1.00"},
     ]
     assert any("1 merged cell range" in w for w in invoice.warnings)
+    assert invoice.row_numbers == [5, 7]  # Excel row numbers (row 6 was empty)
 
     notes = doc.sheets[1]
     assert notes.header_row_index == 0
