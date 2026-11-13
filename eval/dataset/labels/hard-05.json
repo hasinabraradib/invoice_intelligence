@@ -1,0 +1,46 @@
+{
+  "id": "hard-05",
+  "file": "hard-05.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-355",
+    "invoice_date": "2026-02-23",
+    "due_date": "2026-03-25",
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": "USD",
+    "subtotal": "1872.24",
+    "tax": "280.84",
+    "total": "2153.08"
+  },
+  "line_items": [
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "2",
+      "unit_price": "38.17",
+      "line_total": "76.34"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "10",
+      "unit_price": "116.73",
+      "line_total": "1167.30"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "5",
+      "unit_price": "125.72",
+      "line_total": "628.60"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: rotated 8-12 degrees"
+  ],
+  "subset": "hard",
+  "hard_kind": "rotated"
+}

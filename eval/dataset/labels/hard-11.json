@@ -1,0 +1,52 @@
+{
+  "id": "hard-11",
+  "file": "hard-11.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-421",
+    "invoice_date": "2026-07-19",
+    "due_date": "2026-08-18",
+    "supplier_name": "Jamuna Paper Mills",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "BDT",
+    "subtotal": "1597.98",
+    "tax": "239.70",
+    "total": "1837.68"
+  },
+  "line_items": [
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "3",
+      "unit_price": "2.19",
+      "line_total": "6.57"
+    },
+    {
+      "description": "Maintenance visit",
+      "quantity": "1",
+      "unit_price": "132.87",
+      "line_total": "132.87"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "10",
+      "unit_price": "142.95",
+      "line_total": "1429.50"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "2",
+      "unit_price": "14.52",
+      "line_total": "29.04"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: two-column layout with a Ship To distractor and bank details"
+  ],
+  "subset": "hard",
+  "hard_kind": "two_column_pdf"
+}

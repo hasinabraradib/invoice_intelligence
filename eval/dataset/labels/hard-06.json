@@ -1,0 +1,58 @@
+{
+  "id": "hard-06",
+  "file": "hard-06.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-366",
+    "invoice_date": "2026-05-17",
+    "due_date": "2026-06-16",
+    "supplier_name": "Lisboa Textiles Lda",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "EUR",
+    "subtotal": "31894.24",
+    "tax": "4784.14",
+    "total": "36678.38"
+  },
+  "line_items": [
+    {
+      "description": "Office chair",
+      "quantity": "2",
+      "unit_price": "179.29",
+      "line_total": "358.58"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "1",
+      "unit_price": "219.43",
+      "line_total": "219.43"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "1",
+      "unit_price": "461.89",
+      "line_total": "461.89"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "24",
+      "unit_price": "1284.80",
+      "line_total": "30835.20"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "3",
+      "unit_price": "6.38",
+      "line_total": "19.14"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: rotated 8-12 degrees"
+  ],
+  "subset": "hard",
+  "hard_kind": "rotated"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "hard-08",
+  "file": "hard-08.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-388",
+    "invoice_date": "2026-05-16",
+    "due_date": "2026-06-15",
+    "supplier_name": "Northwind Office Supply Ltd",
+    "customer_name": "Test Garments Ltd",
+    "currency": "USD",
+    "subtotal": "2351.32",
+    "tax": "352.70",
+    "total": "2704.02"
+  },
+  "line_items": [
+    {
+      "description": "Freight charges",
+      "quantity": "5",
+      "unit_price": "379.17",
+      "line_total": "1895.85"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "1",
+      "unit_price": "455.47",
+      "line_total": "455.47"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: faint scan: low-contrast grey text on an off-white page"
+  ],
+  "subset": "hard",
+  "hard_kind": "faint"
+}

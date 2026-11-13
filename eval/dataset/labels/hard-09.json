@@ -1,0 +1,172 @@
+{
+  "id": "hard-09",
+  "file": "hard-09.pdf",
+  "file_type": "pdf_digital",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-399",
+    "invoice_date": "2026-09-22",
+    "due_date": "2026-10-22",
+    "supplier_name": "Rheinland Maschinen GmbH",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "EUR",
+    "subtotal": "64151.25",
+    "tax": "9622.69",
+    "total": "73773.94"
+  },
+  "line_items": [
+    {
+      "description": "Software licence (annual) - lot 1",
+      "quantity": "24",
+      "unit_price": "1884.56",
+      "line_total": "45229.44"
+    },
+    {
+      "description": "Cotton fabric (metre) - lot 2",
+      "quantity": "2",
+      "unit_price": "4.55",
+      "line_total": "9.10"
+    },
+    {
+      "description": "Safety gloves (pair) - lot 3",
+      "quantity": "24",
+      "unit_price": "3.88",
+      "line_total": "93.12"
+    },
+    {
+      "description": "Maintenance visit - lot 4",
+      "quantity": "24",
+      "unit_price": "123.27",
+      "line_total": "2958.48"
+    },
+    {
+      "description": "Calibration certificate - lot 5",
+      "quantity": "3",
+      "unit_price": "105.10",
+      "line_total": "315.30"
+    },
+    {
+      "description": "A4 paper (box of 5 reams) - lot 6",
+      "quantity": "24",
+      "unit_price": "23.54",
+      "line_total": "564.96"
+    },
+    {
+      "description": "Toner cartridge - lot 7",
+      "quantity": "1",
+      "unit_price": "40.74",
+      "line_total": "40.74"
+    },
+    {
+      "description": "Steel bolts M8 - lot 8",
+      "quantity": "10",
+      "unit_price": "0.75",
+      "line_total": "7.50"
+    },
+    {
+      "description": "LED panel 60x60 - lot 9",
+      "quantity": "10",
+      "unit_price": "56.38",
+      "line_total": "563.80"
+    },
+    {
+      "description": "Installation service - lot 10",
+      "quantity": "1",
+      "unit_price": "75.60",
+      "line_total": "75.60"
+    },
+    {
+      "description": "Rice 25kg bag - lot 11",
+      "quantity": "10",
+      "unit_price": "22.83",
+      "line_total": "228.30"
+    },
+    {
+      "description": "Office chair - lot 12",
+      "quantity": "24",
+      "unit_price": "180.60",
+      "line_total": "4334.40"
+    },
+    {
+      "description": "Network switch 24-port - lot 13",
+      "quantity": "1",
+      "unit_price": "276.89",
+      "line_total": "276.89"
+    },
+    {
+      "description": "Freight charges - lot 14",
+      "quantity": "5",
+      "unit_price": "293.17",
+      "line_total": "1465.85"
+    },
+    {
+      "description": "Software licence (annual) - lot 15",
+      "quantity": "1",
+      "unit_price": "1220.48",
+      "line_total": "1220.48"
+    },
+    {
+      "description": "Cotton fabric (metre) - lot 16",
+      "quantity": "5",
+      "unit_price": "6.57",
+      "line_total": "32.85"
+    },
+    {
+      "description": "Safety gloves (pair) - lot 17",
+      "quantity": "24",
+      "unit_price": "5.90",
+      "line_total": "141.60"
+    },
+    {
+      "description": "Maintenance visit - lot 18",
+      "quantity": "24",
+      "unit_price": "91.06",
+      "line_total": "2185.44"
+    },
+    {
+      "description": "Calibration certificate - lot 19",
+      "quantity": "24",
+      "unit_price": "150.11",
+      "line_total": "3602.64"
+    },
+    {
+      "description": "A4 paper (box of 5 reams) - lot 20",
+      "quantity": "3",
+      "unit_price": "22.56",
+      "line_total": "67.68"
+    },
+    {
+      "description": "Toner cartridge - lot 21",
+      "quantity": "3",
+      "unit_price": "91.07",
+      "line_total": "273.21"
+    },
+    {
+      "description": "Steel bolts M8 - lot 22",
+      "quantity": "3",
+      "unit_price": "1.55",
+      "line_total": "4.65"
+    },
+    {
+      "description": "LED panel 60x60 - lot 23",
+      "quantity": "10",
+      "unit_price": "16.62",
+      "line_total": "166.20"
+    },
+    {
+      "description": "Installation service - lot 24",
+      "quantity": "1",
+      "unit_price": "293.02",
+      "line_total": "293.02"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: crowded digital layout, 20+ line items in a small font"
+  ],
+  "subset": "hard",
+  "hard_kind": "crowded_pdf"
+}

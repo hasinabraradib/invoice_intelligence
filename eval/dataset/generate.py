@@ -442,6 +442,198 @@ def jpeg(img: Image.Image, quality: int) -> bytes:
     return out.getvalue()
 
 
+# ---------------------------------------------------------------- the "hard" subset
+# Test split only. Separate functions and RNG, so the clean files above never change.
+
+HARD_KINDS = {
+    "noisy_blur": "heavy Gaussian noise and blur",
+    "phone_photo": "low-resolution phone photo: 100 dpi, shear, uneven light, JPEG q30-40",
+    "rotated": "rotated 8-12 degrees",
+    "faint": "faint scan: low-contrast grey text on an off-white page",
+    "crowded_pdf": "crowded digital layout, 20+ line items in a small font",
+    "crowded_scan": "crowded layout, 20+ line items, scanned",
+    "two_column_pdf": "two-column layout with a Ship To distractor and bank details",
+    "two_column_scan": "two-column layout, scanned",
+}
+
+
+def draw_crowded(c: canvas.Canvas, inv: Invoice) -> None:
+    """One page, 20+ lines in 8 pt with 13 pt rows, dense header."""
+    width, height = A4
+    y = height - 50
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, f"TAX INVOICE  {inv.supplier_name}")
+    c.setFont("Helvetica", 8)
+    header = "   ".join(f"{k}: {v}" for k, v in header_lines(inv))
+    c.drawString(40, y - 18, header[:150])
+    y -= 44
+    c.setFont("Helvetica-Bold", 8)
+    for x, text in ((40, "#"), (60, "Description")):
+        c.drawString(x, y, text)
+    for x, text in ((390, "Qty"), (470, "Unit price"), (width - 40, "Amount")):
+        c.drawRightString(x, y, text)
+    y -= 13
+    c.setFont("Helvetica", 8)
+    for n, line in enumerate(inv.lines, start=1):
+        c.drawString(40, y, str(n))
+        c.drawString(60, y, line.description)
+        c.drawRightString(390, y, qty_text(line.quantity))
+        c.drawRightString(470, y, money(line.unit_price, inv.number_style))
+        c.drawRightString(width - 40, y, money(line.line_total, inv.number_style))
+        y -= 13
+    y -= 8
+    for label, value in totals_lines(inv):
+        c.setFont("Helvetica-Bold" if label.startswith("Total") else "Helvetica", 9)
+        c.drawString(390, y, label)
+        c.drawRightString(width - 40, y, value)
+        y -= 14
+    c.setFont("Helvetica", 7)
+    c.drawString(40, 30, FOOTER)
+    c.showPage()
+
+
+def draw_two_column(c: canvas.Canvas, inv: Invoice) -> None:
+    """Supplier block left, invoice details right; Bill To vs a different Ship To; bank
+    details full of numbers that are not amounts."""
+    width, height = A4
+    mid = width / 2 + 10
+    y = height - 55
+    c.setFont("DejaVu-Bold", 13)
+    c.drawString(40, y, inv.supplier_name)
+    c.setFont("DejaVu", 9)
+    for n, text in enumerate(("House 12, Road 4", "Commercial Area", "Tel: +880 1700 000000")):
+        c.drawString(40, y - 15 - 12 * n, text)
+    c.setFont("DejaVu-Bold", 18)
+    c.drawRightString(width - 40, y, "INVOICE")
+    c.setFont("DejaVu", 9)
+    for n, (label, value) in enumerate(header_lines(inv)):
+        if label == "Bill To":
+            continue
+        c.drawString(mid, y - 20 - 13 * n, f"{label}:")
+        c.drawRightString(width - 40, y - 20 - 13 * n, value)
+    y -= 105
+    c.setFont("DejaVu-Bold", 9)
+    c.drawString(40, y, "Bill To")
+    c.drawString(mid, y, "Ship To")
+    c.setFont("DejaVu", 9)
+    c.drawString(40, y - 13, inv.customer_name or "")
+    c.drawString(mid, y - 13, "Warehouse 7, Placeholder Logistics Park")
+    y -= 40
+    c.setFont("DejaVu-Bold", 9)
+    c.drawString(40, y, "Description")
+    for x, text in ((360, "Qty"), (450, "Unit price"), (width - 40, "Amount")):
+        c.drawRightString(x, y, text)
+    c.line(40, y - 4, width - 40, y - 4)
+    y -= 17
+    c.setFont("DejaVu", 9)
+    for line in inv.lines:
+        c.drawString(40, y, line.description)
+        c.drawRightString(360, y, qty_text(line.quantity))
+        c.drawRightString(450, y, money(line.unit_price, inv.number_style))
+        c.drawRightString(width - 40, y, money(line.line_total, inv.number_style))
+        y -= 15
+    y -= 12
+    notes_y = y
+    for label, value in totals_lines(inv):
+        c.setFont("DejaVu-Bold" if label.startswith("Total") else "DejaVu", 9)
+        c.drawString(mid, y, label)
+        c.drawRightString(width - 40, y, value)
+        y -= 15
+    c.setFont("DejaVu", 8)
+    for n, text in enumerate(
+        ("Payment terms: 30 days", "Bank: Example Bank, A/C 0123 4567 8901", "Routing 090 261 724")
+    ):
+        c.drawString(40, notes_y - 12 * n, text)
+    c.drawString(40, 30, FOOTER)
+    c.showPage()
+
+
+def degrade_hard(pdf: bytes, kind: str, rng: random.Random) -> bytes:
+    """Render page 1 and degrade it for one hard kind; returns JPEG bytes."""
+    doc = pdfium.PdfDocument(pdf)
+    dpi = 100 if kind == "phone_photo" else 200
+    img = doc[0].render(scale=dpi / 72).to_pil().convert("L")
+    doc.close()
+    noise_rng = np.random.default_rng(rng.randrange(1 << 30))
+    angle = rng.uniform(2, 5) * rng.choice([-1, 1])
+    blur, sigma, quality = rng.uniform(0.5, 1.0), rng.uniform(6, 12), rng.randrange(50, 70)
+    if kind == "rotated":
+        angle = rng.uniform(8, 12) * rng.choice([-1, 1])
+    if kind == "noisy_blur":
+        blur, sigma = rng.uniform(1.6, 2.2), rng.uniform(26, 34)
+    if kind == "phone_photo":
+        blur, sigma, quality = rng.uniform(0.6, 1.0), rng.uniform(8, 14), rng.randrange(30, 41)
+        shear = rng.uniform(0.03, 0.06)
+        img = img.transform(
+            img.size,
+            Image.AFFINE,
+            (1, shear, -shear * img.height / 2, 0, 1, 0),
+            resample=Image.BICUBIC,
+            fillcolor=255,
+        )
+    img = img.rotate(angle, expand=True, fillcolor=255, resample=Image.BICUBIC)
+    img = img.filter(ImageFilter.GaussianBlur(blur))
+    arr = np.asarray(img, dtype=np.float32)
+    if kind == "faint":
+        arr = 235 - (235 - arr) * rng.uniform(0.28, 0.36)  # grey text on an off-white page
+    if kind == "phone_photo":  # light falls off towards one corner
+        yy, xx = np.mgrid[0 : arr.shape[0], 0 : arr.shape[1]]
+        arr = arr * (1 - 0.35 * (xx / arr.shape[1] + yy / arr.shape[0]) / 2)
+    arr = np.clip(arr + noise_rng.normal(0, sigma, arr.shape), 0, 255).astype("uint8")
+    return jpeg(Image.fromarray(arr), quality)
+
+
+def build_hard(rng: random.Random) -> list[tuple[Invoice, str]]:
+    plan = [
+        "noisy_blur",
+        "noisy_blur",
+        "phone_photo",
+        "phone_photo",
+        "rotated",
+        "rotated",
+        "faint",
+        "faint",
+        "crowded_pdf",
+        "crowded_scan",
+        "two_column_pdf",
+        "two_column_scan",
+    ]
+    out = []
+    for n, kind in enumerate(plan, start=1):
+        supplier, currency = SUPPLIERS[(n * 3) % len(SUPPLIERS)]
+        crowded = kind.startswith("crowded")
+        lines = []
+        for k in range(rng.randrange(22, 27) if crowded else rng.randrange(2, 6)):
+            item, (lo, hi) = CATALOGUE[(n + k) % len(CATALOGUE)]
+            qty = Decimal(rng.choice([1, 2, 3, 5, 10, 24]))
+            unit = Decimal(str(round(rng.uniform(lo, hi), 2))).quantize(CENT)
+            desc = f"{item} - lot {k + 1}" if crowded else item
+            lines.append(Line(desc, qty, unit, (qty * unit).quantize(CENT)))
+        inv_date = date(2026, 1, 13) + timedelta(days=rng.randrange(0, 260))
+        if inv_date.day <= 12:  # keep numeric dates unambiguous: this subset tests images
+            inv_date = inv_date.replace(day=13 + inv_date.day)
+        out.append(
+            (
+                Invoice(
+                    id=f"hard-{n:02d}",
+                    invoice_number=f"HD-{inv_date.year}-{300 + n * 11}",
+                    invoice_date=inv_date,
+                    due_date=inv_date + timedelta(days=30),
+                    supplier_name=supplier,
+                    customer_name=CUSTOMERS[n % len(CUSTOMERS)],
+                    currency=currency,
+                    lines=lines,
+                    tax_rate=Decimal("0.15"),
+                    date_format=rng.choice(["iso", "dmy_text", "dmy_slash"]),
+                    currency_style="code",
+                    notes=[f"hard: {HARD_KINDS[kind]}"],
+                ),
+                kind,
+            )
+        )
+    return out
+
+
 # ---------------------------------------------------------------- spreadsheets
 
 
@@ -847,6 +1039,43 @@ def main() -> None:
         name = f"{extra.id}.pdf"
         pdf = pdf_bytes(lambda c, x=extra, n=n: draw_invoice(c, x, n % 3, [x.lines]))
         add_file(name, pdf, "pdf_digital", "dev", [label(extra, name, "pdf_digital", "dev")])
+
+    # The "hard" subset (test split only): realistic damage and layouts, reported as its
+    # own row next to the clean numbers. Own RNG: earlier files stay byte-identical.
+    hard_rng = random.Random(SEED + 2)  # noqa: S311 (reproducible test data)
+    for hard, kind in build_hard(hard_rng):
+        if kind == "crowded_pdf":
+            name, data, ftype = (
+                f"{hard.id}.pdf",
+                pdf_bytes(lambda c, h=hard: draw_crowded(c, h)),
+                "pdf_digital",
+            )
+        elif kind == "two_column_pdf":
+            name, data, ftype = (
+                f"{hard.id}.pdf",
+                pdf_bytes(lambda c, h=hard: draw_two_column(c, h)),
+                "pdf_digital",
+            )
+        else:
+            # Scanned crowded / two-column layouts get ordinary scan damage ("plain"); the
+            # other kinds use the plain invoice layout with their own damage.
+            layouts = {"crowded_scan": draw_crowded, "two_column_scan": draw_two_column}
+            if kind in layouts:
+                source = pdf_bytes(lambda c, h=hard, d=layouts[kind]: d(c, h))
+                damage = "plain"
+            else:
+                source = pdf_bytes(lambda c, h=hard: draw_invoice(c, h, 0, [h.lines]))
+                damage = kind
+            name, data, ftype = (
+                f"{hard.id}.jpg",
+                degrade_hard(source, damage, hard_rng),
+                "image_scan",
+            )
+        lid = label(hard, name, ftype, "test")
+        labels[lid]["subset"] = "hard"
+        labels[lid]["hard_kind"] = kind
+        add_file(name, data, ftype, "test", [lid], role="invoice")
+        files[-1]["subset"] = "hard"
 
     for lid, data in labels.items():
         (LABELS / f"{lid}.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")

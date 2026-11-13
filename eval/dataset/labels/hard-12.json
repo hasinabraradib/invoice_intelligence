@@ -1,0 +1,58 @@
+{
+  "id": "hard-12",
+  "file": "hard-12.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-432",
+    "invoice_date": "2026-05-31",
+    "due_date": "2026-06-30",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "USD",
+    "subtotal": "718.32",
+    "tax": "107.75",
+    "total": "826.07"
+  },
+  "line_items": [
+    {
+      "description": "Maintenance visit",
+      "quantity": "2",
+      "unit_price": "181.22",
+      "line_total": "362.44"
+    },
+    {
+      "description": "Calibration certificate",
+      "quantity": "1",
+      "unit_price": "169.79",
+      "line_total": "169.79"
+    },
+    {
+      "description": "A4 paper (box of 5 reams)",
+      "quantity": "2",
+      "unit_price": "28.29",
+      "line_total": "56.58"
+    },
+    {
+      "description": "Toner cartridge",
+      "quantity": "2",
+      "unit_price": "63.98",
+      "line_total": "127.96"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "1",
+      "unit_price": "1.55",
+      "line_total": "1.55"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: two-column layout, scanned"
+  ],
+  "subset": "hard",
+  "hard_kind": "two_column_scan"
+}

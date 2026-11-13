@@ -1,0 +1,58 @@
+{
+  "id": "hard-07",
+  "file": "hard-07.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-377",
+    "invoice_date": "2026-02-25",
+    "due_date": "2026-03-27",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "6641.64",
+    "tax": "996.25",
+    "total": "7637.89"
+  },
+  "line_items": [
+    {
+      "description": "Network switch 24-port",
+      "quantity": "1",
+      "unit_price": "233.90",
+      "line_total": "233.90"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "24",
+      "unit_price": "83.76",
+      "line_total": "2010.24"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "5",
+      "unit_price": "862.50",
+      "line_total": "4312.50"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "10",
+      "unit_price": "5.67",
+      "line_total": "56.70"
+    },
+    {
+      "description": "Safety gloves (pair)",
+      "quantity": "5",
+      "unit_price": "5.66",
+      "line_total": "28.30"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: faint scan: low-contrast grey text on an off-white page"
+  ],
+  "subset": "hard",
+  "hard_kind": "faint"
+}

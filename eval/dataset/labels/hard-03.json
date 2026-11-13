@@ -1,0 +1,58 @@
+{
+  "id": "hard-03",
+  "file": "hard-03.jpg",
+  "file_type": "image_scan",
+  "split": "test",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HD-2026-333",
+    "invoice_date": "2026-09-21",
+    "due_date": "2026-10-21",
+    "supplier_name": "Alpine Instruments AG",
+    "customer_name": "Test Garments Ltd",
+    "currency": "EUR",
+    "subtotal": "4926.65",
+    "tax": "739.00",
+    "total": "5665.65"
+  },
+  "line_items": [
+    {
+      "description": "LED panel 60x60",
+      "quantity": "10",
+      "unit_price": "31.06",
+      "line_total": "310.60"
+    },
+    {
+      "description": "Installation service",
+      "quantity": "3",
+      "unit_price": "341.34",
+      "line_total": "1024.02"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "24",
+      "unit_price": "20.92",
+      "line_total": "502.08"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "10",
+      "unit_price": "164.33",
+      "line_total": "1643.30"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "5",
+      "unit_price": "289.33",
+      "line_total": "1446.65"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: low-resolution phone photo: 100 dpi, shear, uneven light, JPEG q30-40"
+  ],
+  "subset": "hard",
+  "hard_kind": "phone_photo"
+}
