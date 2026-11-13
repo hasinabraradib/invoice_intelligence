@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -55,3 +55,8 @@ frontend-check:  ## Lint, typecheck and unit tests for the frontend
 # Browser smoke test against the running stack; skips itself if the stack is down.
 e2e:
 	cd frontend && npx playwright install chromium && npm run e2e
+
+# Time the pipeline on a synthetic batch PDF; prints JSON for the evaluation report.
+# Usage: make batch-benchmark [PAGES=1000] [ARGS="--embed local" | "--scanned" | "--llm real"]
+batch-benchmark: env
+	$(COMPOSE) run --rm api python scripts/batch_benchmark.py --pages $(or $(PAGES),1000) $(ARGS)
