@@ -1,5 +1,7 @@
 # Invoice Intelligence
 
+**Walkthrough video (silent, with subtitles):** https://drive.google.com/file/d/1CWLV_3AUe5BdugQXpAxYlEbERA9YUJxe/view?usp=share_link
+
 Invoice Intelligence turns a pile of invoices into checked, searchable data. Upload PDFs,
 scans, phone photos, spreadsheets or CSV files, including one PDF holding many invoices. The
 system reads them (OCR where needed) and has an LLM extract the key fields. Every value comes
@@ -12,7 +14,8 @@ synthetic dataset, and the results are reported as they came out.
 
 ![Dashboard](docs/screenshots/dashboard-light.png)
 
-**Contents:** [The assignment](#the-assignment-in-my-own-words) ·
+**Contents:** [Walkthrough video](https://drive.google.com/file/d/1CWLV_3AUe5BdugQXpAxYlEbERA9YUJxe/view?usp=share_link) ·
+[The assignment](#the-assignment-in-my-own-words) ·
 [Quick start](#quick-start) · [Demo data](#demo-data) · [Features](#features) ·
 [Screenshots](#screenshots) · [Documentation](#documentation) ·
 [Design decisions](#design-decisions-and-trade-offs) ·
@@ -131,7 +134,8 @@ Phone layouts, open pickers and the previous design: [docs/screenshots/](docs/sc
 | [Test results](docs/test-results.md) | Counts, coverage per package and the slowest tests, with the raw JUnit and coverage files |
 | [Prompts](docs/prompts.md) | The prompts used to build the project, and the runtime prompts the system sends |
 | [AI usage](AI_USAGE.md) | Which AI tools were used, for what, and how their output was reviewed and tested |
-| [Walkthrough script](docs/walkthrough/script.md) | The silent, subtitled video walkthrough, scene by scene; `make walkthrough` records it |
+| [Walkthrough video](https://drive.google.com/file/d/1CWLV_3AUe5BdugQXpAxYlEbERA9YUJxe/view?usp=share_link) | The silent, subtitled screen recording of the app (Google Drive) |
+| [Walkthrough script](docs/walkthrough/script.md) | The same walkthrough, scene by scene; `make walkthrough` records it |
 | [Project rules](CLAUDE.md) | The rules every change follows |
 
 ## Design decisions and trade-offs
