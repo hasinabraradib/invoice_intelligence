@@ -17,6 +17,8 @@ import { LedgerPanel } from "@/components/review/LedgerPanel";
 import { LineItems } from "@/components/review/LineItems";
 import { PageViewer } from "@/components/review/PageViewer";
 import { useReviewer } from "@/components/review/useReviewer";
+import { FileTypeIcon } from "@/components/ui";
+import { ArrowRight, BadgeCheck, Check, ChevronLeft, RotateCcw } from "lucide-react";
 
 export default function ReviewPage() {
   // useSearchParams needs a Suspense boundary in the App Router.
@@ -158,44 +160,52 @@ function Review() {
     patch.mutate({ corrected_by: reviewer.trim(), ...body } as InvoicePatch);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex animate-fade-up flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm"><Link href="/documents" className="btn-link">← Documents</Link></p>
-          <h1 className="truncate text-2xl font-semibold" title={doc.filename}>{doc.filename}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <Link href="/documents" className="btn-link mb-3 inline-flex items-center gap-1 text-muted hover:text-ink">
+            <ChevronLeft className="size-4" aria-hidden="true" /> Documents
+          </Link>
+          <div className="flex min-w-0 items-center gap-3">
+            <FileTypeIcon mime={doc.mime_type} filename={doc.filename} />
+            <h1 className="truncate text-2xl font-semibold tracking-tight text-ink" title={doc.filename}>{doc.filename}</h1>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
             <StatusBadge status={s.status} />
             {busy ? (
-              <span>
+              <span className="chip">
                 {s.stage ?? s.job_status}
                 {s.pages_total ? ` · page ${s.pages_done} of ${s.pages_total}` : ""}
                 {s.segments_total ? ` · invoice ${s.segments_done} of ${s.segments_total}` : ""}
               </span>
             ) : null}
-            {invoices.length > 1 ? <span>{invoices.length} invoices in this document</span> : null}
+            {invoices.length > 1 ? <span className="chip">{invoices.length} invoices in this document</span> : null}
             {invoice?.reviewed_by ? (
-              <span>Approved by {invoice.reviewed_by} · {formatDateTime(invoice.reviewed_at)}
-                {invoice.review_override_reason ? ` (override: ${invoice.review_override_reason})` : ""}</span>
+              <span className="chip border-success-line bg-success-soft text-success">
+                <BadgeCheck className="size-3.5" aria-hidden="true" />
+                Approved by {invoice.reviewed_by} · {formatDateTime(invoice.reviewed_at)}
+                {invoice.review_override_reason ? ` (override: ${invoice.review_override_reason})` : ""}
+              </span>
             ) : null}
-          </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn-ghost" onClick={() => next.mutate()} disabled={next.isPending}>
+            Next in queue <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setReprocessOpen(true)} disabled={busy}>
+            <RotateCcw className="size-4" aria-hidden="true" /> Reprocess
+          </button>
           {invoice ? (
             <button type="button" className="btn-primary" onClick={() => setApproveOpen(true)} disabled={busy}>
-              Approve
+              <Check className="size-4" aria-hidden="true" /> Approve
             </button>
           ) : null}
-          <button type="button" className="btn-secondary" onClick={() => setReprocessOpen(true)} disabled={busy}>
-            Reprocess
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => next.mutate()} disabled={next.isPending}>
-            Next in queue
-          </button>
         </div>
       </div>
 
       {s.status === "partially_failed" ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-orange-line bg-orange-soft p-4 text-sm text-orange">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-orange-line bg-orange-soft p-4 text-sm text-orange">
           <span><strong>Some invoices failed</strong> (the others are saved): {s.error ?? "unknown error"}</span>
           <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(true)} disabled={reprocess.isPending}>
             Retry failed invoices
@@ -203,7 +213,7 @@ function Review() {
         </div>
       ) : null}
       {s.status === "failed" ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger-line bg-danger-soft p-4 text-sm text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-danger-line bg-danger-soft p-4 text-sm text-danger">
           <span><strong>Processing failed:</strong> {s.error ?? "unknown error"}</span>
           <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(false)} disabled={reprocess.isPending}>
             Retry
@@ -211,33 +221,33 @@ function Review() {
         </div>
       ) : null}
       {s.error && s.status !== "failed" && s.error.startsWith("warning") ? (
-        <p className="rounded-md bg-warning-soft p-3 text-sm text-warning">{s.error}</p>
+        <p className="rounded-card border border-warning-line bg-warning-soft p-4 text-sm text-warning">{s.error}</p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* min-w-0: grid columns otherwise grow to fit wide content (tables, images). */}
-        <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+        <div className="min-w-0 lg:sticky lg:top-6 lg:self-start">
           {pages.isPending ? <Skeleton className="h-96 w-full" /> : (
             <PageViewer ref={viewer} documentId={id} pages={pages.data ?? []} page={page} onPage={(n) => setPage(n)} />
           )}
         </div>
 
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-6">
           <InvoiceSwitcher invoices={invoices} selected={invoice?.segment_index ?? 0} onSelect={selectInvoice} />
           {invoice && !invoice.extracted ? (
-            <p className="rounded-md bg-surface-2 p-3 text-sm text-ink-2">
+            <p className="rounded-card border border-line bg-surface-2 p-4 text-sm text-ink-2">
               This invoice has not been extracted yet{busy ? "; processing is still running" : ""}.
             </p>
           ) : null}
           {invoice ? (
             <>
               <section aria-labelledby="fields-heading" className="card" id="fields">
-                <div className="flex flex-wrap items-end justify-between gap-2">
-                  <h2 id="fields-heading" className="text-lg font-semibold">Fields</h2>
-                  <div>
-                    <label htmlFor="reviewer-name" className="label">Your name (for the audit trail)</label>
-                    <input id="reviewer-name" className="input py-1" value={reviewer}
-                      onChange={(e) => setReviewer(e.target.value)} autoComplete="name" />
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <h2 id="fields-heading" className="font-semibold text-ink">Fields</h2>
+                  <div className="w-full sm:w-56">
+                    <label htmlFor="reviewer-name" className="label text-xs">Your name (for the audit trail)</label>
+                    <input id="reviewer-name" className="input py-1.5" value={reviewer}
+                      onChange={(e) => setReviewer(e.target.value)} autoComplete="name" placeholder="e.g. Ayesha" />
                   </div>
                 </div>
                 {reviewer.trim() === "" ? <p className="mt-2 text-xs text-muted">Enter your name to edit fields.</p> : null}
@@ -250,19 +260,19 @@ function Review() {
                 />
               </section>
               <section aria-labelledby="items-heading" className="card">
-                <h2 id="items-heading" className="mb-2 text-lg font-semibold">Line items</h2>
+                <h2 id="items-heading" className="mb-3 font-semibold text-ink">Line items</h2>
                 <LineItems items={invoice.line_items} canEdit={canEdit} busy={patch.isPending}
                   onSave={(position, changes) => savePatch({ line_items: [{ position, ...changes }] } as Omit<InvoicePatch, "corrected_by">)} />
               </section>
               <section aria-labelledby="issues-heading" className="card space-y-3">
-                <h2 id="issues-heading" className="text-lg font-semibold">
+                <h2 id="issues-heading" className="font-semibold text-ink">
                   Issues {errorCount > 0 ? <span className="text-sm font-normal text-danger">({errorCount} error{errorCount === 1 ? "" : "s"})</span> : null}
                 </h2>
                 <IssuesPanel issues={invoice.issues} />
                 <DuplicateLinks duplicates={invoice.duplicates} />
               </section>
               <section aria-labelledby="history-heading" className="card">
-                <h2 id="history-heading" className="mb-2 text-lg font-semibold">History</h2>
+                <h2 id="history-heading" className="mb-3 font-semibold text-ink">History</h2>
                 {corrections.isPending ? <SkeletonRows rows={2} /> : <CorrectionsHistory corrections={corrections.data ?? []} />}
               </section>
             </>
@@ -271,7 +281,7 @@ function Review() {
           ) : hasLedger && ledger.data ? (
             <LedgerPanel ledger={ledger.data} sheet={params.get("sheet")} row={params.get("row") ? Number(params.get("row")) : null} />
           ) : busy || (done && result.isPending) ? (
-            <div className="card"><p className="mb-3 text-sm text-muted">Extracting fields…</p><SkeletonRows rows={6} /></div>
+            <div className="card"><p className="mb-3 flex items-center gap-2 text-sm text-muted"><span className="size-2 animate-pulse rounded-full bg-info-dot" aria-hidden="true" /> Extracting fields…</p><SkeletonRows rows={6} /></div>
           ) : (
             <div className="card text-sm text-muted">No extracted fields for this document.</div>
           )}

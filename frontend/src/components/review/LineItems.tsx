@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { LineItemView } from "@/lib/api";
 import { fieldAnchor } from "@/lib/fields";
 import { displayValue } from "@/lib/format";
-import { FieldStatusBadge } from "../Badges";
+import { FieldStatusBadge, VisionBadge } from "../Badges";
 import { checkByKind } from "./FieldEditor";
 
 const COLUMNS = [
@@ -37,7 +37,7 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full min-w-[36rem] text-left text-sm">
-        <thead className="border-b border-line text-xs uppercase text-muted">
+        <thead className="border-b border-line text-xs text-muted">
           <tr>
             <th scope="col" className="py-2 pr-2">#</th>
             {COLUMNS.map((c) => <th key={c.name} scope="col" className="py-2 pr-2">{c.label}</th>)}
@@ -64,8 +64,9 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
                       </>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        <span className={c.kind === "text" ? "" : "tabular-nums"}>{displayValue(item[c.name].value)}</span>
+                        <span className={c.kind === "text" ? "text-ink" : "num text-ink"}>{displayValue(item[c.name].value)}</span>
                         {item[c.name].status !== "found" ? <FieldStatusBadge status={item[c.name].status ?? "missing"} /> : null}
+                        {item[c.name].source === "vision" ? <VisionBadge /> : null}
                       </div>
                     )}
                   </td>
