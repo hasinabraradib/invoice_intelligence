@@ -14,6 +14,11 @@ const usd = (v: unknown) =>
 export function evaluationTiles(headline: Record<string, unknown>): EvalTile[] {
   return [
     { label: "Field accuracy", value: pct(headline.field_accuracy), hint: "fields right, incl. correctly empty" },
+    {
+      label: "Field accuracy, hard subset",
+      value: pct(headline.hard_field_accuracy),
+      hint: "noisy, faint, rotated, phone-photo, crowded and two-column documents",
+    },
     { label: "False fills", value: pct(headline.false_fill_rate), hint: "values given where none was printed" },
     { label: "Line items F1", value: pct(headline.line_item_f1), hint: "description + exact line total" },
     { label: "Flag precision", value: pct(headline.flag_precision), hint: "raised flags that were right" },

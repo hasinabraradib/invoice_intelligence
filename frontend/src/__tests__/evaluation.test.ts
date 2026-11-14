@@ -13,6 +13,12 @@ describe("evaluationTiles", () => {
     expect(value("Cost per document")).toBe("$0.00071");
   });
 
+  it("shows the hard subset next to the clean accuracy", () => {
+    const tiles = evaluationTiles({ field_accuracy: 1, hard_field_accuracy: 0.75 });
+    expect(tiles.map((t) => t.label).slice(0, 2)).toEqual(["Field accuracy", "Field accuracy, hard subset"]);
+    expect(tiles[1].value).toBe("75.0%");
+  });
+
   it("shows a dash, not zero, for numbers the run did not produce", () => {
     const tiles = evaluationTiles({ field_accuracy: 0.5 });
     expect(tiles.find((t) => t.label === "Cost per document")?.value).toBe("–");
