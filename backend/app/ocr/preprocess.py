@@ -5,6 +5,8 @@ Phone photos and office scans are often small, noisy, slightly rotated and uneve
 so each step below fixes one of those problems.
 """
 
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
 
@@ -93,15 +95,158 @@ def binarize(gray: np.ndarray) -> np.ndarray:
     )
 
 
-def preprocess(image: np.ndarray, dpi: float | None = None) -> np.ndarray:
-    """Full pipeline. Order matters: shrink data first (grayscale), fix resolution before
-    filtering, denoise before skew estimation (speckles confuse it), and binarize last
-    (rotating a black/white image creates jagged edges)."""
+# ---------------------------------------------------------------- photos
+# Phone photos differ from scans: the page may not fill the frame and is seen at an angle,
+# and the light falls off across it. These steps run only on images that look like photos.
+
+PHOTO_STEPS = ("warp", "flatten", "clahe")  # every photo step there is
+# Uneven lighting: the paper's brightness (text and noise smoothed away) varies by at least
+# this many grey levels between the brightest and darkest parts of the page. A flatbed
+# scan is far more even.
+UNEVEN_LIGHT_LEVELS = 30.0
+
+
+@dataclass(frozen=True)
+class PhotoCheck:
+    is_photo: bool
+    lighting_range: float  # grey levels between bright and dark paper
+    outline: np.ndarray | None  # the page's 4 corners, if the page does not fill the frame
+
+
+def paper_background(gray: np.ndarray, size: int = 512) -> np.ndarray:
+    """The paper's brightness without the text: a small copy, closed (text is darker than
+    paper, so a large closing fills it in), then smoothed. Same size as `gray`."""
+    small = _shrink(gray, max_side=size)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+    closed = cv2.morphologyEx(small, cv2.MORPH_CLOSE, kernel)
+    smooth = cv2.GaussianBlur(cv2.medianBlur(closed, 21), (0, 0), 9)
+    return cv2.resize(smooth, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_LINEAR)
+
+
+def find_document_quad(gray: np.ndarray) -> np.ndarray | None:
+    """The page's four corners (top-left, top-right, bottom-right, bottom-left) in `gray`'s
+    coordinates, when the page is a clear quadrilateral that does NOT fill the whole frame
+    (e.g. a photo of an invoice on a desk). None otherwise."""
+    small = _shrink(gray, max_side=800)
+    scale = gray.shape[1] / small.shape[1]
+    blurred = cv2.GaussianBlur(small, (5, 5), 0)
+    edges = cv2.dilate(cv2.Canny(blurred, 50, 150), np.ones((3, 3), np.uint8))
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    area = small.shape[0] * small.shape[1]
+    for contour in sorted(contours, key=cv2.contourArea, reverse=True)[:5]:
+        hull = cv2.convexHull(contour)
+        approx = cv2.approxPolyDP(hull, 0.02 * cv2.arcLength(hull, True), True)
+        share = cv2.contourArea(approx) / area
+        if len(approx) == 4 and 0.25 < share < 0.95 and cv2.isContourConvex(approx):
+            return _order_corners(approx.reshape(4, 2).astype(np.float32) * scale)
+    return None
+
+
+def page_aspect_ratio(quad: np.ndarray, image_shape: tuple[int, ...]) -> float | None:
+    """The page's real height/width from its four corners in a photo.
+
+    Edge lengths in the photo are foreshortened by perspective, so they give the wrong
+    shape. Zhang & He ("Whiteboard scanning and image enhancement", 2007): estimate the
+    camera's focal length from the corners (principal point = image centre, square
+    pixels), then measure the two sides in 3D. None when the sides are nearly parallel
+    (no measurable perspective): then the edge lengths are already right.
+    """
+    u0, v0 = image_shape[1] / 2, image_shape[0] / 2
+    tl, tr, br, bl = (np.array([p[0], p[1], 1.0]) for p in quad)
+    m1, m2, m3, m4 = tl, tr, bl, br
+    k2 = np.dot(np.cross(m1, m4), m3) / np.dot(np.cross(m2, m4), m3)
+    k3 = np.dot(np.cross(m1, m4), m2) / np.dot(np.cross(m3, m4), m2)
+    n2, n3 = k2 * m2 - m1, k3 * m3 - m1
+    if abs(n2[2]) < 1e-6 or abs(n3[2]) < 1e-6:
+        return None
+    f2 = -(
+        (n2[0] * n3[0] - (n2[0] * n3[2] + n2[2] * n3[0]) * u0 + n2[2] * n3[2] * u0 * u0)
+        + (n2[1] * n3[1] - (n2[1] * n3[2] + n2[2] * n3[1]) * v0 + n2[2] * n3[2] * v0 * v0)
+    ) / (n2[2] * n3[2])
+    if not np.isfinite(f2) or f2 <= 0:
+        return None
+    inv = np.linalg.inv(np.array([[np.sqrt(f2), 0, u0], [0, np.sqrt(f2), v0], [0, 0, 1]]))
+    width2 = n2 @ inv.T @ inv @ n2
+    height2 = n3 @ inv.T @ inv @ n3
+    if width2 <= 0 or height2 <= 0:
+        return None
+    return float(np.sqrt(height2 / width2))
+
+
+def warp_document(gray: np.ndarray, quad: np.ndarray) -> np.ndarray:
+    """Perspective-correct the page inside `quad` to a flat, upright rectangle with the
+    page's real proportions (see page_aspect_ratio)."""
+    tl, tr, br, bl = quad
+    width = int(max(np.linalg.norm(tr - tl), np.linalg.norm(br - bl)))
+    height = int(max(np.linalg.norm(bl - tl), np.linalg.norm(br - tr)))
+    ratio = page_aspect_ratio(quad, gray.shape)
+    if ratio is not None and 0.3 < ratio < 3.5:  # sane page shapes only
+        height = int(width * ratio)
+    target = np.array(
+        [[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]], np.float32
+    )
+    matrix = cv2.getPerspectiveTransform(quad.astype(np.float32), target)
+    return cv2.warpPerspective(gray, matrix, (width, height), flags=cv2.INTER_CUBIC)
+
+
+def check_photo(gray: np.ndarray) -> PhotoCheck:
+    """Does this image look like a phone photo rather than a scan? Yes if the paper is
+    unevenly lit, or if a page outline sits inside the frame."""
+    background = paper_background(gray)
+    low, high = np.percentile(background, [2, 98])
+    lighting = float(high - low)
+    outline = find_document_quad(gray)
+    return PhotoCheck(lighting >= UNEVEN_LIGHT_LEVELS or outline is not None, lighting, outline)
+
+
+def flatten_illumination(gray: np.ndarray) -> np.ndarray:
+    """Remove shadows and gradients: divide by the paper's own brightness, so the page
+    becomes evenly white and text keeps its contrast everywhere."""
+    background = paper_background(gray).astype(np.float32)
+    flat = gray.astype(np.float32) / np.maximum(background, 1.0) * 255.0
+    return np.clip(flat, 0, 255).astype(np.uint8)
+
+
+def enhance_contrast(gray: np.ndarray) -> np.ndarray:
+    """CLAHE: local histogram equalisation, limited so paper noise is not amplified much."""
+    return cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+
+
+def preprocess(
+    image: np.ndarray, dpi: float | None = None, photo_steps: tuple[str, ...] = PHOTO_STEPS
+) -> np.ndarray:
+    """Full pipeline. Order matters: shrink data first (grayscale), straighten and even out
+    a photo at full resolution, fix resolution before filtering, denoise before contrast
+    and skew estimation (speckles confuse both), and binarize last (rotating a black/white
+    image creates jagged edges). `photo_steps` picks which photo steps may run; they only
+    run on images that look like photos."""
     gray = to_grayscale(image)
+    photo = check_photo(gray) if photo_steps else None
+    if photo is not None and photo.is_photo:
+        if "warp" in photo_steps and photo.outline is not None:
+            gray = warp_document(gray, photo.outline)
+        if "flatten" in photo_steps:
+            gray = flatten_illumination(gray)
     gray = upscale_if_small(gray, dpi)
     gray = denoise(gray)
+    if photo is not None and photo.is_photo and "clahe" in photo_steps:
+        gray = enhance_contrast(gray)
     gray = deskew(gray)
     return binarize(gray)
+
+
+def _order_corners(points: np.ndarray) -> np.ndarray:
+    """Top-left, top-right, bottom-right, bottom-left (by coordinate sums and differences)."""
+    sums, diffs = points.sum(axis=1), np.diff(points, axis=1).ravel()
+    return np.array(
+        [
+            points[np.argmin(sums)],
+            points[np.argmin(diffs)],
+            points[np.argmax(sums)],
+            points[np.argmax(diffs)],
+        ],
+        dtype=np.float32,
+    )
 
 
 def _shrink(gray: np.ndarray, max_side: int) -> np.ndarray:

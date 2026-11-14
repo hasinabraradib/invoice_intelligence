@@ -348,6 +348,7 @@ async def _read_pages(
                 min_confidence=settings.ocr_min_confidence,
                 page_timeout_seconds=settings.ocr_page_timeout_seconds,
                 dpi=settings.ocr_dpi,
+                photo_steps=tuple(s for s in settings.ocr_photo_steps.split(",") if s),
             ),
             workers=settings.ocr_workers,
             on_page=progress,

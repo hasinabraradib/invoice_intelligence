@@ -64,7 +64,7 @@ def ocr_page_task(path: str, kind: str, number: int, options: dict[str, Any]) ->
         _, image, dpi, error = next(iter(pages))
         if image is None:
             return {"page": number, "error": error or "render failed", "render_failed": True}
-        result = ocr_page(preprocess(image, dpi), opts)
+        result = ocr_page(preprocess(image, dpi, opts.photo_steps), opts)
     except OcrError as exc:
         return {"page": number, "error": str(exc), "unavailable": "not installed" in str(exc)}
     except Exception as exc:  # one bad page must not stop the document

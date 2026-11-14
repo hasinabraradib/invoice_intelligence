@@ -1,0 +1,753 @@
+[
+  {
+    "config": "base",
+    "steps": [],
+    "mean_ocr_confidence": 80.7,
+    "field_accuracy": 0.7963,
+    "seconds": 53.8,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 62.6,
+        "field_accuracy": 0.1111,
+        "line_f1": 0.2
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 42.1,
+        "field_accuracy": 0.0,
+        "line_f1": 0.0
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "warp",
+    "steps": [
+      "warp"
+    ],
+    "mean_ocr_confidence": 80.7,
+    "field_accuracy": 0.7963,
+    "seconds": 51.7,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 62.6,
+        "field_accuracy": 0.1111,
+        "line_f1": 0.2
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 42.1,
+        "field_accuracy": 0.0,
+        "line_f1": 0.0
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "flatten",
+    "steps": [
+      "flatten"
+    ],
+    "mean_ocr_confidence": 86.5,
+    "field_accuracy": 0.9445,
+    "seconds": 51.9,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 79.7,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 83.2,
+        "field_accuracy": 1.0,
+        "line_f1": 0.6667
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "clahe",
+    "steps": [
+      "clahe"
+    ],
+    "mean_ocr_confidence": 78.4,
+    "field_accuracy": 0.787,
+    "seconds": 52.7,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 39.8,
+        "field_accuracy": 0.0,
+        "line_f1": 0.0
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 41.5,
+        "field_accuracy": 0.0,
+        "line_f1": 0.0
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "warp+flatten",
+    "steps": [
+      "warp",
+      "flatten"
+    ],
+    "mean_ocr_confidence": 86.5,
+    "field_accuracy": 0.9445,
+    "seconds": 73.3,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 79.7,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 83.2,
+        "field_accuracy": 1.0,
+        "line_f1": 0.6667
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "warp+flatten+clahe",
+    "steps": [
+      "warp",
+      "flatten",
+      "clahe"
+    ],
+    "mean_ocr_confidence": 83.2,
+    "field_accuracy": 0.9259,
+    "seconds": 54.0,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 48.4,
+        "field_accuracy": 0.7778,
+        "line_f1": 0.2
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 80.9,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  },
+  {
+    "config": "flatten+clahe",
+    "steps": [
+      "flatten",
+      "clahe"
+    ],
+    "mean_ocr_confidence": 83.2,
+    "field_accuracy": 0.9259,
+    "seconds": 54.4,
+    "rows": [
+      {
+        "id": "harddev-01",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 74.5,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-02",
+        "kind": "noisy_blur",
+        "photo": false,
+        "ocr_confidence": 80.3,
+        "field_accuracy": 0.7778,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-03",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 48.4,
+        "field_accuracy": 0.7778,
+        "line_f1": 0.2
+      },
+      {
+        "id": "harddev-04",
+        "kind": "phone_photo",
+        "photo": true,
+        "ocr_confidence": 80.9,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-05",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 93.5,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-06",
+        "kind": "rotated",
+        "photo": false,
+        "ocr_confidence": 91.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.5
+      },
+      {
+        "id": "harddev-07",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 93.6,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-08",
+        "kind": "faint",
+        "photo": false,
+        "ocr_confidence": 91.8,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-09",
+        "kind": "crowded_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-10",
+        "kind": "crowded_scan",
+        "photo": false,
+        "ocr_confidence": 86.3,
+        "field_accuracy": 1.0,
+        "line_f1": 0.9583
+      },
+      {
+        "id": "harddev-11",
+        "kind": "two_column_pdf",
+        "photo": null,
+        "ocr_confidence": null,
+        "field_accuracy": 1.0,
+        "line_f1": 1.0
+      },
+      {
+        "id": "harddev-12",
+        "kind": "two_column_scan",
+        "photo": false,
+        "ocr_confidence": 91.2,
+        "field_accuracy": 0.8889,
+        "line_f1": 1.0
+      }
+    ]
+  }
+]

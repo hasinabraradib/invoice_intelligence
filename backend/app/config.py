@@ -110,6 +110,12 @@ class Settings(BaseSettings):
     ocr_min_confidence: float = Field(default=60, ge=0, le=100)
     ocr_page_timeout_seconds: int = Field(default=60, gt=0)
     ocr_dpi: int = Field(default=300, ge=72, le=600)
+    # Extra cleanup for images that look like phone photos, comma-separated, from
+    # warp (page edges + perspective), flatten (shadows / uneven light), clahe (contrast).
+    # Default "flatten": the only step measured to help on the hard dev set.
+    ocr_photo_steps: str = Field(
+        default="flatten", pattern=r"^((warp|flatten|clahe)(,(warp|flatten|clahe))*)?$"
+    )
     # Pages OCR'd in parallel, each in its own process (Tesseract is single-threaded here).
     # Each worker holds one page image (~10-30 MB) plus Tesseract (~100 MB).
     ocr_workers: int = Field(default_factory=default_ocr_workers, ge=1, le=64)

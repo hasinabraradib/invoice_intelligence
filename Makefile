@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 env:
@@ -90,3 +90,9 @@ eval: eval-dataset
 		status=$$?; $(EVAL_COMPOSE) down; exit $$status
 	$(COMPOSE) run --rm -v "$(CURDIR)/eval/results:/results:ro" api \
 		python scripts/store_eval_run.py /results
+
+# Compare OCR preprocessing choices on the HARD DEV set only (real LLM; a few cents).
+# Usage: make hard-dev-bench [CONFIGS=base,flatten,...]
+hard-dev-bench: eval-dataset
+	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/eval:/eval" api \
+		python /eval/hard_dev_bench.py $(if $(CONFIGS),--configs $(CONFIGS)) --out /eval/results/hard-dev-bench.json

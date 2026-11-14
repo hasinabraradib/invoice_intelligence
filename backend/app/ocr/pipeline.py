@@ -83,7 +83,7 @@ def ocr_document(
 
 def _ocr_into(page: PageText, image: np.ndarray, dpi: float | None, options: OcrOptions) -> None:
     started = time.perf_counter()
-    result = ocr_page(preprocess(image, dpi), options)
+    result = ocr_page(preprocess(image, dpi, options.photo_steps), options)
     if page.error:  # the text layer was unreadable but OCR worked: keep a note of it
         page.warnings.append(f"Text layer unreadable ({page.error}); used OCR instead.")
         page.error = None

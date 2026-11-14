@@ -24,6 +24,10 @@ class OcrOptions(BaseModel):
     min_confidence: float = 60
     page_timeout_seconds: int = 60
     dpi: int = 300
+    # Which photo steps (app.ocr.preprocess.PHOTO_STEPS) may run on images that look like
+    # phone photos. Default chosen by measurement on the hard dev set (docs/evaluation.md):
+    # flatten helped a lot, CLAHE hurt, and the warp could not be measured there.
+    photo_steps: tuple[str, ...] = ("flatten",)
 
 
 class OcrResult(BaseModel):
