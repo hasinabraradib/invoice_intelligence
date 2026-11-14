@@ -44,15 +44,15 @@ export function Modal({ open, title, onClose, children }: Props) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-black/30 p-4 backdrop-blur-[2px] sm:items-center dark:bg-black/60">
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md rounded-lg bg-surface p-5 shadow-xl"
+        className="w-full max-w-md animate-fade-up rounded-card border border-line bg-surface p-6 shadow-lift"
       >
-        <h2 id={titleId} className="mb-3 text-lg font-semibold text-ink">
+        <h2 id={titleId} className="mb-3 text-lg font-semibold tracking-tight text-ink">
           {title}
         </h2>
         {children}

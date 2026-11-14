@@ -24,7 +24,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={api}>
       {children}
       {/* Above the phone tab bar (bottom-20), bottom-right on larger screens. */}
-      <div aria-live="polite" className="fixed inset-x-4 bottom-20 z-50 flex flex-col gap-2 sm:left-auto sm:w-96 md:bottom-6 md:right-6">
+      <div aria-live="polite" className="fixed inset-x-4 bottom-20 z-[60] flex flex-col gap-2 sm:left-auto sm:w-96 md:bottom-6 md:right-6">
         {toasts.map((toast) => (
           <div
             key={toast.id}
