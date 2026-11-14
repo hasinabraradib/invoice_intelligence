@@ -6,6 +6,8 @@ import { uploadFile } from "@/lib/upload";
 import { ACCEPTED_EXTENSIONS, checkUploadFile, MAX_UPLOAD_MB } from "@/lib/validation";
 import { percent } from "@/lib/format";
 import { errorMessage } from "./Toast";
+import { FileTypeIcon, ProgressBar } from "./ui";
+import { UploadCloud } from "lucide-react";
 
 type Item = {
   key: string;
@@ -54,7 +56,7 @@ export function Uploader() {
 
   return (
     <section aria-labelledby="upload-heading" className="card">
-      <h2 id="upload-heading" className="mb-3 text-lg font-semibold">Upload invoices</h2>
+      <h2 id="upload-heading" className="sr-only">Upload invoices</h2>
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -66,11 +68,17 @@ export function Uploader() {
           setDragging(false);
           start(e.dataTransfer.files);
         }}
-        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center ${
-          dragging ? "border-accent bg-accent-soft" : "border-line-strong"
+        className={`flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-10 text-center transition-colors ${
+          dragging ? "border-accent bg-accent-soft" : "border-line-strong bg-surface-2/50 hover:border-accent-line"
         }`}
       >
-        <p className="text-sm text-ink-2">Drag files here, or</p>
+        <span aria-hidden="true" className="grid size-12 place-items-center rounded-2xl border border-line bg-surface text-accent-ink shadow-soft">
+          <UploadCloud className="size-5" strokeWidth={1.75} />
+        </span>
+        <div>
+          <p className="font-medium text-ink">Drop invoices here</p>
+          <p className="mt-0.5 text-xs text-muted">PDF, PNG, JPEG, TIFF, XLSX, XLS or CSV · up to {MAX_UPLOAD_MB} MB each</p>
+        </div>
         <label htmlFor="file-input" className="btn-primary cursor-pointer">Choose files</label>
         <input
           ref={input}
@@ -84,30 +92,30 @@ export function Uploader() {
             e.target.value = ""; // allow choosing the same file again
           }}
         />
-        <p className="text-xs text-muted">PDF, PNG, JPEG, TIFF, XLSX, XLS or CSV · up to {MAX_UPLOAD_MB} MB each</p>
       </div>
       {items.length > 0 ? (
         <ul className="mt-4 space-y-2" aria-label="Uploads">
           {items.map((item) => (
-            <li key={item.key} className="rounded-md border border-line p-3 text-sm">
+            <li key={item.key} className="animate-fade-up rounded-xl border border-line bg-surface p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="min-w-0 truncate font-medium">{item.name}</span>
-                <span>
-                  {item.state === "uploading" && `Uploading ${percent(item.progress)}`}
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <FileTypeIcon filename={item.name} size="sm" />
+                  <span className="min-w-0 truncate font-medium text-ink">{item.name}</span>
+                </span>
+                <span className="text-xs">
+                  {item.state === "uploading" && <span className="num text-muted">Uploading {percent(item.progress)}</span>}
                   {item.state === "done" && item.documentId && (
-                    <Link className="btn-link" href={`/documents/${item.documentId}`}>Uploaded · open</Link>
+                    <Link className="btn-link text-xs" href={`/documents/${item.documentId}`}>Uploaded · open</Link>
                   )}
                   {item.state === "duplicate" && item.documentId && (
-                    <Link className="btn-link" href={`/documents/${item.documentId}`}>Already uploaded · open existing</Link>
+                    <Link className="btn-link text-xs" href={`/documents/${item.documentId}`}>Already uploaded · open existing</Link>
                   )}
                   {item.state === "error" && <span className="text-danger">{item.message}</span>}
                 </span>
               </div>
               {item.state === "uploading" ? (
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3" role="progressbar"
-                  aria-label={`Upload progress for ${item.name}`} aria-valuemin={0} aria-valuemax={100}
-                  aria-valuenow={Math.round(item.progress * 100)}>
-                  <div className="h-full bg-accent transition-all" style={{ width: percent(item.progress) }} />
+                <div className="mt-2.5">
+                  <ProgressBar value={item.progress} label={`Upload progress for ${item.name}`} />
                 </div>
               ) : null}
             </li>
