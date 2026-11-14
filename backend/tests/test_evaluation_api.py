@@ -30,3 +30,20 @@ async def test_latest_run_is_returned_and_saving_twice_is_idempotent(api, db_ses
     latest = (await api.get("/evaluation/latest")).json()
     assert latest["results_file"] == "new.json" and latest["split"] == "test"
     assert latest["headline"]["field_accuracy"] == 0.93
+
+
+def test_the_newest_run_is_picked_and_other_json_ignored(tmp_path):
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from store_eval_run import newest_run
+
+    for name in (
+        "2026-11-13T22-24-22Z.json",
+        "2026-11-14T01-45-58Z.json",
+        "hard-dev-bench-2026-11-14-preprocessing.json",
+    ):
+        (tmp_path / name).write_text("{}")
+    assert newest_run(tmp_path).name == "2026-11-14T01-45-58Z.json"
+    assert newest_run(tmp_path / "x.json") == tmp_path / "x.json"
