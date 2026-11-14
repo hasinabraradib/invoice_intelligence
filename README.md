@@ -87,10 +87,11 @@ provider (right number, right citation).
 | Page | What it is for |
 |---|---|
 | `/` Assistant | Chat (see above) |
-| `/dashboard` | Counts at a glance |
+| `/dashboard` | KPI cards with 14-day sparklines (processed, needs review, failed, seconds per page), documents per day, a status donut, the latest stored evaluation (or, if none, average extraction confidence, labelled as such), most common issues, the top of the review queue and recent uploads with live status. All of it comes from `GET /stats`; nothing is estimated in the browser |
 | `/documents` | Drag-and-drop upload with per-file progress, then a live table (it polls only while something is processing), with filters, reprocess and "Retry all failed" |
 | `/documents/{id}` Review | Page preview on the left; every field on the right with status, confidence, evidence (click it to jump to the page) and inline editing; line items, issues, duplicates, history, approve and reprocess |
 | `/review` Queue | Documents needing review, oldest first; "Next in queue" walks through them |
+| `/cross-check` | Compare invoices with a ledger spreadsheet or another PDF: matched / mismatched / missing summary, then each finding with evidence links on both sides |
 | `/search` | Hybrid, keyword or semantic search with the same filters; results open the review page at the matching page |
 
 ```bash
@@ -103,7 +104,29 @@ cd frontend && API_URL=http://localhost:8000 npm run gen:api   # regenerate API 
 ```
 
 `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`) is the API address *as the browser
-sees it*. It's baked in when the image is built. Screenshots: [docs/screenshots/](docs/screenshots/).
+sees it*. It's baked in when the image is built.
+
+**Design.** The design system lives in `frontend/src/app/globals.css`: colour, radius and shadow
+tokens on `:root`, with a separately tuned dark palette under `prefers-color-scheme: dark`. It
+uses Geist (via `next/font`), one indigo accent, and soft status tints that always come with a
+text label. Money uses tabular figures. Motion is limited to fades, hover lift, count-up
+numbers, progress bars and the streaming caret, and is turned off under
+`prefers-reduced-motion`. Shared pieces are in `frontend/src/components/` (`ui.tsx`,
+`Badges.tsx`, `Feedback.tsx`, `charts.tsx`). The sidebar becomes an icon rail on tablets and
+a bottom tab bar on phones. Every page was checked at 375, 768 and 1440 px in both themes,
+including a keyboard pass for visible focus.
+
+| Light | Dark |
+|---|---|
+| ![Assistant](docs/screenshots/assistant-light.png) | ![Assistant, dark](docs/screenshots/assistant-dark.png) |
+| ![Dashboard](docs/screenshots/dashboard-light.png) | ![Dashboard, dark](docs/screenshots/dashboard-dark.png) |
+| ![Documents](docs/screenshots/documents-light.png) | ![Documents, dark](docs/screenshots/documents-dark.png) |
+| ![Review](docs/screenshots/review-light.png) | ![Review, dark](docs/screenshots/review-dark.png) |
+| ![Cross-check](docs/screenshots/cross-check-light.png) | ![Cross-check, dark](docs/screenshots/cross-check-dark.png) |
+| ![Search](docs/screenshots/search-light.png) | ![Search, dark](docs/screenshots/search-dark.png) |
+
+More, including the review queue and phone-width shots: [docs/screenshots/](docs/screenshots/).
+All screenshots show synthetic sample documents.
 
 ### Background worker
 

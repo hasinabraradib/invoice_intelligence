@@ -200,3 +200,25 @@ Why the extraction prompt looks the way it does:
   misreads that keep every check consistent still pass unless something else triggers a
   second reading.
 
+## Frontend design pass
+
+- **Tokens first, then pages.** Colours, radii, shadows and motion became CSS variables, with
+  a dark palette tuned on its own (not inverted). 152 hard-coded colour classes were mapped
+  to tokens by a script, and the diff was reviewed by hand. Status colour always comes with a
+  text label.
+- **Behaviour was kept fixed on purpose.** Only JSX and classes changed. Labels, ids and
+  texts that tests and the e2e smoke test use ("Attach invoices", "Approved by ...",
+  "Reprocess {file}", ...) were kept, and the unit tests, e2e and backend suites ran before
+  every commit.
+- **The dashboard shows no made-up numbers.** Anything it needed that `GET /stats` didn't
+  return (daily series, seconds per page, top issues, review queue, recent uploads) was added
+  to the API with tests. Without a stored evaluation it shows average extraction confidence,
+  labelled as such, and with neither it shows no number.
+- **Checked by looking, not assumed.** Every page was screenshotted at 375, 768 and 1440 px
+  in both themes, and a scripted Tab pass checked that every focused element shows a ring.
+  This caught real issues:
+  - the chat input had no visible focus;
+  - at 768 px a full sidebar squeezed the tables, so tablets now get an icon rail;
+  - thumbnails were empty boxes before they loaded;
+  - the batch invoice switcher wrapped badly.
+
