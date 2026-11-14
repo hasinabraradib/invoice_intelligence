@@ -29,7 +29,7 @@ export function ActionCard({ action, onChange }: { action: ActionView; onChange:
 
   const pending = status === "pending";
   const tone = pending
-    ? "border-accent-line bg-accent-soft"
+    ? "border-warning-line bg-warning-soft"
     : status === "confirmed"
       ? "border-success-line bg-success-soft"
       : "border-line bg-surface-2";
@@ -40,7 +40,7 @@ export function ActionCard({ action, onChange }: { action: ActionView; onChange:
         <span
           aria-hidden="true"
           className={`grid size-8 shrink-0 place-items-center rounded-xl ${
-            pending ? "bg-surface text-accent-ink shadow-soft" : status === "confirmed" ? "bg-surface text-success" : "bg-surface text-muted"
+            pending ? "bg-butter text-on-pastel" : status === "confirmed" ? "bg-surface text-success" : "bg-surface text-muted"
           }`}
         >
           <Icon className="size-4" strokeWidth={1.75} />
@@ -51,13 +51,13 @@ export function ActionCard({ action, onChange }: { action: ActionView; onChange:
           {action.error ? <p className="mt-1 text-danger">{action.error}</p> : null}
           {pending ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button type="button" className="btn-primary px-3 py-1.5 text-xs" disabled={busy} onClick={() => void decide("confirm")}>
+              <button type="button" className="btn-primary btn-sm" disabled={busy} onClick={() => void decide("confirm")}>
                 Confirm
               </button>
-              <button type="button" className="btn-secondary px-3 py-1.5 text-xs" disabled={busy} onClick={() => void decide("cancel")}>
+              <button type="button" className="btn-secondary btn-sm" disabled={busy} onClick={() => void decide("cancel")}>
                 Cancel
               </button>
-              <span className="text-xs text-muted">Nothing changes until you confirm · expires in about {minutes} min</span>
+              <span className="text-xs text-ink-2">Nothing changes until you confirm · expires in about {minutes} min</span>
             </div>
           ) : null}
         </div>

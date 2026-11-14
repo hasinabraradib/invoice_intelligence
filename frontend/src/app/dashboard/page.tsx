@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, CheckCircle2, Clock, FlaskConical, Gauge, TriangleAlert, XCircle, type LucideIcon } from "lucide-react";
-import { assistant, type Stats } from "@/lib/assistant";
+import { assistant, liveSummary, type Stats } from "@/lib/assistant";
+import { PastelCard, type Pastel } from "@/components/controls/misc";
 import { api } from "@/lib/api";
 import { evaluationTiles } from "@/lib/evaluation";
 import { issueLabel } from "@/lib/issues";
 import { formatDateTime } from "@/lib/format";
-import { DOCUMENT_STATUS, StatusBadge, TONE } from "@/components/Badges";
+import { DOCUMENT_STATUS, StatusBadge } from "@/components/Badges";
 import { DailyBars, Donut, Sparkline, type Slice } from "@/components/charts";
 import { EmptyState, ErrorBox, Skeleton, SkeletonCards } from "@/components/Feedback";
 import { errorMessage } from "@/components/Toast";
@@ -16,12 +17,12 @@ import type { DocumentStatus } from "@/lib/api";
 
 const IN_FLIGHT = new Set(["uploaded", "processing"]);
 const DONUT_COLORS: Record<string, string> = {
-  processed: "var(--success-dot)",
-  needs_review: "var(--warning-dot)",
-  processing: "var(--info-dot)",
-  uploaded: "var(--neutral-dot)",
-  failed: "var(--danger-dot)",
-  partially_failed: "var(--orange-dot)",
+  processed: "var(--sage)",
+  needs_review: "var(--butter)",
+  processing: "var(--peri)",
+  uploaded: "var(--surface-3)",
+  failed: "var(--pink)",
+  partially_failed: "var(--peach)",
 };
 
 /** The numbers behind the assistant's greeting, at a glance. */
@@ -40,8 +41,8 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Overview"
         title="Dashboard"
-        description="What came in, what needs a person, and how well extraction is doing."
-        actions={<Link href="/documents" className="btn-secondary">Upload invoices</Link>}
+        description={liveSummary(stats.data) ?? "What came in, what needs a person, and how well extraction is doing."}
+        actions={<Link href="/documents" className="btn-primary">Upload invoices</Link>}
       />
       {stats.isPending ? (
         <div className="space-y-6">
@@ -68,7 +69,7 @@ function Overview({ s, evaluation, evaluationPending }: { s: Stats; evaluation: 
         <Kpi
           label="Processed"
           icon={CheckCircle2}
-          tone="success"
+          tone="sage"
           value={s.documents_by_status.processed ?? 0}
           trend={daily.map((d) => d.processed)}
           href="/documents?status=processed"
@@ -77,7 +78,7 @@ function Overview({ s, evaluation, evaluationPending }: { s: Stats; evaluation: 
         <Kpi
           label="Needs review"
           icon={TriangleAlert}
-          tone="warning"
+          tone="butter"
           value={s.invoices_need_review}
           trend={daily.map((d) => d.needs_review)}
           href="/review"
@@ -86,7 +87,7 @@ function Overview({ s, evaluation, evaluationPending }: { s: Stats; evaluation: 
         <Kpi
           label="Failed"
           icon={XCircle}
-          tone="danger"
+          tone="pink"
           value={s.documents_failed}
           trend={daily.map((d) => d.failed)}
           href="/documents?status=failed"
@@ -95,7 +96,7 @@ function Overview({ s, evaluation, evaluationPending }: { s: Stats; evaluation: 
         <Kpi
           label="Time per page"
           icon={Clock}
-          tone="info"
+          tone="peri"
           value={seconds}
           format={(n) => `${n.toFixed(1)} s`}
           trend={daily.map((d) => d.seconds_per_page ?? null)}
@@ -139,7 +140,7 @@ function Kpi({
 }: {
   label: string;
   icon: LucideIcon;
-  tone: keyof typeof TONE;
+  tone: Pastel;
   value: number | null | undefined;
   trend: (number | null)[];
   href?: string;
@@ -148,32 +149,32 @@ function Kpi({
   empty?: string;
 }) {
   const body = (
-    <>
+    <PastelCard tone={tone} className="h-full">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted">{label}</span>
-        <span className={`grid size-8 place-items-center rounded-xl ${TONE[tone].badge} border`} aria-hidden="true">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="grid size-8 place-items-center rounded-full bg-on-pastel/10" aria-hidden="true">
           <Icon className="size-4" strokeWidth={1.75} />
         </span>
       </div>
-      <div className="mt-3 flex items-end justify-between gap-3">
+      <div className="mt-5 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <div className="num text-3xl font-semibold tracking-tight text-ink">
+          <div className="num text-4xl font-semibold tracking-tight">
             {value === null || value === undefined ? "–" : <CountUp value={value} format={format} />}
           </div>
-          <div className="mt-0.5 truncate text-xs text-muted">{value === null || value === undefined ? empty : note}</div>
+          <div className="mt-0.5 truncate text-xs text-on-pastel-muted">{value === null || value === undefined ? empty : note}</div>
         </div>
         <div className="w-24 shrink-0">
-          <Sparkline data={trend} color={`var(--${tone}-dot)`} label={`${label} per day`} />
+          <Sparkline data={trend} label={`${label} per day`} />
         </div>
       </div>
-    </>
+    </PastelCard>
   );
   return href ? (
-    <Link href={href} className="card card-hover focus-ring block animate-fade-up">
+    <Link href={href} className="card-hover focus-ring block animate-fade-up rounded-card">
       {body}
     </Link>
   ) : (
-    <div className="card animate-fade-up">{body}</div>
+    <div className="animate-fade-up">{body}</div>
   );
 }
 
@@ -185,7 +186,7 @@ function EvaluationCard({ evaluation, pending, confidence }: { evaluation: Eval 
   return (
     <section className="card flex animate-fade-up flex-col" aria-labelledby="eval-heading">
       <div className="mb-4 flex items-center gap-2">
-        <span className="grid size-8 place-items-center rounded-xl border border-accent-line bg-accent-soft text-accent-ink" aria-hidden="true">
+        <span className="grid size-8 place-items-center rounded-full bg-peri text-on-pastel" aria-hidden="true">
           <FlaskConical className="size-4" strokeWidth={1.75} />
         </span>
         <h2 id="eval-heading" className="font-semibold text-ink">Latest evaluation</h2>
@@ -289,7 +290,7 @@ function IssuesCard({ s }: { s: Stats }) {
                 <span className="num font-medium text-ink">{issue.count}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
-                <div className="h-full rounded-full bg-accent/70 transition-[width] duration-500" style={{ width: `${(issue.count / max) * 100}%` }} />
+                <div className="h-full rounded-full bg-ink transition-[width] duration-500" style={{ width: `${(issue.count / max) * 100}%` }} />
               </div>
             </li>
           ))}

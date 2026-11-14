@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { AlertTriangle, Check, ChevronRight, FileText, Paperclip, Sparkles, Wrench } from "lucide-react";
+import { AlertTriangle, Check, ChevronRight, FileText, Paperclip, ReceiptText, Wrench } from "lucide-react";
 import { citationHref, type ActionView, type Citation, type ToolUse } from "@/lib/assistant";
 import { ActionCard } from "./ActionCard";
 import { Markdown } from "./Markdown";
@@ -22,7 +22,7 @@ export function ChatMessage({ message, onAction }: { message: UIMessage; onActio
   if (message.role === "user") {
     return (
       <div className="flex animate-fade-up justify-end">
-        <div className="max-w-[85%] rounded-3xl rounded-br-lg bg-accent px-4 py-2.5 text-[15px] leading-relaxed text-on-accent shadow-soft">
+        <div className="max-w-[85%] rounded-3xl rounded-br-lg bg-accent px-4 py-2.5 text-[15px] leading-relaxed text-on-accent">
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
           {message.attachments.length > 0 ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs opacity-85">
@@ -37,8 +37,8 @@ export function ChatMessage({ message, onAction }: { message: UIMessage; onActio
   const names = [...new Set(message.tools.map((t) => t.name))];
   return (
     <div className="flex animate-fade-up gap-3">
-      <span aria-hidden="true" className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft text-accent-ink">
-        <Sparkles className="size-3.5" strokeWidth={2} />
+      <span aria-hidden="true" className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-butter text-on-pastel">
+        <ReceiptText className="size-3.5" strokeWidth={2} />
       </span>
       <div className="min-w-0 max-w-[92%] flex-1 space-y-3 text-[15px] leading-relaxed text-ink">
         {names.length > 0 ? <ToolTrace tools={message.tools} names={names} streaming={message.streaming} /> : null}
@@ -46,7 +46,7 @@ export function ChatMessage({ message, onAction }: { message: UIMessage; onActio
           <div className={message.streaming ? "streaming" : undefined}>
             <Markdown text={message.content} />
             {message.streaming ? (
-              <span aria-hidden="true" className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-caret bg-accent align-baseline" />
+              <span aria-hidden="true" className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-caret bg-ink align-baseline" />
             ) : null}
           </div>
         ) : message.streaming ? (
@@ -75,9 +75,9 @@ export function ChatMessage({ message, onAction }: { message: UIMessage; onActio
               <li key={i}>
                 <Link
                   href={citationHref(c)}
-                  className="focus-ring chip hover:border-line-strong hover:bg-surface hover:text-ink"
+                  className="focus-ring chip border-info-line bg-info-soft text-ink hover:border-ink"
                 >
-                  <FileText className="size-3.5 text-faint" aria-hidden="true" />
+                  <FileText className="size-3.5" aria-hidden="true" />
                   {c.filename}
                   {c.invoice_number ? <span className="text-muted">· {c.invoice_number}</span> : null}
                   {c.page ? <span className="text-muted">· p. {c.page}</span> : null}

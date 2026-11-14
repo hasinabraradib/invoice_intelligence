@@ -42,17 +42,28 @@ export const assistant = {
   },
 };
 
-export function greeting(stats: Stats | undefined, hour: number): string {
-  const part = hour < 5 ? "Good evening" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  if (!stats) return `${part}.`;
-  if (stats.documents === 0) return `${part}. Upload an invoice to get started, or ask me anything.`;
-  const bits = [
-    `${stats.invoices_need_review} invoice${stats.invoices_need_review === 1 ? "" : "s"} need${stats.invoices_need_review === 1 ? "s" : ""} review`,
-  ];
+export function salutation(hour: number): string {
+  return hour < 5 ? "Good evening" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** One line under the greeting, from live counts, e.g. "9 invoices need your review and
+ * 2 documents are processing." Never guesses: no stats, no sentence. */
+export function liveSummary(stats: Stats | undefined): string | null {
+  if (!stats) return null;
+  if (stats.documents === 0) return "Nothing uploaded yet. Drop an invoice here to get started, or ask me anything.";
+  const review = stats.invoices_need_review;
   const jobs = stats.jobs_running + stats.jobs_queued;
-  if (jobs) bits.push(`${jobs} job${jobs === 1 ? "" : "s"} running`);
+  const bits = [
+    review
+      ? `${plural(review, "invoice", "invoices")} ${review === 1 ? "needs" : "need"} your review`
+      : "No invoices need your review",
+  ];
+  if (jobs) bits.push(`${plural(jobs, "document", "documents")} ${jobs === 1 ? "is" : "are"} processing`);
   if (stats.documents_failed) bits.push(`${stats.documents_failed} failed`);
-  return `${part}. ${bits.join(", ")}.`;
+  const last = bits.pop();
+  return `${bits.length ? `${bits.join(", ")} and ${last}` : last}.`;
 }
 
 /** 3-4 suggestions that fit the current state of the data. */

@@ -4,15 +4,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { assistant, greeting, suggestions, type ActionView, type Citation, type ToolUse } from "@/lib/assistant";
+import { assistant, liveSummary, salutation, suggestions, type ActionView, type Citation, type ToolUse } from "@/lib/assistant";
 import { readSse } from "@/lib/sse";
 import { uploadFile } from "@/lib/upload";
 import { ACCEPTED_EXTENSIONS, checkUploadFile } from "@/lib/validation";
 import { percent } from "@/lib/format";
 import { ChatMessage, type UIMessage } from "@/components/chat/ChatMessage";
 import { SkeletonRows } from "@/components/Feedback";
+import { PastelCard } from "@/components/controls/misc";
 import { errorMessage, useToast } from "@/components/Toast";
-import { ArrowUp, ArrowUpRight, ChevronDown, History, Paperclip, Plus, Sparkles, Square, Upload } from "lucide-react";
+import { ArrowUp, ArrowUpRight, ChevronDown, History, Paperclip, Plus, Square, Upload } from "lucide-react";
 
 type Attachment = {
   key: string; name: string; progress: number; documentId?: string; status?: string;
@@ -164,11 +165,11 @@ function Assistant() {
 
   const empty = messages.length === 0;
   const live = stats.data
-    ? [
-        stats.data.invoices_need_review ? { label: `${stats.data.invoices_need_review} to review`, href: "/review", tone: "text-warning" } : null,
-        stats.data.jobs_running + stats.data.jobs_queued ? { label: `${stats.data.jobs_running + stats.data.jobs_queued} processing`, href: "/documents?status=processing", tone: "text-info" } : null,
-        stats.data.documents_failed ? { label: `${stats.data.documents_failed} failed`, href: "/documents?status=failed", tone: "text-danger" } : null,
-      ].filter((x): x is { label: string; href: string; tone: string } => x !== null)
+    ? ([
+        { label: "To review", value: stats.data.invoices_need_review, note: "invoices", href: "/review", tone: "butter" },
+        { label: "Processing", value: stats.data.jobs_running + stats.data.jobs_queued, note: "documents", href: "/documents?status=processing", tone: "peri" },
+        { label: "Failed", value: stats.data.documents_failed, note: "documents", href: "/documents?status=failed", tone: "pink" },
+      ] as const)
     : [];
   return (
     <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
@@ -194,42 +195,48 @@ function Assistant() {
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); attach(e.dataTransfer.files); }}>
         {dragging ? (
-          <div className="pointer-events-none absolute inset-0 z-20 grid animate-fade-in place-items-center rounded-card border-2 border-dashed border-accent bg-accent-soft/90 backdrop-blur-sm">
-            <div className="text-center">
-              <Upload className="mx-auto mb-2 size-6 text-accent-ink" aria-hidden="true" />
-              <p className="font-medium text-ink">Drop invoices to upload</p>
-              <p className="text-sm text-muted">PDF, images, XLSX or CSV</p>
+          <div className="pointer-events-none absolute inset-0 z-20 grid animate-fade-in place-items-center rounded-card border-2 border-dashed border-ink bg-butter">
+            <div className="text-center text-on-pastel">
+              <Upload className="mx-auto mb-2 size-6" aria-hidden="true" />
+              <p className="font-medium">Drop invoices to upload</p>
+              <p className="text-sm text-on-pastel-muted">PDF, images, XLSX or CSV</p>
             </div>
           </div>
         ) : null}
         <div className="mx-auto w-full max-w-3xl flex-1 space-y-7 pb-6" aria-live="polite">
           {empty ? (
-            <div className="flex min-h-[50vh] flex-col items-center justify-center py-10 text-center">
-              <span aria-hidden="true" className="mb-5 grid size-12 animate-fade-up place-items-center rounded-2xl border border-accent-line bg-accent-soft text-accent-ink shadow-soft">
-                <Sparkles className="size-5" strokeWidth={1.75} />
-              </span>
-              <h1 className="max-w-xl animate-fade-up text-balance text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                {greeting(stats.data, new Date().getHours())}
+            <div className="py-6 sm:py-10">
+              <h1 className="animate-fade-up text-4xl font-semibold tracking-[-0.03em] text-ink sm:text-5xl">
+                {salutation(new Date().getHours())}
               </h1>
-              <p className="mt-3 max-w-md animate-fade-up text-sm text-muted">
+              <p className="mt-3 max-w-2xl animate-fade-up text-base text-ink-2" aria-live="polite">
+                {liveSummary(stats.data) ?? "\u00a0"}
+              </p>
+              <p className="mt-1 max-w-2xl animate-fade-up text-sm text-muted">
                 Ask about your invoices, upload new ones, or ask me to correct, approve or cross-check something. I always ask before changing anything.
               </p>
               {live.length > 0 ? (
-                <ul className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Right now">
+                <ul className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Right now">
                   {live.map((item) => (
                     <li key={item.label}>
-                      <Link href={item.href} className={`focus-ring chip hover:border-line-strong ${item.tone}`}>{item.label}</Link>
+                      <Link href={item.href} className="focus-ring card-hover block rounded-card">
+                        <PastelCard tone={item.tone} className="h-full">
+                          <p className="text-sm font-medium">{item.label}</p>
+                          <p className="num mt-4 text-4xl font-semibold tracking-tight">{item.value}</p>
+                          <p className="text-xs text-on-pastel-muted">{item.note}</p>
+                        </PastelCard>
+                      </Link>
                     </li>
                   ))}
                 </ul>
               ) : null}
-              <ul className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2" aria-label="Suggestions">
+              <p className="eyebrow mt-8 mb-2.5">Try asking</p>
+              <ul className="flex flex-wrap gap-2" aria-label="Suggestions">
                 {suggestions(stats.data).map((s) => (
                   <li key={s}>
-                    <button type="button" className="focus-ring card card-hover flex w-full items-center justify-between gap-3 p-3.5 text-left text-sm text-ink-2"
-                      onClick={() => void send(s)}>
+                    <button type="button" className="btn-secondary h-auto min-h-9 max-w-full py-1.5 text-left font-normal whitespace-normal" onClick={() => void send(s)}>
                       {s}
-                      <ArrowUpRight className="size-4 shrink-0 text-faint" aria-hidden="true" />
+                      <ArrowUpRight className="size-4 shrink-0 text-muted" aria-hidden="true" />
                     </button>
                   </li>
                 ))}
@@ -242,7 +249,7 @@ function Assistant() {
           <div ref={bottom} />
         </div>
 
-        <div className="sticky bottom-20 z-10 mx-auto w-full max-w-3xl bg-gradient-to-t from-bg via-bg to-transparent pt-4 md:bottom-4">
+        <div className="sticky bottom-20 z-10 mx-auto w-full max-w-3xl bg-bg pt-4 md:bottom-4">
           {attachments.length > 0 ? (
             <ul className="mb-2 flex flex-wrap gap-2" aria-label="Attached files">
               {attachments.map((a) => (
@@ -258,7 +265,7 @@ function Assistant() {
               ))}
             </ul>
           ) : null}
-          <form className="flex items-end gap-2 rounded-[1.75rem] border border-line bg-surface p-2 shadow-lift transition-shadow focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/20" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <form className="flex items-end gap-2 rounded-[1.75rem] border border-line-strong bg-surface p-2 transition-shadow focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25" onSubmit={(e) => { e.preventDefault(); submit(); }}>
             <input ref={fileInput} id="chat-file" type="file" multiple accept={ACCEPTED_EXTENSIONS.join(",")} className="sr-only"
               onChange={(e) => { attach(e.target.files); e.target.value = ""; }} />
             <button type="button" className="btn-ghost size-10 shrink-0 rounded-full p-0" onClick={() => fileInput.current?.click()} aria-label="Attach invoices">

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Markdown, safeHref } from "@/components/chat/Markdown";
 import { ActionCard } from "@/components/chat/ActionCard";
 import { ToastProvider } from "@/components/Toast";
-import { citationHref, greeting, suggestions, type Stats } from "@/lib/assistant";
+import { citationHref, liveSummary, salutation, suggestions, type Stats } from "@/lib/assistant";
 import { parseSseBlock, readSse } from "@/lib/sse";
 
 const base: Stats = {
@@ -59,9 +59,16 @@ describe("server-sent events", () => {
 
 describe("greeting and suggestions", () => {
   it("greets with live numbers", () => {
-    expect(greeting(base, 20)).toBe("Good evening. 9 invoices need review, 2 jobs running.");
-    expect(greeting({ ...base, invoices_need_review: 1, jobs_running: 0 }, 9)).toBe("Good morning. 1 invoice needs review.");
-    expect(greeting({ ...base, documents: 0 }, 14)).toMatch(/^Good afternoon\. Upload an invoice/);
+    expect(salutation(20)).toBe("Good evening");
+    expect(salutation(9)).toBe("Good morning");
+    expect(salutation(14)).toBe("Good afternoon");
+    expect(liveSummary(base)).toBe("9 invoices need your review and 2 documents are processing.");
+    expect(liveSummary({ ...base, invoices_need_review: 1, jobs_running: 0 })).toBe("1 invoice needs your review.");
+    expect(liveSummary({ ...base, invoices_need_review: 0, jobs_running: 1, documents_failed: 3 })).toBe(
+      "No invoices need your review, 1 document is processing and 3 failed.",
+    );
+    expect(liveSummary({ ...base, documents: 0 })).toMatch(/^Nothing uploaded yet/);
+    expect(liveSummary(undefined)).toBeNull();
   });
 
   it("suggests what fits the data, at most four", () => {
