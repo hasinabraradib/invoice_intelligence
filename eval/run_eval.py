@@ -209,6 +209,9 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
                 "input_tokens": job.get("llm_input_tokens", 0),
                 "output_tokens": job.get("llm_output_tokens", 0),
                 "cached_input_tokens": job.get("llm_cached_input_tokens", 0),
+                "vision_calls": job.get("llm_vision_calls", 0),
+                "vision_input_tokens": job.get("llm_vision_input_tokens", 0),
+                "vision_output_tokens": job.get("llm_vision_output_tokens", 0),
                 "segments": [[i["page_start"], i["page_end"]] for i in doc.get("invoices") or []],
                 "expected_segments": f.get("expected_segments"),
             }
@@ -329,6 +332,9 @@ def summary(scores: list, files: list[dict], prices: dict) -> dict[str, Any]:
         "input_tokens": tokens_in,
         "output_tokens": tokens_out,
         "cached_input_tokens": sum(r["cached_input_tokens"] for r in files),
+        "vision_calls": sum(r.get("vision_calls", 0) for r in files),
+        "vision_input_tokens": sum(r.get("vision_input_tokens", 0) for r in files),
+        "vision_output_tokens": sum(r.get("vision_output_tokens", 0) for r in files),
         "cost_usd": round(cost, 6) if cost is not None else None,
         "cost_usd_per_document": round(cost / len(files), 6)
         if cost is not None and files
@@ -544,6 +550,10 @@ def render(report: dict) -> str:
         f"${report['prices']['input']} / ${report['prices']['output']} per million input / "
         "output tokens. Cached input is priced at the full rate, so this is an upper bound.",
     ]
+    lines.append(
+        f"- Vision fallback: {a['vision_calls']} call(s), {a['vision_input_tokens']:,} input / "
+        f"{a['vision_output_tokens']:,} output tokens (included in the totals above)."
+    )
     ae = report.get("assistant_eval")
     if ae:
         lines += [
