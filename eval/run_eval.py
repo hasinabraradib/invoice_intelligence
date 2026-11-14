@@ -184,6 +184,7 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
         doc = docs.get(label["file"], {})
         invoice = scoring.pick_invoice(label, doc.get("invoices") or [])
         s = scoring.score_invoice(label, invoice)
+        s.needs_review = bool(invoice and invoice.get("needs_review"))  # type: ignore[attr-defined]
         invoice_scores.append((label, s))
 
     file_rows = []
@@ -263,6 +264,7 @@ def score(manifest: dict, labels: list[dict], docs: dict[str, dict], prices: dic
                 "dataset": label.get("dataset"),
                 "subset": label.get("subset", "clean"),
                 "hard_kind": label.get("hard_kind"),
+                "needs_review": getattr(s, "needs_review", None),
                 **scoring.as_dict(s),
             }
             for label, s in invoice_scores
@@ -296,6 +298,28 @@ def _kind_table(kinds: dict[str, list], prices: dict) -> dict[str, dict]:
 HARD_KEYS = ("field_accuracy", "false_fill_rate", "missing_rate", "wrong_rate", "line_item_f1")
 
 
+def review_recall(scores: list) -> dict[str, Any]:
+    """Of the invoices the system got wrong (any wrong/missing field or line item), how many
+    went to human review? And how many invoices it got fully right were sent anyway?"""
+    wrong = [
+        s
+        for s in scores
+        if any(f.outcome in ("wrong", "missing") for f in s.fields) or s.line_fn or s.line_fp
+    ]
+    # "Correct": read right and nothing planted (no expected flag, not a duplicate copy).
+    right = [
+        s for s in scores if s not in wrong and not s.flags_expected and not s.duplicate_expected
+    ]
+    flagged = sum(bool(getattr(s, "needs_review", False)) for s in wrong)
+    return {
+        "invoices_with_errors": len(wrong),
+        "errors_sent_to_review": flagged,
+        "review_recall": round(flagged / len(wrong), 4) if wrong else None,
+        "correct_sent_to_review": sum(bool(getattr(s, "needs_review", False)) for s in right),
+        "correct_invoices": len(right),
+    }
+
+
 def summary(scores: list, files: list[dict], prices: dict) -> dict[str, Any]:
     fields = scoring.field_metrics(scores)["overall"]
     lines = scoring.line_metrics(scores)
@@ -312,6 +336,7 @@ def summary(scores: list, files: list[dict], prices: dict) -> dict[str, Any]:
             / Decimal(1_000_000)
         )
     return {
+        **review_recall(scores),
         "field_accuracy": fields["accuracy"],
         "false_fill_rate": fields["false_fill_rate"],
         "missing_rate": fields["missing_rate"],
@@ -395,6 +420,14 @@ def _headline_rows(m: dict) -> list[tuple[str, str]]:
             f"{pct(o['flag_precision'])} / {pct(o['flag_recall'])}",
         ),
         ("Documents processed (not failed)", pct(o["document_success_rate"])),
+        (
+            "Invoices with errors sent to review",
+            f"{o['errors_sent_to_review']}/{o['invoices_with_errors']}",
+        ),
+        (
+            "Fully correct invoices sent to review (no planted defect)",
+            f"{o['correct_sent_to_review']}/{o['correct_invoices']}",
+        ),
         (
             "Time per document p50 / p95 (s)",
             f"{num(o['p50_seconds_per_document'], 1)} / {num(o['p95_seconds_per_document'], 1)}",
@@ -701,6 +734,7 @@ def main() -> int:
         "hard_false_fill_rate": hard["false_fill_rate"],
         "hard_missing_rate": hard["missing_rate"],
         "hard_line_item_f1": hard["line_item_f1"],
+        "hard_review_recall": hard["review_recall"],
         "segmentation_exact": (
             sum(s["exact"] for s in scored["segmentation"])
             / max(1, sum(s["expected"] for s in scored["segmentation"]))
