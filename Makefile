@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down demo test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down demo frontend-deps test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 # It also adds a random API key (API_KEYS) if .env has none. The key stays in .env and in
@@ -55,14 +55,21 @@ embed-backfill: env
 frontend: env  ## (Re)build and start only the web UI on http://localhost:3000
 	$(COMPOSE) up -d --build frontend
 
-frontend-dev:  ## Next.js dev server with hot reload (needs the API running)
-	cd frontend && npm install && npm run dev
+# Install the frontend's packages once (a fresh clone has no node_modules).
+frontend-deps:
+	@test -d frontend/node_modules || (cd frontend && npm ci)
 
-frontend-check:  ## Lint, typecheck and unit tests for the frontend
+# Hot-reload dev server. It proxies to the API on localhost:8000, so publish that port first:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+frontend-dev: frontend-deps  ## Next.js dev server with hot reload
+	cd frontend && API_INTERNAL_URL=http://localhost:8000 \
+		API_KEY="$$(grep '^API_KEYS=' ../.env | cut -d= -f2 | cut -d, -f1)" npm run dev
+
+frontend-check: frontend-deps  ## Lint, typecheck and unit tests for the frontend
 	cd frontend && npm run lint && npm run typecheck && npm test
 
 # Browser smoke test against the running stack; skips itself if the stack is down.
-e2e:
+e2e: frontend-deps
 	cd frontend && npx playwright install chromium && npm run e2e
 
 # Demo data: generate the synthetic dataset (fixed seed) and upload a varied set of it
@@ -79,7 +86,7 @@ prompts-doc: env
 # All three suites with coverage and JUnit output into docs/test-results/, then a summary
 # in docs/test-results.md. Needs the stack running (`make up`) for the e2e test.
 RESULTS := $(CURDIR)/docs/test-results
-test-report: env
+test-report: env frontend-deps
 	mkdir -p $(RESULTS)
 	$(COMPOSE) run --rm --build --no-deps -v "$(RESULTS):/results" api \
 		pytest -p no:cacheprovider -m "" --cov=app --cov-report=xml:/results/coverage.xml \

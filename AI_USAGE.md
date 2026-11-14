@@ -287,3 +287,30 @@ Why the extraction prompt looks the way it does:
   returned I/O errors. With the user's agreement, only caches were cleared (npm cache and my
   own scratch screenshots). Docker recovered after a restart, and no project data was lost.
 
+## Submission readiness
+
+- **Security.** The API key is checked in constant time against every configured key and
+  fails closed when none is set. The browser never sees it: a Next.js route handler forwards
+  allow-listed paths and adds it server-side. Checked by downloading every JS chunk and the
+  HTML of the running app and searching them for the key.
+- **A trade-off made explicit.** A nonce-based CSP needs per-request rendering, which this
+  Next.js setup's prerendered shell (`cacheComponents`) cannot give, so it was turned off.
+  Scripts get no `unsafe-inline`; styles keep it because charts set inline style
+  attributes. Both choices are written down in docs/security.md.
+- **Audits.** pip-audit flagged only the base image's `pip` and `setuptools`, which were
+  upgraded. npm audit is clean for production dependencies; 8 moderate build-time issues
+  in the ESLint toolchain are accepted and recorded. gitleaks over the full history found
+  one false positive, the test fixtures' fake key, which is reviewed and recorded.
+- **Bugs the checks caught:**
+  - **Coverage under-counted async database code.** SQLAlchemy's async engine runs inside
+    greenlets; after adding greenlet tracing, `dashboard.py` went from 28% to 93% and the
+    total from 87.6% to 91.5%.
+  - **The fresh-clone check found a real gap.** `make frontend-check` failed on a new clone
+    because nothing installed the frontend's packages. A `frontend-deps` step now runs
+    `npm ci` once.
+  - **An environment problem.** The disk filled up and corrupted Docker's storage. Recovered
+    with the user's agreement by clearing caches only (npm cache, build cache), with no
+    data loss.
+- **Not reproduced exactly.** The fresh-clone timing reused already-present base images and
+  Python dependency layers, and says so in the README.
+

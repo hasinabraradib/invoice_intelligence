@@ -62,7 +62,8 @@ provider (right number, right citation).
 
 ```bash
 make frontend        # rebuild and restart only the UI container
-make frontend-dev    # hot-reload dev server on :3000 (API must be running)
+make frontend-dev    # hot-reload dev server on :3000; first publish the API with
+                     # docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 make frontend-check  # lint + typecheck + unit tests
 make e2e             # browser smoke test against the running stack (skips if it is down,
                      # or if no LLM is configured)

@@ -63,6 +63,15 @@ make up
 open http://localhost:3000        # or just visit it in your browser
 ```
 
+**How long it takes.** A fresh clone, following these steps literally (2026-11-15):
+- `make up`: 137 s to a healthy stack; first-time `npm ci` inside the frontend build took 103 s of that;
+- `make demo`: 153 s for 12 documents with OpenAI, including the one-time embedding-model download;
+- `make test`: 61 s.
+
+The base images and Python dependency layers were already on that machine, so a machine
+that has never built them also downloads CPU PyTorch and the other Python packages; expect
+a few more minutes.
+
 `make up` waits until every service is healthy. Check it with
 `curl -s http://localhost:3000/api/health`. Stop with `make down`; your data stays in Docker
 volumes. Only port 3000 is published, on localhost. Provider details and every setting are
