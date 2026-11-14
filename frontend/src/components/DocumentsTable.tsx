@@ -116,7 +116,7 @@ export function DocumentsTable() {
       ) : (
         <>
           {/* Phones: a list of cards. */}
-          <ul className="divide-y divide-line border-t border-line md:hidden">
+          <ul className="divide-y divide-line border-t border-line lg:hidden">
             {items.map((doc) => (
               <li key={doc.id} className="flex gap-3 px-5 py-4">
                 <DocThumb id={doc.id} mime={doc.mime_type} filename={doc.filename} pageCount={doc.page_count} status={doc.status} />
@@ -138,7 +138,7 @@ export function DocumentsTable() {
             ))}
           </ul>
           {/* Tablets and up: a table. */}
-          <div className="relative hidden overflow-x-auto md:block">
+          <div className="relative hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[52rem] text-left text-sm">
               <thead className="border-y border-line bg-surface-2/60 text-xs text-muted">
                 <tr>

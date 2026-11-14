@@ -174,7 +174,7 @@ function Summary({ check }: { check: CrossCheckDetail }) {
     ...(ledger ? [["Ledger duplicates", s.duplicates_in_b ?? 0, "border-orange-line bg-orange-soft text-orange", Copy] as [string, number, string, LucideIcon]] : []),
   ];
   return (
-    <dl className={`grid grid-cols-2 gap-3 ${ledger ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+    <dl className={`grid grid-cols-2 gap-3 ${ledger ? "sm:grid-cols-3 xl:grid-cols-5" : "sm:grid-cols-4"}`}>
       {tiles.map(([label, value, tone, Icon]) => (
         <div key={label} className={`rounded-2xl border p-4 ${value ? tone : "border-line bg-surface-2 text-muted"}`}>
           <dt className="flex items-center gap-1.5 text-xs font-medium">
@@ -194,7 +194,7 @@ function Findings({ check, showMatched }: { check: CrossCheckDetail; showMatched
   return (
     <>
     {/* Phones: one card per finding. */}
-    <ul className="space-y-3 md:hidden">
+    <ul className="space-y-3 xl:hidden">
       {rows.map((f, i) => {
         const [a, b] = evidenceLinks(check, f);
         return (
@@ -214,7 +214,7 @@ function Findings({ check, showMatched }: { check: CrossCheckDetail; showMatched
         );
       })}
     </ul>
-    <div className="relative hidden overflow-x-auto md:block">
+    <div className="relative hidden overflow-x-auto xl:block">
       <table className="w-full min-w-[52rem] text-left text-sm">
         <thead className="border-b border-line text-xs font-medium tracking-wide text-muted uppercase">
           <tr>

@@ -43,11 +43,12 @@ function Logo() {
 function Sidebar({ pathname }: { pathname: string }) {
   return (
     <>
-      {/* Desktop and tablet: a slim column. */}
-      <header className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-surface/60 md:px-3 md:py-5 md:backdrop-blur">
-        <Link href="/" className="focus-ring mb-8 flex items-center gap-2.5 rounded-xl px-2 py-1">
+      {/* Tablet: an icon rail (labels stay for screen readers, and show as tooltips).
+          Desktop: icons with labels. */}
+      <header className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-[4.5rem] md:shrink-0 lg:w-60 md:flex-col md:border-r md:border-line md:bg-surface/60 md:px-3 md:py-5 md:backdrop-blur">
+        <Link href="/" className="focus-ring mb-8 flex items-center justify-center gap-2.5 rounded-xl px-2 py-1 lg:justify-start">
           <Logo />
-          <span className="text-[15px] font-semibold tracking-tight text-ink">Invoice Intelligence</span>
+          <span className="sr-only text-[15px] font-semibold tracking-tight text-ink lg:not-sr-only">Invoice Intelligence</span>
         </Link>
         <nav aria-label="Main">
           <ul className="flex flex-col gap-0.5">
@@ -58,7 +59,8 @@ function Sidebar({ pathname }: { pathname: string }) {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={`focus-ring group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${
+                    title={label}
+                    className={`focus-ring group flex items-center justify-center gap-3 rounded-xl px-3 py-2.5 text-sm lg:justify-start lg:py-2 transition-colors ${
                       active ? "bg-surface-2 font-medium text-ink shadow-soft" : "text-muted hover:bg-surface-2 hover:text-ink"
                     }`}
                   >
@@ -67,14 +69,14 @@ function Sidebar({ pathname }: { pathname: string }) {
                       className={`size-[18px] ${active ? "text-accent" : "text-faint group-hover:text-ink-2"}`}
                       strokeWidth={1.75}
                     />
-                    {label}
+                    <span className="sr-only lg:not-sr-only">{label}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </nav>
-        <p className="mt-auto px-3 text-xs text-faint">Every value has evidence.</p>
+        <p className="mt-auto hidden px-3 text-xs text-faint lg:block">Every value has evidence.</p>
       </header>
 
       {/* Phones: a top bar with the name, and a fixed bottom tab bar. */}

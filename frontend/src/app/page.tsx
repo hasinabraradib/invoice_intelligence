@@ -258,7 +258,7 @@ function Assistant() {
               ))}
             </ul>
           ) : null}
-          <form className="flex items-end gap-2 rounded-[1.75rem] border border-line bg-surface p-2 shadow-lift transition-colors focus-within:border-accent-line" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <form className="flex items-end gap-2 rounded-[1.75rem] border border-line bg-surface p-2 shadow-lift transition-shadow focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/20" onSubmit={(e) => { e.preventDefault(); submit(); }}>
             <input ref={fileInput} id="chat-file" type="file" multiple accept={ACCEPTED_EXTENSIONS.join(",")} className="sr-only"
               onChange={(e) => { attach(e.target.files); e.target.value = ""; }} />
             <button type="button" className="btn-ghost size-10 shrink-0 rounded-full p-0" onClick={() => fileInput.current?.click()} aria-label="Attach invoices">
