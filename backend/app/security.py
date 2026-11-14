@@ -1,6 +1,7 @@
 """API key auth, rate limits and security headers.
 
-- Every route except /health needs an `X-API-Key` header matching one of the keys in the
+- Every data route (all except /health and the schema at /docs and /openapi.json, which
+  hold no data) needs an `X-API-Key` header matching one of the keys in the
   API_KEYS env var (comma-separated). Keys are compared in constant time, and every
   configured key is checked, so timing reveals neither which key nor how much matched.
   With no keys configured, every protected request is refused (fail closed).
@@ -175,7 +176,8 @@ API_HEADERS = {
     b"content-security-policy": b"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
 }
 # Swagger UI and ReDoc are pages with scripts from a CDN: give them a policy that allows
-# exactly that (they are still behind the API key).
+# exactly that. They show only the schema, never data, and the API port is not published
+# unless docker-compose.dev.yml is used.
 DOCS_CSP = (
     b"default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
     b"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "

@@ -385,7 +385,8 @@ The API is not published on the host. Call it through the web server's proxy at
 `http://localhost:3000/api` (it adds the key), or publish it for development with
 `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d` and send the key
 yourself: `curl -H "X-API-Key: $API_KEY" http://localhost:3000/api/documents`. Interactive docs
-are then at http://localhost:3000/api/docs. Every route except `/health` needs the key; uploads,
+are then at http://localhost:8000/docs. Every data route needs the key (only `/health` and the
+schema at `/docs` and `/openapi.json` are open; they contain no data); uploads,
 assistant messages and searches are rate-limited (`429` with `Retry-After`). Every error
 has the same shape:
 `{"error": {"code": "not_found", "message": "document not found"}}`. Lists use
