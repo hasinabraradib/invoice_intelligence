@@ -1,6 +1,48 @@
 # AI usage log
 
-How AI tools were used to build this project. Each row is one step.
+How AI tools were used to build this project, and how their output was checked. The exact
+prompts are in [docs/prompts.md](docs/prompts.md).
+
+## Tools and what they were used for
+
+| Tool | Used for | Not used for |
+|---|---|---|
+| **Claude Code** (Anthropic's coding agent, model Claude Opus 5.5) | Writing and editing code, tests, migrations, Docker and docs in this repository, step by step from my prompts; running the tests, linters, builds and the stack; looking at the UI in a headless browser | Deciding the requirements: the steps, constraints and acceptance rules are mine (see the prompts) |
+| **OpenAI gpt-6-luna** (at run time, `LLM_PROVIDER=openai`) | What the product does with an LLM: extracting quoted values, classifying unclear batch pages, the vision second opinion, and the assistant's tool calls | Arithmetic, parsing or validation (plain, tested code does those), or "fixing" values |
+| **Gemini / Groq** (optional providers) | The same runtime roles, behind the same interface | — |
+
+No AI tool had access to real personal or business documents: development, the evaluation
+and every screenshot use synthetic or sample files only.
+
+## How the output was reviewed and tested
+
+- **Tests in the same commit.** Every change came with unit or integration tests. The full
+  backend suite (Postgres and Redis in Docker), the frontend suite (Vitest), lint, typecheck
+  and the Playwright end-to-end smoke test ran before each commit. Current results:
+  [docs/test-results.md](docs/test-results.md).
+- **Project rules as acceptance criteria.** [CLAUDE.md](CLAUDE.md) fixes the rules every
+  change must keep: Decimal money, the LLM only extracts and quotes, nullable fields with a
+  status, idempotent jobs, no document text in logs, magic-byte file checks, small commits.
+  Changes that broke a rule were redone, not merged.
+- **Measured, not assumed.** Extraction quality is measured on a labelled synthetic dataset
+  (`make eval`, [docs/evaluation.md](docs/evaluation.md)). Tuning used only the dev split
+  and a separate hard dev set; the hard test files were never opened for tuning, and test
+  results are reported as they came out, including when a change did not help.
+- **Real provider checks** used synthetic samples only. The real replies were sanitised
+  into fixtures, so the tests do not need a key.
+- **UI checked by looking.** Pages were screenshotted at 375, 768 and 1440 px in both
+  themes, contrast was computed, and a scripted keyboard pass checked focus visibility.
+- **Security checks.** pip-audit, npm audit and a gitleaks scan of the full history, with
+  raw reports in [docs/security/](docs/security/), and a threat model in
+  [docs/security.md](docs/security.md).
+- **Bugs the checks caught** are recorded in the sections below (for example a metric that
+  counted the planted duplicate as correct, a hint component that remounted its button,
+  and coverage that missed async database code).
+
+## Step log
+
+Each row is one step. "What I changed by hand" is for the author to fill in after reviewing
+the step.
 
 | Date | Step | Tool | Prompt summary | What I changed by hand |
 |------|------|------|----------------|------------------------|
@@ -22,6 +64,9 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-14 | 6b: Hardening the worker against hangs | Claude Code (Claude Opus 5.5) | After the embedding deadlock: run parsing, OCR and embedding in killable process pools with a hard timeout per call; embedding problems never block or fail a document; job heartbeats, a watchdog that retries or fails stuck jobs, and a worker that recycles itself; Docker healthchecks and restart policies; regression tests (512-token page within 5 s, a step that sleeps forever is killed and the next job runs, the watchdog picks up a stuck job); pin torch/transformers/sentence-transformers and document eager attention. | _To fill in after review_ |
 | 2026-11-14 | 6c: Photos and noisy scans | Claude Code (Claude Opus 5.5) | Generate a separate hard dev set (different seed) and work only on it; photo preprocessing (page edges and perspective warp, shadow/lighting removal, CLAHE) applied only to images that look like photos, each step kept only if measured to help; vision fallback below OCR_MIN_CONFIDENCE with fields marked "vision", lower confidence and always reviewed; tests; re-run make eval and report hard-test before/after rows. | _To fill in after review_ |
 | 2026-11-14 | 6d: Catching confident OCR misreads (time-boxed) | Claude Code (Claude Opus 5.5) | Trigger a vision reading of image-based pages on confusable letters, failing checks or uncertain required fields (not only low OCR confidence); use it as a second opinion that never replaces a value (disagreement: uncertain, both readings, OCR_VISION_DISAGREE, review); measure on the hard dev set only; keep only if review-flag recall rises without new false flags; one make eval run. | _To fill in after review_ |
+| 2026-11-14 | Frontend design pass | Claude Code (Claude Opus 5.5) | Design system (tokens, dark mode, Geist, motion with reduced-motion), sidebar and phone tab bar, assistant home, a dashboard backed by an extended `GET /stats` (with tests), restyled pages, skeletons and toasts; checks at 375/768/1440 px in both themes; screenshots. | _To fill in after review_ |
+| 2026-11-14 | Visual redesign (pastel) | Claude Code (Claude Opus 5.5) | Style inspired by a reference screenshot (not copied): cream page, black sidebar, pastel summary blocks, pill buttons; Radix Select, searchable document picker, date range with presets and calendar, filter toolbar with chips, reasons on disabled buttons; WCAG AA contrast measured; before/after screenshots. | _To fill in after review_ |
+| 2026-11-15 | Submission readiness | Claude Code (Claude Opus 5.5) | API keys behind a server-side Next.js proxy, Redis rate limits, security headers and strict CORS, hardened containers; dependency audits and a full-history secret scan; threat model; architecture diagrams; test report with coverage; this disclosure and docs/prompts.md; README rewrite; fresh-clone check; clean-up and v1.0.0 tag. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 

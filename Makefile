@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test test-report lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 # It also adds a random API key (API_KEYS) if .env has none. The key stays in .env and in
@@ -64,6 +64,11 @@ frontend-check:  ## Lint, typecheck and unit tests for the frontend
 # Browser smoke test against the running stack; skips itself if the stack is down.
 e2e:
 	cd frontend && npx playwright install chromium && npm run e2e
+
+# Rewrite the "Runtime prompts" section of docs/prompts.md from the code.
+prompts-doc: env
+	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/docs:/docs" api \
+		python scripts/export_prompts.py /docs/prompts.md
 
 # All three suites with coverage and JUnit output into docs/test-results/, then a summary
 # in docs/test-results.md. Needs the stack running (`make up`) for the e2e test.
