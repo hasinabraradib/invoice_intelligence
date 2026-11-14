@@ -260,12 +260,19 @@ removes shadows and light fall-off. Scans skip this, so their output is unchange
 Measured on the hard dev set, this took phone photos from 11% and 0% to 89% and 100% field
 accuracy. A perspective warp (page edges plus a corner-based aspect-ratio estimate) and
 CLAHE contrast are built in but off by default (`OCR_PHOTO_STEPS`): CLAHE made results
-worse, and the synthetic photos give the warp nothing to correct. If a page's OCR
-confidence is still below `OCR_MIN_CONFIDENCE`, the **vision fallback** sends the page
-image to the LLM (`VISION_FALLBACK_ENABLED`; OpenAI reads images) for the fields and a
-transcription. Those values are marked `source: "vision"`, capped at 0.5 confidence and
-the invoice always goes to review, because they can't be checked against OCR text. Vision
-calls and tokens are counted separately.
+worse, and the synthetic photos give the warp nothing to correct. **Vision as a second opinion** (`VISION_FALLBACK_ENABLED`; OpenAI reads images). A
+scanned or photographed page is read again from its image when OCR confidence is below
+`OCR_MIN_CONFIDENCE`, an ID or amount contains a digit-like letter next to a digit (O/0,
+l/1, I/1, t/1, S/5, B/8, Z/2), a validation check fails, or a required field is uncertain.
+The two readings are compared field by field:
+- **They agree:** the OCR value is kept and its confidence rises slightly.
+- **They disagree:** the OCR value is still kept, but marked uncertain with both readings
+  in its reasons, an `OCR_VISION_DISAGREE` issue is raised, and the invoice goes to review.
+- **The OCR text gives nothing usable:** only then is the image reading used. It is marked
+  `source: "vision"`, capped at 0.5 confidence and always reviewed.
+
+Text-layer PDFs and spreadsheets are never re-read. Vision calls and tokens are counted
+separately.
 
 **Embedding model: eager attention, pinned versions.** The model is loaded with
 `attn_implementation="eager"`. With torch 2.15 on CPU (seen on aarch64), the default fused
@@ -462,8 +469,11 @@ failed on natural questions, and embedding a long page hung the worker.
 The photo work (see "Photos and unreadable pages" below) was developed only on the hard
 **dev** set; the hard test files stayed held out, so the before/after is a fair measurement.
 Heavy noise is still the weak spot (56%): the OCR reads it with high confidence but the
-wrong characters, so the vision fallback, which only triggers on low confidence, never
-fired in the eval.
+wrong characters. To catch such misreads, scans and photos now get a **second reading**
+from the page image when something looks off (see below). It never replaces a value: a
+disagreement sends the invoice to review. On the hard test subset, 6 of 7 invoices with an
+error now reach review, no fully correct clean invoice does, and cost goes from about $0.0010
+to $0.0013 per document.
 
 The clean numbers are an **upper bound**. The hard subset shows the drop on bad images:
 phone photos and heavy noise cause misreads, though every one was flagged for review.

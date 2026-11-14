@@ -21,6 +21,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-14 | 6a follow-ups: rule fix, assistant miss, hard subset | Claude Code (Claude Opus 5.5) | Fix the no-subtotal line-sum rule with unit tests and dev examples, reporting pre-fix test results as the headline; find and fix the root cause of the assistant's "no Umbrella Trading invoice" miss with a regression test; add a hard test subset (noise, blur, phone photos, 8-12° rotation, faint scans, crowded and two-column layouts) reported as its own row; re-run make eval. | _To fill in after review_ |
 | 2026-11-14 | 6b: Hardening the worker against hangs | Claude Code (Claude Opus 5.5) | After the embedding deadlock: run parsing, OCR and embedding in killable process pools with a hard timeout per call; embedding problems never block or fail a document; job heartbeats, a watchdog that retries or fails stuck jobs, and a worker that recycles itself; Docker healthchecks and restart policies; regression tests (512-token page within 5 s, a step that sleeps forever is killed and the next job runs, the watchdog picks up a stuck job); pin torch/transformers/sentence-transformers and document eager attention. | _To fill in after review_ |
 | 2026-11-14 | 6c: Photos and noisy scans | Claude Code (Claude Opus 5.5) | Generate a separate hard dev set (different seed) and work only on it; photo preprocessing (page edges and perspective warp, shadow/lighting removal, CLAHE) applied only to images that look like photos, each step kept only if measured to help; vision fallback below OCR_MIN_CONFIDENCE with fields marked "vision", lower confidence and always reviewed; tests; re-run make eval and report hard-test before/after rows. | _To fill in after review_ |
+| 2026-11-14 | 6d: Catching confident OCR misreads (time-boxed) | Claude Code (Claude Opus 5.5) | Trigger a vision reading of image-based pages on confusable letters, failing checks or uncertain required fields (not only low OCR confidence); use it as a second opinion that never replaces a value (disagreement: uncertain, both readings, OCR_VISION_DISAGREE, review); measure on the hard dev set only; keep only if review-flag recall rises without new false flags; one make eval run. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -181,3 +182,21 @@ Why the extraction prompt looks the way it does:
 - **A small tooling bug.** The eval's "store the latest run" step picked the newest JSON
   in the results folder, which was now a benchmark file. It now only picks timestamped run
   files, with a test.
+
+## Catching confident OCR misreads (step 6d, time-boxed)
+
+- **Second opinion, not replacement.** The OCR value stays, because it is grounded in OCR
+  text. The vision reading can only confirm it (a small confidence bonus) or contradict it
+  (uncertain, both readings recorded, review). Nothing is swapped in silently.
+- **Kept on a dev measurement, then checked on test once.** On dev, review recall for
+  invoices with errors went from 62.5% to 75%, with no new flags on correct invoices. On
+  the held-out hard test subset it is 6 of 7, the same count as before by the earlier
+  definition. The previously missed invoice is now caught, but another (only a missing
+  optional currency) is not. That is reported as "no clear gain on test", not rounded up.
+- **A metric bug in my own report.** The new "correct invoices sent to review" count first
+  included the planted duplicate copy, which is reviewed by design. It was fixed in the
+  runner and the generated table was corrected.
+- **Known gaps:** a digit-like letter beside punctuation ("HO-2026") isn't a trigger, and
+  misreads that keep every check consistent still pass unless something else triggers a
+  second reading.
+
