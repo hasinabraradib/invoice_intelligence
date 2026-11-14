@@ -28,7 +28,13 @@ dependencies = [
     "arq>=0.26",                 # async job queue on Redis (fits our async SQLAlchemy)
     # Local sentence embeddings for semantic search. The Dockerfile installs the CPU-only
     # torch wheel first, so the GPU build (several GB) is never pulled in.
-    "sentence-transformers>=3.0",
+    # PINNED EXACTLY: torch's fused SDPA attention never returned on CPU for inputs over
+    # ~128 tokens (torch 2.15, aarch64), so the model is loaded with eager attention
+    # (app/search/embedder.py). Upgrade these together, then run `pytest -m slow`
+    # (tests/test_embedder.py times a 512-token page) before relying on a new version.
+    "torch==2.15.0",
+    "transformers==5.22.2",
+    "sentence-transformers==6.3.0",
 ]
 
 [project.optional-dependencies]

@@ -30,7 +30,8 @@ ENV HF_HOME=/models/huggingface \
 ARG INSTALL_DEV=false
 COPY pyproject.toml ./
 # CPU-only torch first (for sentence-transformers): ~200 MB instead of several GB of CUDA.
-RUN uv pip install --system --no-cache --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+# Pinned to the version pyproject.toml pins (see the note there about eager attention).
+RUN uv pip install --system --no-cache --index-url https://download.pytorch.org/whl/cpu "torch==2.15.0"
 RUN if [ "$INSTALL_DEV" = "true" ]; then EXTRA="--extra dev"; else EXTRA=""; fi \
     && uv pip install --system --no-cache -r pyproject.toml $EXTRA
 
