@@ -37,6 +37,7 @@ from app.assistant import actions as action_service
 from app.assistant.agent import Event, run_turn
 from app.assistant.tools import stats
 from app.config import Settings, get_settings
+from app.dashboard import dashboard_stats
 from app.db import get_session
 from app.models import AssistantAction, ChatMessage, Conversation
 
@@ -62,7 +63,9 @@ def _action_view(action: AssistantAction) -> ActionView:
 
 @router.get("/stats", response_model=Stats, summary="Counts for the greeting and dashboard")
 async def get_stats(session: Session) -> Stats:
-    return Stats(**await stats(session))
+    # The assistant's get_stats tool uses only the small counts; the dashboard extras are
+    # added here so the LLM is not sent tables it does not need.
+    return Stats(**await stats(session), **await dashboard_stats(session))
 
 
 @router.post("/assistant/conversations", response_model=ConversationView, status_code=201)

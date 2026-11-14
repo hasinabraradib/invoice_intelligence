@@ -492,6 +492,47 @@ class Stats(BaseModel):
     documents_failed: int
     spreadsheets: int
     cross_checks: int
+    # Dashboard extras (app.dashboard). None = no data yet, never a made-up number.
+    daily: list["DailyStats"] = Field(default_factory=list)  # last 14 days, oldest first
+    avg_seconds_per_page: float | None = None  # succeeded jobs in those 14 days
+    avg_extraction_confidence: float | None = None  # 0-1, over extracted invoices
+    top_issues: list["IssueCount"] = Field(default_factory=list)
+    review_queue: list["QueueItem"] = Field(default_factory=list)  # 5 oldest needing review
+    recent_uploads: list["RecentUpload"] = Field(default_factory=list)
+
+
+class DailyStats(BaseModel):
+    date: date
+    uploaded: int
+    processed: int
+    needs_review: int
+    failed: int  # failed or partially failed
+    seconds_per_page: float | None  # average over jobs that finished that day
+
+
+class IssueCount(BaseModel):
+    code: str
+    count: int
+
+
+class QueueItem(BaseModel):
+    invoice_id: uuid.UUID
+    document_id: uuid.UUID
+    filename: str
+    segment_index: int
+    invoice_number: str | None
+    supplier_name: str | None
+    main_issue: str | None  # the most severe issue's code
+    main_issue_message: str | None
+
+
+class RecentUpload(BaseModel):
+    id: uuid.UUID
+    filename: str
+    status: DocumentStatus
+    mime_type: str
+    page_count: int
+    created_at: datetime
 
 
 # ---------------------------------------------------------------- evaluation
