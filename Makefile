@@ -92,7 +92,7 @@ eval: eval-dataset
 		python scripts/store_eval_run.py /results
 
 # Compare OCR preprocessing choices on the HARD DEV set only (real LLM; a few cents).
-# Usage: make hard-dev-bench [CONFIGS=base,flatten,...]
+# Usage: make hard-dev-bench [CONFIGS=base,flatten,...] [ARGS=--second-opinion]
 hard-dev-bench: eval-dataset
 	$(COMPOSE) run --rm --build --no-deps -v "$(CURDIR)/eval:/eval" api \
-		python /eval/hard_dev_bench.py $(if $(CONFIGS),--configs $(CONFIGS)) --out /eval/results/hard-dev-bench.json
+		python /eval/hard_dev_bench.py $(if $(CONFIGS),--configs $(CONFIGS)) $(ARGS) --out /eval/results/hard-dev-bench.json

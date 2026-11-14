@@ -77,6 +77,10 @@ class ExtractionResult(BaseModel):
     retryable: bool = False  # True if the failure was temporary (rate limit, outage)
     provider: str
     source: Literal["text", "vision"] = "text"  # "vision": the image fallback was used
+    # Vision as a second opinion on OCR'd pages: why it was asked, and the
+    # OCR_VISION_DISAGREE issues it raised (app.extraction.second_opinion).
+    vision_triggers: list[str] = Field(default_factory=list)
+    second_opinion: list[Any] = Field(default_factory=list)
     fields: dict[str, FieldResult] = Field(default_factory=dict)
     line_items: list[LineItemResult] = Field(default_factory=list)
     supplier_key: str | None = None  # for duplicate detection later

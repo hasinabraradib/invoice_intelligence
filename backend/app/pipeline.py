@@ -35,6 +35,7 @@ from app.config import Settings, get_settings
 from app.extraction.llm import LLMClient
 from app.extraction.prompt import SourcePage, source_pages
 from app.extraction.schema import ALL_FIELDS
+from app.extraction.second_opinion import compare_readings, vision_triggers
 from app.extraction.service import ExtractionResult, extract_from_pages
 from app.extraction.vision import extract_from_images
 from app.invoices import (
@@ -399,23 +400,35 @@ async def _extract_segments(
         nonlocal done
         own_pages = [p for p in pages if segment.page_start <= p.number <= segment.page_end]
         transcripts: dict[int, str] = {}
-        result: ExtractionResult | None = None
-        vision_note = None
-        low = wants_vision(own_pages, llm, settings)
-        if low:
-            result, transcripts, vision_note = await _vision_extract(
-                own_pages, llm, settings, path, pools, limiter
-            )
+        low: list[int] = []
         try:
-            if result is None:
-                result = await anyio.to_thread.run_sync(
-                    functools.partial(
-                        extract_from_pages, own_pages, llm, chunk_tokens=settings.llm_chunk_tokens
-                    ),
-                    limiter=limiter,
+            result = await anyio.to_thread.run_sync(
+                functools.partial(
+                    extract_from_pages, own_pages, llm, chunk_tokens=settings.llm_chunk_tokens
+                ),
+                limiter=limiter,
+            )
+            # OCR'd pages get a second reading from the page images when something looks
+            # off. It is compared with the OCR reading, never silently swapped in; only
+            # when the OCR text gave nothing usable is the image reading used instead.
+            triggers = (
+                vision_triggers(own_pages, result, settings)
+                if vision_allowed(own_pages, llm, settings)
+                else []
+            )
+            if triggers:
+                vision, transcripts, note = await _vision_extract(
+                    own_pages, llm, settings, path, pools, limiter
                 )
-                if vision_note:
-                    result.warnings.append(vision_note)
+                if vision is None:
+                    result.warnings.append(note)
+                elif result.ok:
+                    result.vision_triggers = triggers
+                    result.second_opinion = compare_readings(result, vision)
+                else:
+                    vision.vision_triggers = triggers
+                    result = vision
+                    low = _low_pages(own_pages, settings)
         except Exception as exc:  # a bug inside extraction: this segment fails, others go on
             logger.exception("extraction crashed for segment %d", segment.index)
             failures.append(
@@ -455,23 +468,24 @@ async def _extract_segments(
     return failures
 
 
-def wants_vision(pages: list[SourcePage], llm: LLMClient, settings: Settings) -> list[int]:
-    """The page numbers OCR could not read well enough (confidence below
-    OCR_MIN_CONFIDENCE after preprocessing), if this invoice should be read from its page
-    images instead; [] otherwise (fallback off, provider cannot read images, nothing below
-    the threshold, or too many pages)."""
-    if not settings.vision_fallback_enabled or not getattr(llm, "supports_images", False):
-        return []
-    low = sorted(
+def vision_allowed(pages: list[SourcePage], llm: LLMClient, settings: Settings) -> bool:
+    """May this invoice's pages be read from their images (fallback on, the provider reads
+    images, not too many pages)? What triggers a reading: app.extraction.second_opinion."""
+    return (
+        settings.vision_fallback_enabled
+        and getattr(llm, "supports_images", False)
+        and len({p.number for p in pages}) <= settings.vision_max_pages
+    )
+
+
+def _low_pages(pages: list[SourcePage], settings: Settings) -> list[int]:
+    return sorted(
         {
             p.number
             for p in pages
             if p.ocr_confidence is not None and p.ocr_confidence < settings.ocr_min_confidence
         }
     )
-    if not low or len({p.number for p in pages}) > settings.vision_max_pages:
-        return []
-    return low
 
 
 async def _vision_extract(
@@ -558,6 +572,9 @@ async def _save_segment(
     )
     if result.source == "vision":  # never grounded in OCR text: always reviewed
         issues.append(vision_issue())
+        needs_review = True
+    if result.second_opinion:  # OCR and the page image disagree: a human decides
+        issues.extend(result.second_opinion)
         needs_review = True
     if segment.recheck:  # boundaries moved: corrections were kept but must be re-checked
         issues.append(boundary_issue(segment))

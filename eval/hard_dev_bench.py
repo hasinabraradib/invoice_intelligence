@@ -15,6 +15,7 @@ import statistics
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, "/app")  # the backend image: `app` is importable
 
@@ -110,13 +111,119 @@ def run_config(name: str, steps: tuple, labels: list[dict], llm, settings) -> di
     }
 
 
+def dev_labels_with_ocr() -> list[dict]:
+    """The hard dev set plus the clean dev documents that go through OCR (the only kind
+    the second opinion can touch). Never test files."""
+    labels = [json.loads(p.read_text()) for p in sorted((DATASET / "labels").glob("*.json"))]
+    chosen = [
+        x
+        for x in labels
+        if x["split"] == "dev"
+        and (x.get("subset") == "hard" or x["file_type"] in ("image_scan", "pdf_scanned"))
+    ]
+    if any(x["split"] != "dev" for x in chosen):
+        raise SystemExit("dev only")
+    return chosen
+
+
+def run_second_opinion(labels: list[dict], llm, settings) -> dict:
+    """Current system (vision only below OCR_MIN_CONFIDENCE) vs vision as a second opinion
+    with the wider triggers: review-flag recall, new flags on correct invoices, cost."""
+    from app.extraction.second_opinion import compare_readings, vision_triggers
+    from app.extraction.vision import extract_from_images
+    from app.steps import render_page_task
+    from app.validation.rules import validate_invoice
+
+    options = OcrOptions(langs=settings.ocr_langs, min_confidence=settings.ocr_min_confidence)
+
+    def review(result, extra=()) -> bool:
+        report = validate_invoice(
+            result, tolerance=settings.money_tolerance, review_confidence=settings.review_confidence
+        )
+        return report.needs_review or bool(extra)
+
+    def errors(label, result) -> tuple[bool, Any]:
+        score = scoring.score_invoice(label, _invoice_dict(result) if result.ok else None)
+        bad = any(f.outcome in ("wrong", "missing") for f in score.fields)
+        return bad or bool(score.line_fn or score.line_fp), score
+
+    def one(label: dict) -> dict:
+        path = DATASET / "files" / label["file"]
+        parsed = parse_document(path, label["file"], run_ocr=False)
+        if parsed.pages_needing_ocr:
+            parsed = ocr_document(path, parsed, options)
+        pages = source_pages(parsed)
+        text = extract_from_pages(pages, llm)
+        before_review = review(text) if text.ok else True
+        has_errors, score = errors(label, text)
+        triggers = vision_triggers(pages, text, settings)
+        after_review, disagreements = before_review, []
+        if triggers and text.ok:
+            numbers = sorted({p.number for p in pages})
+            images = [
+                (n, render_page_task(str(path), n, settings.vision_image_max_side)) for n in numbers
+            ]
+            vision, _ = extract_from_images(images, llm)
+            if vision.ok:
+                merged = text.model_copy(deep=True)
+                issues = compare_readings(merged, vision)
+                disagreements = [i.field for i in issues]
+                after_review = review(merged, issues)
+        return {
+            "id": label["id"],
+            "kind": label.get("hard_kind") or label["file_type"],
+            "subset": label.get("subset", "clean"),
+            "triggers": triggers,
+            "errors": has_errors,
+            "planted": bool(label.get("expected_flags")),
+            "review_before": before_review,
+            "review_after": after_review,
+            "disagreements": disagreements,
+            "field_accuracy": scoring.field_metrics([score])["overall"]["accuracy"],
+        }
+
+    before = llm.usage.as_dict()
+    with concurrent.futures.ThreadPoolExecutor(4) as pool:
+        rows = list(pool.map(one, labels))
+    after = llm.usage.as_dict()
+    err = [r for r in rows if r["errors"]]
+    correct = [r for r in rows if not r["errors"] and not r["planted"]]
+    return {
+        "invoices": len(rows),
+        "triggered": sum(bool(r["triggers"]) for r in rows),
+        "errors_present": len(err),
+        "flag_recall_before": sum(r["review_before"] for r in err) / len(err) if err else None,
+        "flag_recall_after": sum(r["review_after"] for r in err) / len(err) if err else None,
+        "correct_invoices": len(correct),
+        "new_flags_on_correct": sum(r["review_after"] and not r["review_before"] for r in correct),
+        "vision_calls": after["vision_calls"] - before["vision_calls"],
+        "vision_input_tokens": after["vision_input_tokens"] - before["vision_input_tokens"],
+        "vision_output_tokens": after["vision_output_tokens"] - before["vision_output_tokens"],
+        "rows": rows,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--configs", default=",".join(CONFIGS))
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--second-opinion", action="store_true")
     args = parser.parse_args()
     settings = get_settings()
     llm = get_llm_client(settings)
+    if args.second_opinion:
+        result = run_second_opinion(dev_labels_with_ocr(), llm, settings)
+        for row in result["rows"]:
+            print(
+                f"{row['id']:<12} {row['kind']:<16} errors={row['errors']!s:<5} "
+                f"review {row['review_before']!s:<5} -> {row['review_after']!s:<5} "
+                f"triggers={row['triggers']} disagree={row['disagreements']}"
+            )
+        summary = {k: v for k, v in result.items() if k != "rows"}
+        print(json.dumps(summary, indent=2))
+        if args.out:
+            args.out.write_text(json.dumps(result, indent=2, default=str))
+        return 0
     labels = hard_dev_labels()
     results = []
     for name in args.configs.split(","):

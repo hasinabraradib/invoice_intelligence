@@ -1,0 +1,236 @@
+{
+  "invoices": 16,
+  "triggered": 6,
+  "errors_present": 8,
+  "flag_recall_before": 0.625,
+  "flag_recall_after": 0.75,
+  "correct_invoices": 8,
+  "new_flags_on_correct": 0,
+  "vision_calls": 6,
+  "vision_input_tokens": 24218,
+  "vision_output_tokens": 8896,
+  "rows": [
+    {
+      "id": "harddev-01",
+      "kind": "noisy_blur",
+      "subset": "hard",
+      "triggers": [
+        "failed checks: LINE_ARITHMETIC",
+        "uncertain required field(s): invoice_date"
+      ],
+      "errors": true,
+      "planted": false,
+      "review_before": true,
+      "review_after": true,
+      "disagreements": [
+        "customer_name",
+        "currency",
+        "line_items[1].quantity",
+        "line_items[1].unit_price"
+      ],
+      "field_accuracy": 0.7778
+    },
+    {
+      "id": "harddev-02",
+      "kind": "noisy_blur",
+      "subset": "hard",
+      "triggers": [],
+      "errors": true,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 0.7778
+    },
+    {
+      "id": "harddev-03",
+      "kind": "phone_photo",
+      "subset": "hard",
+      "triggers": [
+        "failed checks: LINE_ITEMS_SUM_MISMATCH, TOTAL_MISMATCH"
+      ],
+      "errors": true,
+      "planted": false,
+      "review_before": true,
+      "review_after": true,
+      "disagreements": [
+        "subtotal",
+        "line_items[1].quantity"
+      ],
+      "field_accuracy": 0.8889
+    },
+    {
+      "id": "harddev-04",
+      "kind": "phone_photo",
+      "subset": "hard",
+      "triggers": [
+        "failed checks: LINE_ARITHMETIC, LINE_ITEMS_SUM_MISMATCH"
+      ],
+      "errors": true,
+      "planted": false,
+      "review_before": true,
+      "review_after": true,
+      "disagreements": [
+        "line_items[1].line_total"
+      ],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-05",
+      "kind": "rotated",
+      "subset": "hard",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-06",
+      "kind": "rotated",
+      "subset": "hard",
+      "triggers": [
+        "failed checks: LINE_ITEMS_SUM_MISMATCH"
+      ],
+      "errors": true,
+      "planted": false,
+      "review_before": true,
+      "review_after": true,
+      "disagreements": [
+        "line_items[1].unit_price",
+        "line_items[1].line_total"
+      ],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-07",
+      "kind": "faint",
+      "subset": "hard",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-08",
+      "kind": "faint",
+      "subset": "hard",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-09",
+      "kind": "crowded_pdf",
+      "subset": "hard",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-10",
+      "kind": "crowded_scan",
+      "subset": "hard",
+      "triggers": [
+        "failed checks: LINE_ARITHMETIC, LINE_TOTALS_INCOMPLETE"
+      ],
+      "errors": true,
+      "planted": false,
+      "review_before": false,
+      "review_after": true,
+      "disagreements": [
+        "line_items[7].quantity",
+        "line_items[16].line_total"
+      ],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-11",
+      "kind": "two_column_pdf",
+      "subset": "hard",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "harddev-12",
+      "kind": "two_column_scan",
+      "subset": "hard",
+      "triggers": [],
+      "errors": true,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 0.8889
+    },
+    {
+      "id": "inv-27",
+      "kind": "image_scan",
+      "subset": "clean",
+      "triggers": [
+        "failed checks: MISSING_REQUIRED",
+        "uncertain required field(s): invoice_date"
+      ],
+      "errors": true,
+      "planted": true,
+      "review_before": true,
+      "review_after": true,
+      "disagreements": [],
+      "field_accuracy": 0.7778
+    },
+    {
+      "id": "inv-28",
+      "kind": "image_scan",
+      "subset": "clean",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "inv-33",
+      "kind": "image_scan",
+      "subset": "clean",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    },
+    {
+      "id": "inv-34",
+      "kind": "pdf_scanned",
+      "subset": "clean",
+      "triggers": [],
+      "errors": false,
+      "planted": false,
+      "review_before": false,
+      "review_after": false,
+      "disagreements": [],
+      "field_accuracy": 1.0
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import app.models as m
 from app.config import Settings
 from app.extraction.llm import FakeLLMClient, LLMError, OpenAIClient
 from app.extraction.prompt import SourcePage
-from app.pipeline import VISION_EXTRACTED, process_document, wants_vision
+from app.pipeline import VISION_EXTRACTED, process_document, vision_allowed
 from app.repository import Repository
 from tests import factories
 from tests.test_pipeline import GOOD_REPLY
@@ -67,54 +67,90 @@ def _pages(*confidences):
     return [SourcePage(n, "text", ocr_confidence=c) for n, c in enumerate(confidences, start=1)]
 
 
-def test_vision_is_wanted_only_below_the_ocr_threshold():
-    llm = FakeLLMClient(GOOD_REPLY, vision=[VISION_REPLY])
-    settings = Settings(ocr_min_confidence=60)
-    assert wants_vision(_pages(42.0, 91.0), llm, settings) == [1]
-    assert wants_vision(_pages(60.0, 75.0), llm, settings) == []  # at the threshold: OCR is used
-    assert wants_vision(_pages(None), llm, settings) == []  # text layer, no OCR at all
-
-
-def test_vision_is_not_used_when_off_unsupported_or_too_long():
-    low = _pages(20.0)
+def test_vision_is_allowed_only_when_on_supported_and_short():
     capable = FakeLLMClient(GOOD_REPLY, vision=[VISION_REPLY])
-    assert wants_vision(low, capable, Settings(vision_fallback_enabled=False)) == []
-    assert wants_vision(low, FakeLLMClient(GOOD_REPLY), Settings()) == []  # no image support
+    assert vision_allowed(_pages(20.0), capable, Settings())
+    assert not vision_allowed(_pages(20.0), capable, Settings(vision_fallback_enabled=False))
+    assert not vision_allowed(_pages(20.0), FakeLLMClient(GOOD_REPLY), Settings())  # no images
     many = _pages(20.0, 90.0, 90.0, 90.0, 90.0)
-    assert wants_vision(many, capable, Settings(vision_max_pages=4)) == []
+    assert not vision_allowed(many, capable, Settings(vision_max_pages=4))
 
 
 # ---------------------------------------------------------------- end to end (real OCR)
 
 
+async def _codes(session, invoice_id) -> set[str]:
+    rows = await session.scalars(
+        select(m.ValidationIssue.code).where(m.ValidationIssue.invoice_id == invoice_id)
+    )
+    return set(rows)
+
+
 @needs_tesseract
-async def test_unreadable_scan_is_read_by_vision_and_always_reviewed(
+async def test_a_low_confidence_scan_gets_a_second_reading_that_agrees(
     db_session, tmp_path, upload_dir
 ):
+    """Below the OCR threshold the page image is read too; the readings agree, so the OCR
+    values are kept (confirmed) and no disagreement is raised."""
     path = tmp_path / "noisy.png"
     _noisy_scan(path)
     doc = await _document(db_session, path, "image/png")
     llm = FakeLLMClient(GOOD_REPLY, vision=[VISION_REPLY])
 
+    await process_document(doc.id, db_session, llm, _settings(upload_dir))
+
+    assert len(llm.calls) == 1 and len(llm.vision_calls) == 1  # OCR path, then a second look
+    invoice = await _invoice(db_session, doc.id)
+    total = invoice.fields["total"]
+    assert total["value"] == "4.50" and total["source"] == "text"
+    assert "confirmed by a second reading of the page image" in total["reasons"]
+    assert "OCR_VISION_DISAGREE" not in await _codes(db_session, invoice.id)
+    images = llm.vision_calls[0]["images"]
+    assert len(images) == 1 and images[0].startswith(b"\x89PNG")
+
+
+@needs_tesseract
+async def test_when_the_readings_disagree_the_ocr_value_is_kept_and_reviewed(
+    db_session, tmp_path, upload_dir
+):
+    path = tmp_path / "noisy.png"
+    _noisy_scan(path)
+    doc = await _document(db_session, path, "image/png")
+    other = {
+        **GOOD_REPLY,
+        "invoice_number": {**GOOD_REPLY["invoice_number"], "value": "INV-2024-007"},
+    }
+    llm = FakeLLMClient(GOOD_REPLY, vision=[{**VISION_REPLY, "invoice": other}])
+
+    await process_document(doc.id, db_session, llm, _settings(upload_dir))
+
+    invoice = await _invoice(db_session, doc.id)
+    number = invoice.fields["invoice_number"]
+    assert number["value"] == "INV-2024-001"  # never silently replaced
+    assert number["status"] == "uncertain"
+    assert any("INV-2024-001" in r and "INV-2024-007" in r for r in number["reasons"])
+    assert "OCR_VISION_DISAGREE" in await _codes(db_session, invoice.id)
+    assert invoice.needs_review
+
+
+@needs_tesseract
+async def test_when_the_ocr_text_gives_nothing_the_image_reading_is_used_and_reviewed(
+    db_session, tmp_path, upload_dir
+):
+    path = tmp_path / "noisy.png"
+    _noisy_scan(path)
+    doc = await _document(db_session, path, "image/png")
+    llm = FakeLLMClient("{not json", vision=[VISION_REPLY])  # the OCR-text path fails
+
     outcome = await process_document(doc.id, db_session, llm, _settings(upload_dir))
 
-    page = (await Repository(db_session).get_page_texts(doc.id))[0]
-    assert len(llm.vision_calls) == 1 and llm.calls == []  # the image path, not the OCR text
     assert outcome.status == m.DocumentStatus.NEEDS_REVIEW
     invoice = await _invoice(db_session, doc.id)
     assert invoice.needs_review
-    assert (
-        invoice.fields["total"]["value"] == "4.50" and invoice.fields["total"]["source"] == "vision"
-    )
     assert all(f["source"] == "vision" and f["confidence"] <= 0.5 for f in invoice.fields.values())
-    codes = await db_session.scalars(
-        select(m.ValidationIssue.code).where(m.ValidationIssue.invoice_id == invoice.id)
-    )
-    assert VISION_EXTRACTED in set(codes)
-    # The transcription replaced the unreadable OCR text, so search sees it too.
-    assert page.source == "vision" and "INV-2024-001" in page.text
-    images = llm.vision_calls[0]["images"]
-    assert len(images) == 1 and images[0].startswith(b"\x89PNG")
+    assert VISION_EXTRACTED in await _codes(db_session, invoice.id)
+    page = (await Repository(db_session).get_page_texts(doc.id))[0]
+    assert page.source == "vision" and "INV-2024-001" in page.text  # better text for search
 
 
 @needs_tesseract
