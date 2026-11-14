@@ -1,4 +1,5 @@
 "use client";
+import { AlertTriangle, Check } from "lucide-react";
 // Small toast system: errors and confirmations, announced to screen readers.
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
@@ -33,11 +34,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <span
               aria-hidden="true"
-              className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold ${
-                toast.kind === "error" ? "bg-danger-soft text-danger" : "bg-success-soft text-success"
+              className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${
+                toast.kind === "error" ? "bg-pink text-on-pastel" : "bg-sage text-on-pastel"
               }`}
             >
-              {toast.kind === "error" ? "!" : "✓"}
+              {toast.kind === "error" ? <AlertTriangle className="size-3" strokeWidth={2.5} /> : <Check className="size-3" strokeWidth={2.5} />}
             </span>
             <span className="flex-1">{toast.message}</span>
             <button

@@ -2,7 +2,7 @@
 // Charts styled to the design system: colours come from CSS variables, so they follow
 // dark mode; minimal gridlines, rounded bars, quiet tooltips. Every chart has a text
 // alternative for screen readers.
-import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useReducedMotion } from "@/components/ui";
 
 const tooltip = {
@@ -21,31 +21,15 @@ const tooltip = {
 };
 
 /** A tiny trend line for a KPI card. Values may contain nulls (no data that day). */
-export function Sparkline({ data, color = "var(--accent)", label }: { data: (number | null)[]; color?: string; label: string }) {
+export function Sparkline({ data, color = "var(--on-pastel)", label }: { data: (number | null)[]; color?: string; label: string }) {
   const reduced = useReducedMotion();
-  const id = `spark-${label.replace(/\W+/g, "-")}`;
   const points = data.map((value, i) => ({ i, value }));
   return (
     <div className="h-10 w-full" role="img" aria-label={`${label}, last ${data.length} days`}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={points} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.22} />
-              <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={1.75}
-            fill={`url(#${id})`}
-            connectNulls
-            dot={false}
-            isAnimationActive={!reduced}
-          />
-        </AreaChart>
+        <LineChart data={points} margin={{ top: 4, right: 2, bottom: 2, left: 2 }}>
+          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={1.5} connectNulls dot={false} isAnimationActive={!reduced} />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
@@ -71,13 +55,18 @@ export function DailyBars({ data, label }: { data: DayPoint[]; label: string }) 
               tickFormatter={shortDay}
               tickLine={false}
               axisLine={{ stroke: "var(--chart-grid)" }}
-              tick={{ fill: "var(--faint)", fontSize: 11 }}
+              tick={{ fill: "var(--muted)", fontSize: 11 }}
               interval="preserveStartEnd"
               minTickGap={18}
             />
-            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: "var(--faint)", fontSize: 11 }} width={44} />
+            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} width={44} />
+            <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="2 4" />
             <Tooltip {...tooltip} labelFormatter={(v) => shortDay(String(v))} formatter={(v) => [v, "documents"]} />
-            <Bar dataKey="value" fill="var(--accent)" radius={[6, 6, 2, 2]} maxBarSize={28} isAnimationActive={!reduced} />
+            <Bar dataKey="value" radius={[8, 8, 8, 8]} maxBarSize={22} isAnimationActive={!reduced}>
+              {data.map((d, i) => (
+                <Cell key={d.date} fill={i === data.length - 1 ? "var(--butter-deep)" : "var(--ink)"} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -105,7 +94,7 @@ export function Donut({ data, centerLabel, centerValue }: { data: Slice[]; cente
             innerRadius="72%"
             outerRadius="100%"
             paddingAngle={shown.length > 1 ? 2 : 0}
-            cornerRadius={4}
+            cornerRadius={6}
             stroke="none"
             isAnimationActive={!reduced}
           >

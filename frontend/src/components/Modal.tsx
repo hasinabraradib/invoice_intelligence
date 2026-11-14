@@ -44,7 +44,7 @@ export function Modal({ open, title, onClose, children }: Props) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-black/30 p-4 backdrop-blur-[2px] sm:items-center dark:bg-black/60">
+    <div className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-black/35 p-4 sm:items-center dark:bg-black/65">
       <div
         ref={panel}
         role="dialog"

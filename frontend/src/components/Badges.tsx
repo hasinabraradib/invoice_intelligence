@@ -10,7 +10,7 @@ export const TONE: Record<Tone, { badge: string; dot: string; bar: string }> = {
   danger: { badge: "bg-danger-soft text-danger border-danger-line", dot: "bg-danger-dot", bar: "bg-danger-dot" },
   orange: { badge: "bg-orange-soft text-orange border-orange-line", dot: "bg-orange-dot", bar: "bg-orange-dot" },
   neutral: { badge: "bg-neutral-soft text-neutral border-neutral-line", dot: "bg-neutral-dot", bar: "bg-neutral-dot" },
-  accent: { badge: "bg-accent-soft text-accent-ink border-accent-line", dot: "bg-accent", bar: "bg-accent" },
+  accent: { badge: "bg-surface text-ink border-ink/50", dot: "bg-ink", bar: "bg-ink" },
 };
 
 export const DOCUMENT_STATUS: Record<DocumentStatus, { label: string; tone: Tone }> = {
@@ -61,7 +61,7 @@ export function MatchedByBadge({ matchedBy }: { matchedBy: string }) {
 
 export function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
-  const color = pct >= 80 ? "bg-success-dot" : pct >= 60 ? "bg-warning-dot" : "bg-danger-dot";
+  const color = pct >= 80 ? "bg-ink" : pct >= 60 ? "bg-warning-dot" : "bg-danger-dot";
   return (
     <div className="flex items-center gap-2" title={`Confidence ${pct}%`}>
       <div
