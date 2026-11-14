@@ -42,7 +42,7 @@ export function ApproveDialog({ open, errorCount, defaultReviewer, busy, onAppro
         </div>
         {errorCount > 0 ? (
           <div>
-            <p className="mb-2 rounded-md bg-red-50 p-3 text-sm text-red-900">
+            <p className="mb-2 rounded-md bg-danger-soft p-3 text-sm text-danger">
               {errorCount} error{errorCount === 1 ? "" : "s"} still open. Fix them, or explain why
               this invoice is correct anyway.
             </p>
@@ -59,7 +59,7 @@ export function ApproveDialog({ open, errorCount, defaultReviewer, busy, onAppro
             />
           </div>
         ) : (
-          <p className="text-sm text-slate-700">No errors remain. Approving clears “needs review”.</p>
+          <p className="text-sm text-ink-2">No errors remain. Approving clears “needs review”.</p>
         )}
         <div className="flex justify-end gap-2">
           <button type="button" className="btn-secondary" onClick={onClose}>

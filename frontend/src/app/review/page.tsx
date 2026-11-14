@@ -36,21 +36,21 @@ export default function ReviewQueuePage() {
           <EmptyState title="Nothing to review">Every processed invoice has been checked.</EmptyState>
         ) : (
           <>
-            <p className="mb-2 text-sm text-slate-600">{queue.data.total} document(s) waiting.</p>
-            <ol className="divide-y divide-slate-100">
+            <p className="mb-2 text-sm text-muted">{queue.data.total} document(s) waiting.</p>
+            <ol className="divide-y divide-line">
               {queue.data.items.map((doc, i) => (
                 <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                   <div className="min-w-0">
                     <Link href={`/documents/${doc.id}`} className="btn-link">
                       {offset + i + 1}. {doc.filename}
                     </Link>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-muted">
                       {doc.invoice_count > 1
                         ? `${doc.invoice_count} invoices in this document`
                         : `${doc.invoice?.supplier_name ?? "Unknown supplier"} · ${doc.invoice?.invoice_number ?? "no number"} · ${formatMoney(doc.invoice?.total, doc.invoice?.currency)}`}
                     </p>
                   </div>
-                  <span className="text-xs text-slate-500">uploaded {formatDateTime(doc.created_at)}</span>
+                  <span className="text-xs text-muted">uploaded {formatDateTime(doc.created_at)}</span>
                 </li>
               ))}
             </ol>

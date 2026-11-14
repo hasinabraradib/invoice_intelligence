@@ -47,7 +47,7 @@ function CrossCheck() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Cross-check</h1>
       <form className="card space-y-4" onSubmit={(e) => { e.preventDefault(); run.mutate(); }}>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Compare invoices with a ledger spreadsheet (a list of invoices), or with another PDF such
           as a purchase order or a second copy. Values are never changed; differences are flagged
           for review.
@@ -60,7 +60,7 @@ function CrossCheck() {
           {run.isPending ? "Starting…" : "Run cross-check"}
         </button>
         {documents.isSuccess && choices.length < 2 ? (
-          <p className="text-sm text-slate-600">Process at least two documents first.</p>
+          <p className="text-sm text-muted">Process at least two documents first.</p>
         ) : null}
       </form>
 
@@ -71,15 +71,15 @@ function CrossCheck() {
         {recent.isPending ? <SkeletonRows rows={3} /> : recent.isError ? (
           <ErrorBox message={errorMessage(recent.error)} />
         ) : recent.data.items.length === 0 ? (
-          <p className="text-sm text-slate-600">None yet.</p>
+          <p className="text-sm text-muted">None yet.</p>
         ) : (
-          <ul className="divide-y divide-slate-100 text-sm">
+          <ul className="divide-y divide-line text-sm">
             {recent.data.items.map((c) => (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <Link href={`/cross-check?id=${c.id}`} className="btn-link" aria-current={c.id === selected ? "page" : undefined}>
                   {c.document_a.filename} ↔ {c.document_b.filename}
                 </Link>
-                <span className="text-xs text-slate-500">{c.status} · {formatDateTime(c.created_at)}</span>
+                <span className="text-xs text-muted">{c.status} · {formatDateTime(c.created_at)}</span>
               </li>
             ))}
           </ul>
@@ -123,13 +123,13 @@ function CheckResult({ id }: { id: string }) {
         <h2 id="result-heading" className="text-lg font-semibold">
           {c.document_a.filename} ↔ {c.document_b.filename}
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           {c.mode === "invoices_vs_ledger" ? "Invoices vs ledger" : c.mode === "invoices_vs_invoices" ? "Invoices vs invoices" : ""}
           {" · "}{c.status}{c.finished_at ? ` · ${formatDateTime(c.finished_at)}` : ""}
         </p>
       </div>
       {c.status === "failed" ? <ErrorBox message={c.error ?? "The cross-check failed."} /> : null}
-      {c.status === "queued" || c.status === "running" ? <p className="text-sm text-slate-600" role="status">Comparing…</p> : null}
+      {c.status === "queued" || c.status === "running" ? <p className="text-sm text-muted" role="status">Comparing…</p> : null}
       {c.status === "succeeded" ? (
         <>
           <Summary check={c} />
@@ -148,17 +148,17 @@ function Summary({ check }: { check: CrossCheckDetail }) {
   const s = check.summary;
   const ledger = check.mode === "invoices_vs_ledger";
   const tiles = [
-    ["Matched", s.matched ?? 0, "text-green-800"],
-    ["Mismatched", s.mismatched ?? 0, "text-red-800"],
-    [ledger ? "Not in ledger" : "Only in A", s.missing_in_b ?? 0, "text-amber-900"],
-    [ledger ? "Not in PDF" : "Only in B", s.missing_in_a ?? 0, "text-amber-900"],
-    ...(ledger ? [["Ledger duplicates", s.duplicates_in_b ?? 0, "text-amber-900"] as const] : []),
+    ["Matched", s.matched ?? 0, "text-success"],
+    ["Mismatched", s.mismatched ?? 0, "text-danger"],
+    [ledger ? "Not in ledger" : "Only in A", s.missing_in_b ?? 0, "text-warning"],
+    [ledger ? "Not in PDF" : "Only in B", s.missing_in_a ?? 0, "text-warning"],
+    ...(ledger ? [["Ledger duplicates", s.duplicates_in_b ?? 0, "text-warning"] as const] : []),
   ] as const;
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
       {tiles.map(([label, value, color]) => (
-        <div key={label} className="rounded-md border border-slate-200 p-3">
-          <dt className="text-xs text-slate-600">{label}</dt>
+        <div key={label} className="rounded-md border border-line p-3">
+          <dt className="text-xs text-muted">{label}</dt>
           <dd className={`text-2xl font-semibold tabular-nums ${color}`}>{value}</dd>
         </div>
       ))}
@@ -169,11 +169,11 @@ function Summary({ check }: { check: CrossCheckDetail }) {
 function Findings({ check, showMatched }: { check: CrossCheckDetail; showMatched: boolean }) {
   const rows = check.findings.filter((f) => showMatched || f.kind !== "matched");
   if (rows.length === 0) return <EmptyState title="No differences found">Every invoice matched.</EmptyState>;
-  const severity = { error: "border-red-300 bg-red-50 text-red-800", warning: "border-amber-300 bg-amber-50 text-amber-900", info: "border-green-300 bg-green-50 text-green-800" };
+  const severity = { error: "border-danger-line bg-danger-soft text-danger", warning: "border-warning-line bg-warning-soft text-warning", info: "border-success-line bg-success-soft text-success" };
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full min-w-[52rem] text-left text-sm">
-        <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+        <thead className="border-b border-line text-xs uppercase text-muted">
           <tr>
             <th scope="col" className="py-2 pr-3">Finding</th>
             <th scope="col" className="py-2 pr-3">Field</th>
@@ -183,16 +183,16 @@ function Findings({ check, showMatched }: { check: CrossCheckDetail; showMatched
             <th scope="col" className="py-2">Evidence B</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 align-top">
+        <tbody className="divide-y divide-line align-top">
           {rows.map((f, i) => {
             const [a, b] = evidenceLinks(check, f);
             return (
               <tr key={i}>
                 <td className="py-2 pr-3">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap ${severity[f.severity]}`}>{kindLabel(f.kind)}</span>
-                  <p className="mt-1 text-xs text-slate-600">{f.message}</p>
+                  <p className="mt-1 text-xs text-muted">{f.message}</p>
                 </td>
-                <td className="py-2 pr-3 text-slate-700">{f.field ?? "—"}</td>
+                <td className="py-2 pr-3 text-ink-2">{f.field ?? "—"}</td>
                 <td className="py-2 pr-3 tabular-nums">{f.value_a ?? "—"}</td>
                 <td className="py-2 pr-3 tabular-nums">{f.value_b ?? "—"}</td>
                 <td className="py-2 pr-3">{a ? <Link className="btn-link" href={a.href}>{a.label}</Link> : "—"}</td>

@@ -5,13 +5,13 @@ import { formatDateTime } from "@/lib/format";
 
 /** Errors first, then warnings; each links to its field. */
 export function IssuesPanel({ issues }: { issues: IssueView[] }) {
-  if (issues.length === 0) return <p className="text-sm text-green-800">No issues found.</p>;
+  if (issues.length === 0) return <p className="text-sm text-success">No issues found.</p>;
   const sorted = [...issues].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "error" ? -1 : 1));
   return (
     <ul className="space-y-2">
       {sorted.map((issue, i) => (
         <li key={`${issue.code}-${issue.field}-${i}`}
-          className={`rounded-md border p-3 text-sm ${issue.severity === "error" ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}>
+          className={`rounded-md border p-3 text-sm ${issue.severity === "error" ? "border-danger-line bg-danger-soft" : "border-warning-line bg-warning-soft"}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-medium">
               <span className="uppercase">{issue.severity}</span> · {issue.message}
@@ -19,7 +19,7 @@ export function IssuesPanel({ issues }: { issues: IssueView[] }) {
             {issue.field ? <a href={`#${fieldAnchor(issue.field)}`} className="btn-link text-xs">{issue.field}</a> : null}
           </div>
           {issue.expected || issue.actual ? (
-            <p className="mt-1 text-xs text-slate-700">
+            <p className="mt-1 text-xs text-ink-2">
               {issue.expected ? <>Expected <strong>{issue.expected}</strong>. </> : null}
               {issue.actual ? <>Found <strong>{issue.actual}</strong>.</> : null}
             </p>
@@ -45,15 +45,15 @@ export function DuplicateLinks({ duplicates }: { duplicates: InvoiceResult["dupl
 }
 
 export function CorrectionsHistory({ corrections }: { corrections: CorrectionView[] }) {
-  if (corrections.length === 0) return <p className="text-sm text-slate-600">No changes yet.</p>;
+  if (corrections.length === 0) return <p className="text-sm text-muted">No changes yet.</p>;
   return (
     <ol className="space-y-2 text-sm">
       {[...corrections].reverse().map((c) => (
-        <li key={c.id} className="border-l-2 border-slate-300 pl-3">
+        <li key={c.id} className="border-l-2 border-line-strong pl-3">
           <p>
             <strong>{c.field}</strong>: {c.old_value ?? "—"} → {c.new_value ?? "—"}
           </p>
-          <p className="text-xs text-slate-500">{c.corrected_by} · {formatDateTime(c.corrected_at)}</p>
+          <p className="text-xs text-muted">{c.corrected_by} · {formatDateTime(c.corrected_at)}</p>
         </li>
       ))}
     </ol>

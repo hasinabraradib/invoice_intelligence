@@ -18,14 +18,14 @@ export function LedgerPanel({ ledger, sheet, row }: Props) {
     <section className="card space-y-3" aria-labelledby="ledger-heading">
       <h2 id="ledger-heading" className="text-lg font-semibold">Ledger ({ledger.rows.total} rows)</h2>
       {sheets.map((s) => (
-        <p key={s.name} className="text-xs text-slate-600">
+        <p key={s.name} className="text-xs text-muted">
           Sheet “{s.name}” ({s.source === "manual" ? "mapping fixed by hand" : "mapping detected"}):{" "}
           {Object.entries(s.columns).filter(([, c]) => c).map(([f, c]) => `${f} ← “${c}”`).join(", ")}
         </p>
       ))}
-      <div className="relative max-h-[70vh] overflow-auto rounded border border-slate-200">
+      <div className="relative max-h-[70vh] overflow-auto rounded border border-line">
         <table className="w-full min-w-[40rem] text-left text-xs">
-          <thead className="sticky top-0 bg-slate-50 text-slate-500">
+          <thead className="sticky top-0 bg-surface-2 text-muted">
             <tr>
               <th scope="col" className="px-2 py-1">Row</th>
               <th scope="col" className="px-2 py-1">Invoice no.</th>
@@ -35,18 +35,18 @@ export function LedgerPanel({ ledger, sheet, row }: Props) {
               <th scope="col" className="px-2 py-1">Problems</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {ledger.rows.items.map((r) => {
               const active = r.sheet_name === sheet && r.row_number === row;
               return (
                 <tr key={r.id} ref={active ? highlighted : undefined} aria-current={active ? "true" : undefined}
-                  className={active ? "bg-yellow-100 outline outline-2 outline-yellow-400" : ""}>
-                  <td className="px-2 py-1 text-slate-500">{sheets.length > 1 ? `${r.sheet_name} ` : ""}{r.row_number}</td>
+                  className={active ? "bg-warning-soft outline outline-2 outline-warning-dot" : ""}>
+                  <td className="px-2 py-1 text-muted">{sheets.length > 1 ? `${r.sheet_name} ` : ""}{r.row_number}</td>
                   <td className="px-2 py-1">{r.invoice_number ?? "—"}</td>
                   <td className="px-2 py-1">{r.invoice_date ?? "—"}</td>
                   <td className="px-2 py-1">{r.supplier_name ?? "—"}</td>
                   <td className="px-2 py-1 text-right tabular-nums">{formatMoney(r.total, r.currency)}</td>
-                  <td className="px-2 py-1 text-amber-800">{r.problems.join("; ")}</td>
+                  <td className="px-2 py-1 text-warning">{r.problems.join("; ")}</td>
                 </tr>
               );
             })}

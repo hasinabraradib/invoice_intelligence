@@ -163,7 +163,7 @@ function Review() {
         <div className="min-w-0">
           <p className="text-sm"><Link href="/documents" className="btn-link">← Documents</Link></p>
           <h1 className="truncate text-2xl font-semibold" title={doc.filename}>{doc.filename}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
             <StatusBadge status={s.status} />
             {busy ? (
               <span>
@@ -195,7 +195,7 @@ function Review() {
       </div>
 
       {s.status === "partially_failed" ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-orange-300 bg-orange-50 p-4 text-sm text-orange-900">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-orange-line bg-orange-soft p-4 text-sm text-orange">
           <span><strong>Some invoices failed</strong> (the others are saved): {s.error ?? "unknown error"}</span>
           <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(true)} disabled={reprocess.isPending}>
             Retry failed invoices
@@ -203,7 +203,7 @@ function Review() {
         </div>
       ) : null}
       {s.status === "failed" ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger-line bg-danger-soft p-4 text-sm text-danger">
           <span><strong>Processing failed:</strong> {s.error ?? "unknown error"}</span>
           <button type="button" className="btn-secondary" onClick={() => reprocess.mutate(false)} disabled={reprocess.isPending}>
             Retry
@@ -211,7 +211,7 @@ function Review() {
         </div>
       ) : null}
       {s.error && s.status !== "failed" && s.error.startsWith("warning") ? (
-        <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-900">{s.error}</p>
+        <p className="rounded-md bg-warning-soft p-3 text-sm text-warning">{s.error}</p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -225,7 +225,7 @@ function Review() {
         <div className="min-w-0 space-y-4">
           <InvoiceSwitcher invoices={invoices} selected={invoice?.segment_index ?? 0} onSelect={selectInvoice} />
           {invoice && !invoice.extracted ? (
-            <p className="rounded-md bg-slate-100 p-3 text-sm text-slate-700">
+            <p className="rounded-md bg-surface-2 p-3 text-sm text-ink-2">
               This invoice has not been extracted yet{busy ? "; processing is still running" : ""}.
             </p>
           ) : null}
@@ -240,7 +240,7 @@ function Review() {
                       onChange={(e) => setReviewer(e.target.value)} autoComplete="name" />
                   </div>
                 </div>
-                {reviewer.trim() === "" ? <p className="mt-2 text-xs text-slate-600">Enter your name to edit fields.</p> : null}
+                {reviewer.trim() === "" ? <p className="mt-2 text-xs text-muted">Enter your name to edit fields.</p> : null}
                 <FieldList
                   fields={invoice.fields}
                   canEdit={canEdit}
@@ -256,7 +256,7 @@ function Review() {
               </section>
               <section aria-labelledby="issues-heading" className="card space-y-3">
                 <h2 id="issues-heading" className="text-lg font-semibold">
-                  Issues {errorCount > 0 ? <span className="text-sm font-normal text-red-700">({errorCount} error{errorCount === 1 ? "" : "s"})</span> : null}
+                  Issues {errorCount > 0 ? <span className="text-sm font-normal text-danger">({errorCount} error{errorCount === 1 ? "" : "s"})</span> : null}
                 </h2>
                 <IssuesPanel issues={invoice.issues} />
                 <DuplicateLinks duplicates={invoice.duplicates} />
@@ -271,9 +271,9 @@ function Review() {
           ) : hasLedger && ledger.data ? (
             <LedgerPanel ledger={ledger.data} sheet={params.get("sheet")} row={params.get("row") ? Number(params.get("row")) : null} />
           ) : busy || (done && result.isPending) ? (
-            <div className="card"><p className="mb-3 text-sm text-slate-600">Extracting fields…</p><SkeletonRows rows={6} /></div>
+            <div className="card"><p className="mb-3 text-sm text-muted">Extracting fields…</p><SkeletonRows rows={6} /></div>
           ) : (
-            <div className="card text-sm text-slate-600">No extracted fields for this document.</div>
+            <div className="card text-sm text-muted">No extracted fields for this document.</div>
           )}
         </div>
       </div>

@@ -24,13 +24,13 @@ export function FieldList({ fields, canEdit, savingField, onSave, onEvidence }: 
   const [editing, setEditing] = useState<string | null>(null);
   const currency = fields.currency?.value;
   return (
-    <ul className="divide-y divide-slate-100" aria-label="Extracted fields">
+    <ul className="divide-y divide-line" aria-label="Extracted fields">
       {HEADER_FIELDS.map(({ name, label, kind }) => {
         const field = fields[name] ?? { status: "missing" as const, confidence: 0, reasons: [] };
         return (
           <li key={name} id={fieldAnchor(name)} className="scroll-mt-20 py-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-medium text-slate-600">{label}</span>
+              <span className="text-sm font-medium text-muted">{label}</span>
               <div className="flex items-center gap-3">
                 <FieldStatusBadge status={field.status ?? "missing"} />
                 <ConfidenceBar value={field.confidence ?? 0} />
@@ -51,7 +51,7 @@ export function FieldList({ fields, canEdit, savingField, onSave, onEvidence }: 
               />
             ) : (
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                <span className="break-all text-base text-slate-900">{shown(field, kind, currency)}</span>
+                <span className="break-all text-base text-ink">{shown(field, kind, currency)}</span>
                 {canEdit ? (
                   <button type="button" className="btn-link" onClick={() => setEditing(name)}
                     aria-label={`Edit ${label}`}>Edit</button>
@@ -61,16 +61,16 @@ export function FieldList({ fields, canEdit, savingField, onSave, onEvidence }: 
             {field.evidence ? (
               <button
                 type="button"
-                className="focus-ring mt-1 block w-full rounded bg-slate-50 px-2 py-1 text-left text-xs text-slate-700 hover:bg-slate-100"
+                className="focus-ring mt-1 block w-full rounded bg-surface-2 px-2 py-1 text-left text-xs text-ink-2 hover:bg-surface-2"
                 onClick={() => field.page && onEvidence(field.page)}
                 disabled={!field.page}
                 title={field.page ? `Show page ${field.page}` : undefined}
               >
-                “{field.evidence}” {field.page ? <span className="text-blue-700">· page {field.page}</span> : null}
+                “{field.evidence}” {field.page ? <span className="text-accent-ink">· page {field.page}</span> : null}
               </button>
             ) : null}
             {field.reasons && field.reasons.length > 0 ? (
-              <ul className="mt-1 list-inside list-disc text-xs text-amber-800">
+              <ul className="mt-1 list-inside list-disc text-xs text-warning">
                 {field.reasons.map((reason) => <li key={reason}>{reason}</li>)}
               </ul>
             ) : null}

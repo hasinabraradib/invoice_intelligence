@@ -23,21 +23,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div aria-live="polite" className="fixed inset-x-4 bottom-4 z-50 flex flex-col gap-2 sm:left-auto sm:w-96">
+      {/* Above the phone tab bar (bottom-20), bottom-right on larger screens. */}
+      <div aria-live="polite" className="fixed inset-x-4 bottom-20 z-50 flex flex-col gap-2 sm:left-auto sm:w-96 md:bottom-6 md:right-6">
         {toasts.map((toast) => (
           <div
             key={toast.id}
             role={toast.kind === "error" ? "alert" : "status"}
-            className={`flex items-start justify-between gap-3 rounded-md border px-4 py-3 text-sm shadow-md ${
-              toast.kind === "error"
-                ? "border-red-300 bg-red-50 text-red-900"
-                : "border-green-300 bg-green-50 text-green-900"
-            }`}
+            className="flex animate-fade-up items-start gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink shadow-lift"
           >
-            <span>{toast.message}</span>
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold ${
+                toast.kind === "error" ? "bg-danger-soft text-danger" : "bg-success-soft text-success"
+              }`}
+            >
+              {toast.kind === "error" ? "!" : "✓"}
+            </span>
+            <span className="flex-1">{toast.message}</span>
             <button
               type="button"
-              className="focus-ring rounded px-1 font-semibold"
+              className="focus-ring -mr-1 rounded-lg px-1.5 text-muted hover:text-ink"
               aria-label="Dismiss"
               onClick={() => setToasts((all) => all.filter((t) => t.id !== toast.id))}
             >

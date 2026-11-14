@@ -178,12 +178,12 @@ function Assistant() {
       <section aria-label="Chat" className="card relative flex min-h-[70vh] min-w-0 flex-col"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); attach(e.dataTransfer.files); }}>
-        {dragging ? <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-blue-500 bg-blue-50/80 text-sm font-medium">Drop invoices to upload</div> : null}
+        {dragging ? <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-accent bg-accent-soft text-sm font-medium">Drop invoices to upload</div> : null}
         <div className="flex-1 space-y-4 overflow-y-auto pb-4" aria-live="polite">
           {empty ? (
             <div className="space-y-4 py-6">
               <h1 className="text-2xl font-semibold">{greeting(stats.data, new Date().getHours())}</h1>
-              <p className="text-sm text-slate-600">Ask about your invoices, upload new ones, or ask me to correct, approve or cross-check something. I always ask before changing anything.</p>
+              <p className="text-sm text-muted">Ask about your invoices, upload new ones, or ask me to correct, approve or cross-check something. I always ask before changing anything.</p>
               <ul className="flex flex-wrap gap-2" aria-label="Suggestions">
                 {suggestions(stats.data).map((s) => (
                   <li key={s}><button type="button" className="btn-secondary rounded-full text-xs" onClick={() => void send(s)}>{s}</button></li>
@@ -200,8 +200,8 @@ function Assistant() {
         {attachments.length > 0 ? (
           <ul className="mb-2 flex flex-wrap gap-2" aria-label="Attached files">
             {attachments.map((a) => (
-              <li key={a.key} className="rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-xs">
-                📎 {a.name} · {a.error ? <span className="text-red-700">{a.error}</span>
+              <li key={a.key} className="rounded-full border border-line-strong bg-surface-2 px-2 py-0.5 text-xs">
+                📎 {a.name} · {a.error ? <span className="text-danger">{a.error}</span>
                   : a.progress < 1 ? `uploading ${percent(a.progress)}`
                   : a.documentId ? <Link className="btn-link text-xs" href={`/documents/${a.documentId}`}>{a.status === "duplicate" ? "already uploaded" : `${a.status ?? "uploaded"}${a.stage && !FINAL.has(a.status ?? "") ? ` · ${a.stage}` : ""}`}</Link>
                   : "…"}
@@ -210,7 +210,7 @@ function Assistant() {
           </ul>
         ) : null}
 
-        <form className="flex items-end gap-2 border-t border-slate-200 pt-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <form className="flex items-end gap-2 border-t border-line pt-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <input ref={fileInput} id="chat-file" type="file" multiple accept={ACCEPTED_EXTENSIONS.join(",")} className="sr-only"
             onChange={(e) => { attach(e.target.files); e.target.value = ""; }} />
           <button type="button" className="btn-secondary px-2" onClick={() => fileInput.current?.click()} aria-label="Attach invoices">📎</button>
@@ -230,13 +230,13 @@ function Assistant() {
 }
 
 function History({ items, current }: { items: { id: string; title?: string | null }[]; current: string | null }) {
-  if (items.length === 0) return <p className="mt-2 text-xs text-slate-500">No conversations yet.</p>;
+  if (items.length === 0) return <p className="mt-2 text-xs text-muted">No conversations yet.</p>;
   return (
     <ul className="mt-2 space-y-1">
       {items.map((c) => (
         <li key={c.id}>
           <Link href={`/?c=${c.id}`} aria-current={c.id === current ? "page" : undefined}
-            className={`focus-ring block truncate rounded px-2 py-1 text-sm ${c.id === current ? "bg-slate-200" : "hover:bg-slate-100"}`}>
+            className={`focus-ring block truncate rounded px-2 py-1 text-sm ${c.id === current ? "bg-surface-3" : "hover:bg-surface-2"}`}>
             {c.title ?? "Untitled"}
           </Link>
         </li>

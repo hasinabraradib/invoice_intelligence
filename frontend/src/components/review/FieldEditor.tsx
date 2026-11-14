@@ -64,7 +64,7 @@ export function FieldEditor({ id, label, kind, initial, busy, onSave, onCancel }
         <input {...common} type="text" inputMode={kind === "money" || kind === "quantity" ? "decimal" : undefined}
           value={text} onChange={(e) => setText(e.target.value)} autoFocus />
       )}
-      {!check.ok ? <p id={errorId} className="text-xs text-red-700">{check.error}</p> : null}
+      {!check.ok ? <p id={errorId} className="text-xs text-danger">{check.error}</p> : null}
       <div className="flex gap-2">
         <button type="submit" className="btn-primary px-2 py-1 text-xs" disabled={!check.ok || busy}>
           {busy ? "Saving…" : "Save"}

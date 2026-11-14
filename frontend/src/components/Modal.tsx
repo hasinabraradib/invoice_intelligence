@@ -44,15 +44,15 @@ export function Modal({ open, title, onClose, children }: Props) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 p-4 sm:items-center">
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
+        className="w-full max-w-md rounded-lg bg-surface p-5 shadow-xl"
       >
-        <h2 id={titleId} className="mb-3 text-lg font-semibold text-slate-900">
+        <h2 id={titleId} className="mb-3 text-lg font-semibold text-ink">
           {title}
         </h2>
         {children}
@@ -74,7 +74,7 @@ type ConfirmProps = {
 export function ConfirmDialog({ open, title, message, confirmLabel, busy, onConfirm, onClose }: ConfirmProps) {
   return (
     <Modal open={open} title={title} onClose={onClose}>
-      <p className="mb-5 text-sm text-slate-700">{message}</p>
+      <p className="mb-5 text-sm text-ink-2">{message}</p>
       <div className="flex justify-end gap-2">
         <button type="button" className="btn-secondary" onClick={onClose}>
           Cancel

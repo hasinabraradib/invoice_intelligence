@@ -64,7 +64,7 @@ function Search() {
           <legend className="label">Mode</legend>
           <div className="flex flex-wrap gap-2">
             {MODES.map((m) => (
-              <label key={m.value} className={`focus-within:ring-2 focus-within:ring-blue-600 cursor-pointer rounded-md border px-3 py-1.5 text-sm ${mode === m.value ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white"}`}>
+              <label key={m.value} className={`focus-within:ring-2 focus-within:ring-accent cursor-pointer rounded-md border px-3 py-1.5 text-sm ${mode === m.value ? "border-accent bg-slate-900 text-white" : "border-line-strong bg-surface"}`}>
                 <input type="radio" name="mode" value={m.value} checked={mode === m.value} className="sr-only"
                   onChange={() => go(text || q, m.value)} />
                 {m.label} <span className="opacity-75">· {m.hint}</span>
@@ -86,7 +86,7 @@ function Search() {
           <EmptyState title="No matches">Try other words, another mode, or fewer filters.</EmptyState>
         ) : (
           <>
-            <p className="mb-2 text-sm text-slate-600">{results.data.total} document(s)</p>
+            <p className="mb-2 text-sm text-muted">{results.data.total} document(s)</p>
             <ul className="space-y-3">
               {results.data.items.map((hit) => (
                 <li key={hit.document_id} className="card space-y-2">
@@ -99,7 +99,7 @@ function Search() {
                       <StatusBadge status={hit.status} />
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-muted">
                     {hit.invoice_count > 1 && hit.segment_index != null ? `Invoice ${hit.segment_index + 1} of ${hit.invoice_count} · ` : ""}
                     {hit.supplier_name ?? "Unknown supplier"} · {hit.invoice_number ?? "no number"} · {formatMoney(hit.total, hit.currency)}
                   </p>

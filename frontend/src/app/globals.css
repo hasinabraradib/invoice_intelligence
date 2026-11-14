@@ -1,29 +1,203 @@
 @import "tailwindcss";
 
-/* A few shared building blocks; everything else is plain Tailwind utilities.
-   Tailwind 4 needs @utility (not @layer components) for classes that @apply each other. */
-@utility focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2;
-}
-@utility btn-primary {
-  @apply focus-ring inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50;
-}
-@utility btn-secondary {
-  @apply focus-ring inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
-}
-@utility btn-link {
-  @apply focus-ring rounded text-sm font-medium text-blue-700 underline-offset-2 hover:underline;
-}
-@utility input {
-  @apply focus-ring block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400;
-}
-@utility label {
-  @apply mb-1 block text-sm font-medium text-slate-700;
-}
-@utility card {
-  @apply rounded-lg border border-slate-200 bg-white p-4;
+/* ---------------------------------------------------------------- design tokens
+   Every colour in the app comes from these variables, so dark mode is a second, tuned
+   palette (not an inverted one). Light: warm off-white page, white cards, one indigo
+   accent used sparingly. Status colours are soft tints, always paired with text. */
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --surface-2: #f3f2ee;
+  --surface-3: #ebe9e4;
+  --ink: #1b1a17;
+  --ink-2: #44413c;
+  --muted: #6f6b64; /* 5.1:1 on white */
+  --faint: #9a958d;
+  --line: #e9e6e0;
+  --line-strong: #d7d3cb;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-ink: #4338ca;
+  --accent-soft: #eef0ff;
+  --accent-line: #c7cbfb;
+  --on-accent: #ffffff;
+
+  --success: #0f7a4a;   --success-soft: #ecf8f1; --success-line: #b9e6cc; --success-dot: #22a06b;
+  --warning: #a35a00;   --warning-soft: #fdf6e7; --warning-line: #f5d79a; --warning-dot: #e2a300;
+  --info: #1d5fc4;      --info-soft: #eef5ff;    --info-line: #bcd5fa;    --info-dot: #3b82f6;
+  --danger: #b42318;    --danger-soft: #fdf1f0;  --danger-line: #f6c7c2;  --danger-dot: #e5484d;
+  --orange: #b54708;    --orange-soft: #fef4ec;  --orange-line: #f7cfac;  --orange-dot: #f38744;
+  --neutral: #57534e;   --neutral-soft: #f3f2ee; --neutral-line: #dedad3; --neutral-dot: #a8a29e;
+
+  --shadow-soft: 0 1px 2px rgb(27 26 23 / 0.04), 0 2px 8px -2px rgb(27 26 23 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(27 26 23 / 0.04), 0 12px 28px -8px rgb(27 26 23 / 0.12);
+  --chart-grid: #ece9e3;
+  color-scheme: light;
 }
 
+/* Dark: a deep, slightly warm charcoal; surfaces step up in lightness instead of using
+   shadows; text is off-white (not pure white) and tints are translucent so they glow
+   softly instead of shouting. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111110;
+    --surface: #1a1918;
+    --surface-2: #222120;
+    --surface-3: #2b2a28;
+    --ink: #f2f0ec;
+    --ink-2: #d3cfc8;
+    --muted: #a6a199; /* 6.4:1 on surface */
+    --faint: #7b776f;
+    --line: #2c2b29;
+    --line-strong: #3b3a37;
+
+    --accent: #6d68f0;
+    --accent-hover: #827ef4;
+    --accent-ink: #aeb4ff;
+    --accent-soft: rgb(109 104 240 / 0.16);
+    --accent-line: rgb(129 126 244 / 0.4);
+    --on-accent: #ffffff;
+
+    --success: #6fd7a3;   --success-soft: rgb(34 160 107 / 0.14); --success-line: rgb(34 160 107 / 0.35); --success-dot: #3cc68a;
+    --warning: #f2c35e;   --warning-soft: rgb(226 163 0 / 0.14);  --warning-line: rgb(226 163 0 / 0.35);  --warning-dot: #f0b429;
+    --info: #8fb8ff;      --info-soft: rgb(59 130 246 / 0.15);    --info-line: rgb(59 130 246 / 0.38);    --info-dot: #5b9bff;
+    --danger: #ff9a92;    --danger-soft: rgb(229 72 77 / 0.15);   --danger-line: rgb(229 72 77 / 0.4);    --danger-dot: #f2555a;
+    --orange: #ffb27a;    --orange-soft: rgb(243 135 68 / 0.15);  --orange-line: rgb(243 135 68 / 0.4);   --orange-dot: #f79552;
+    --neutral: #c9c4bc;   --neutral-soft: rgb(255 255 255 / 0.06); --neutral-line: rgb(255 255 255 / 0.12); --neutral-dot: #8a857d;
+
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 14px 32px -10px rgb(0 0 0 / 0.55);
+    --chart-grid: #2a2927;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-success-dot: var(--success-dot);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-warning-dot: var(--warning-dot);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+  --color-info-dot: var(--info-dot);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-danger-dot: var(--danger-dot);
+  --color-orange: var(--orange);
+  --color-orange-soft: var(--orange-soft);
+  --color-orange-line: var(--orange-line);
+  --color-orange-dot: var(--orange-dot);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-line: var(--neutral-line);
+  --color-neutral-dot: var(--neutral-dot);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+  --radius-card: 1.125rem; /* 18 px */
+
+  --animate-fade-up: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-caret: caret 1s steps(2, start) infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes caret {
+  to { visibility: hidden; }
+}
+
+/* ---------------------------------------------------------------- building blocks
+   Tailwind 4 needs @utility (not @layer components) for classes that @apply each other. */
+@utility focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+}
+@utility btn {
+  @apply focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-on-accent shadow-soft hover:bg-accent-hover;
+}
+@utility btn-secondary {
+  @apply btn border border-line bg-surface text-ink shadow-soft hover:border-line-strong hover:bg-surface-2;
+}
+@utility btn-ghost {
+  @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink;
+}
+@utility btn-link {
+  @apply focus-ring rounded text-sm font-medium text-accent-ink underline-offset-4 hover:underline;
+}
+@utility input {
+  @apply focus-ring block w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm text-ink shadow-soft transition-colors placeholder:text-faint hover:border-line-strong;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-ink-2;
+}
+@utility card {
+  @apply rounded-card border border-line bg-surface p-5 shadow-soft;
+}
+@utility card-hover {
+  @apply transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-2;
+}
+@utility eyebrow {
+  @apply text-xs font-medium uppercase tracking-[0.08em] text-muted;
+}
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+html {
+  @apply bg-bg;
+}
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-bg font-sans text-ink antialiased;
+}
+::selection {
+  @apply bg-accent-soft text-ink;
+}
+
+/* Motion is decoration only: honour the system setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

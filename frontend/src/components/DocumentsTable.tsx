@@ -66,7 +66,7 @@ export function DocumentsTable() {
         <>
           <div className="relative overflow-x-auto">
             <table className="w-full min-w-[56rem] text-left text-sm">
-              <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+              <thead className="border-b border-line text-xs uppercase text-muted">
                 <tr>
                   <th scope="col" className="py-2 pr-3">File</th>
                   <th scope="col" className="py-2 pr-3">Status</th>
@@ -80,14 +80,14 @@ export function DocumentsTable() {
                   <th scope="col" className="py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {documents.data.items.map((doc) => (
                   <tr key={doc.id}>
                     <td className="max-w-56 truncate py-2 pr-3">
                       <Link href={`/documents/${doc.id}`} className="btn-link">{doc.filename}</Link>
                     </td>
                     <td className="py-2 pr-3"><StatusBadge status={doc.status} /></td>
-                    <td className="py-2 pr-3 text-slate-600">
+                    <td className="py-2 pr-3 text-muted">
                       {doc.job && isActive(doc)
                         ? [
                             doc.job.stage ?? doc.job.status,
@@ -105,7 +105,7 @@ export function DocumentsTable() {
                       {doc.invoice_count > 1 ? "several" : formatMoney(doc.invoice?.total, doc.invoice?.currency)}
                     </td>
                     <td className="py-2 pr-3">{doc.needs_review ? "⚑ Needs review" : "—"}</td>
-                    <td className="py-2 pr-3 whitespace-nowrap text-slate-600">{formatDateTime(doc.created_at)}</td>
+                    <td className="py-2 pr-3 whitespace-nowrap text-muted">{formatDateTime(doc.created_at)}</td>
                     <td className="py-2 text-right">
                       <button type="button" className="btn-secondary px-2 py-1 text-xs"
                         disabled={isActive(doc) || reprocess.isPending}

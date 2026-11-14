@@ -25,17 +25,17 @@ export function ActionCard({ action, onChange }: { action: ActionView; onChange:
     }
   }
 
-  const tone = status === "pending" ? "border-blue-300 bg-blue-50" : status === "confirmed" ? "border-green-300 bg-green-50" : "border-slate-300 bg-slate-50";
+  const tone = status === "pending" ? "border-accent-line bg-accent-soft" : status === "confirmed" ? "border-success-line bg-success-soft" : "border-line-strong bg-surface-2";
   return (
     <div className={`rounded-md border p-3 text-sm ${tone}`} role="group" aria-label="Proposed change">
       <p className="font-medium">{status === "pending" ? "Proposed change" : `Change ${status}`}</p>
       <p className="mt-1">{action.summary}</p>
-      {action.error ? <p className="mt-1 text-red-800">{action.error}</p> : null}
+      {action.error ? <p className="mt-1 text-danger">{action.error}</p> : null}
       {status === "pending" ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <button type="button" className="btn-primary px-2 py-1 text-xs" disabled={busy} onClick={() => void decide("confirm")}>Confirm</button>
           <button type="button" className="btn-secondary px-2 py-1 text-xs" disabled={busy} onClick={() => void decide("cancel")}>Cancel</button>
-          <span className="text-xs text-slate-600">Nothing changes until you confirm · expires in about {minutes} min</span>
+          <span className="text-xs text-muted">Nothing changes until you confirm · expires in about {minutes} min</span>
         </div>
       ) : null}
     </div>

@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { Providers } from "@/components/Providers";
@@ -9,11 +11,21 @@ export const metadata: Metadata = {
   description: "Upload invoices, review extracted fields with evidence, and search them.",
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#111110" },
+  ],
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-3 focus:py-2 focus:text-ink focus:shadow-lift"
+        >
           Skip to content
         </a>
         <Providers>
@@ -22,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Suspense fallback={<Nav pathname="" />}>
               <Nav />
             </Suspense>
-            <main id="main" className="min-w-0 flex-1 px-4 py-6">
+            <main id="main" className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 md:px-10 md:pb-12 md:pt-10">
               <div className="mx-auto max-w-6xl">{children}</div>
             </main>
           </div>

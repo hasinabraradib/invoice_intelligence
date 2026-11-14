@@ -65,7 +65,7 @@ export function Pagination({ total, limit, offset, onChange }: {
     <nav aria-label="Pagination" className="flex items-center justify-between gap-2 pt-3 text-sm">
       <button type="button" className="btn-secondary" disabled={offset === 0}
         onClick={() => onChange(Math.max(0, offset - limit))}>Previous</button>
-      <span className="text-slate-600">Page {page} of {pages} · {total} total</span>
+      <span className="text-muted">Page {page} of {pages} · {total} total</span>
       <button type="button" className="btn-secondary" disabled={offset + limit >= total}
         onClick={() => onChange(offset + limit)}>Next</button>
     </nav>

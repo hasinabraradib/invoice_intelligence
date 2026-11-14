@@ -27,7 +27,7 @@ export function renderSnippet(snippet: string): ReactNode[] {
       const text = unescapeHtml(part);
       nodes.push(
         marked ? (
-          <mark key={index} className="rounded bg-yellow-200 px-0.5 text-slate-900">
+          <mark key={index} className="rounded bg-warning-soft px-0.5 text-ink">
             {text}
           </mark>
         ) : (
@@ -40,5 +40,5 @@ export function renderSnippet(snippet: string): ReactNode[] {
 }
 
 export function Snippet({ text }: { text: string }) {
-  return <p className="text-sm text-slate-700">{renderSnippet(text)}</p>;
+  return <p className="text-sm text-ink-2">{renderSnippet(text)}</p>;
 }

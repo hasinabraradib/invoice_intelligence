@@ -20,7 +20,7 @@ export function inline(text: string): ReactNode[] {
   return text.split(INLINE).map((part, i) => {
     if (!part) return null;
     if (part.startsWith("`") && part.endsWith("`") && part.length > 1)
-      return <code key={i} className="rounded bg-slate-100 px-1 text-[0.9em]">{part.slice(1, -1)}</code>;
+      return <code key={i} className="rounded bg-surface-2 px-1 text-[0.9em]">{part.slice(1, -1)}</code>;
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) return <strong key={i}>{inline(part.slice(2, -2))}</strong>;
     if ((part.startsWith("*") && part.endsWith("*")) || (part.startsWith("_") && part.endsWith("_")))
       if (part.length > 2) return <em key={i}>{inline(part.slice(1, -1))}</em>;
@@ -47,7 +47,7 @@ export function Markdown({ text }: { text: string }) {
       i++;
       while (i < lines.length && !lines[i].startsWith("```")) code.push(lines[i++]);
       i++;
-      blocks.push(<pre key={blocks.length} className="overflow-x-auto rounded bg-slate-100 p-2 text-xs"><code>{code.join("\n")}</code></pre>);
+      blocks.push(<pre key={blocks.length} className="overflow-x-auto rounded bg-surface-2 p-2 text-xs"><code>{code.join("\n")}</code></pre>);
     } else if (/^\s*([-*]|\d+\.)\s+/.test(line)) {
       const ordered = /^\s*\d+\./.test(line);
       const items: string[] = [];

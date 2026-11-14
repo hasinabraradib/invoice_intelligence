@@ -67,10 +67,10 @@ export function Uploader() {
           start(e.dataTransfer.files);
         }}
         className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center ${
-          dragging ? "border-blue-500 bg-blue-50" : "border-slate-300"
+          dragging ? "border-accent bg-accent-soft" : "border-line-strong"
         }`}
       >
-        <p className="text-sm text-slate-700">Drag files here, or</p>
+        <p className="text-sm text-ink-2">Drag files here, or</p>
         <label htmlFor="file-input" className="btn-primary cursor-pointer">Choose files</label>
         <input
           ref={input}
@@ -84,12 +84,12 @@ export function Uploader() {
             e.target.value = ""; // allow choosing the same file again
           }}
         />
-        <p className="text-xs text-slate-500">PDF, PNG, JPEG, TIFF, XLSX, XLS or CSV · up to {MAX_UPLOAD_MB} MB each</p>
+        <p className="text-xs text-muted">PDF, PNG, JPEG, TIFF, XLSX, XLS or CSV · up to {MAX_UPLOAD_MB} MB each</p>
       </div>
       {items.length > 0 ? (
         <ul className="mt-4 space-y-2" aria-label="Uploads">
           {items.map((item) => (
-            <li key={item.key} className="rounded-md border border-slate-200 p-3 text-sm">
+            <li key={item.key} className="rounded-md border border-line p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="min-w-0 truncate font-medium">{item.name}</span>
                 <span>
@@ -100,14 +100,14 @@ export function Uploader() {
                   {item.state === "duplicate" && item.documentId && (
                     <Link className="btn-link" href={`/documents/${item.documentId}`}>Already uploaded · open existing</Link>
                   )}
-                  {item.state === "error" && <span className="text-red-700">{item.message}</span>}
+                  {item.state === "error" && <span className="text-danger">{item.message}</span>}
                 </span>
               </div>
               {item.state === "uploading" ? (
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200" role="progressbar"
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3" role="progressbar"
                   aria-label={`Upload progress for ${item.name}`} aria-valuemin={0} aria-valuemax={100}
                   aria-valuenow={Math.round(item.progress * 100)}>
-                  <div className="h-full bg-blue-600 transition-all" style={{ width: percent(item.progress) }} />
+                  <div className="h-full bg-accent transition-all" style={{ width: percent(item.progress) }} />
                 </div>
               ) : null}
             </li>

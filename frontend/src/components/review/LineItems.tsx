@@ -25,7 +25,7 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
 
-  if (items.length === 0) return <p className="text-sm text-slate-600">No line items were found.</p>;
+  if (items.length === 0) return <p className="text-sm text-muted">No line items were found.</p>;
 
   const startEdit = (item: LineItemView) => {
     setDraft(Object.fromEntries(COLUMNS.map((c) => [c.name, item[c.name].value == null ? "" : String(item[c.name].value)])));
@@ -37,17 +37,17 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full min-w-[36rem] text-left text-sm">
-        <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+        <thead className="border-b border-line text-xs uppercase text-muted">
           <tr>
             <th scope="col" className="py-2 pr-2">#</th>
             {COLUMNS.map((c) => <th key={c.name} scope="col" className="py-2 pr-2">{c.label}</th>)}
             <th scope="col" className="py-2"><span className="sr-only">Actions</span></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-line">
           {items.map((item) => (
             <tr key={item.position} id={fieldAnchor(`line_items[${item.position}]`)} className="scroll-mt-20 align-top">
-              <td className="py-2 pr-2 text-slate-500">{item.position}</td>
+              <td className="py-2 pr-2 text-muted">{item.position}</td>
               {COLUMNS.map((c) => {
                 const cellId = `line-${item.position}-${c.name}`;
                 const check = checks[c.name];
@@ -60,7 +60,7 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
                           inputMode={c.kind === "text" ? undefined : "decimal"}
                           aria-invalid={!check.ok}
                           onChange={(e) => setDraft({ ...draft, [c.name]: e.target.value })} />
-                        {!check.ok ? <p className="text-xs text-red-700">{check.error}</p> : null}
+                        {!check.ok ? <p className="text-xs text-danger">{check.error}</p> : null}
                       </>
                     ) : (
                       <div className="flex flex-col gap-1">
