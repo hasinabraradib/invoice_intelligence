@@ -1,0 +1,52 @@
+{
+  "id": "harddev-07",
+  "file": "harddev-07.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-377",
+    "invoice_date": "2026-07-20",
+    "due_date": "2026-08-19",
+    "supplier_name": "Padma Electric Co.",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "BDT",
+    "subtotal": "14396.01",
+    "tax": "2159.40",
+    "total": "16555.41"
+  },
+  "line_items": [
+    {
+      "description": "Network switch 24-port",
+      "quantity": "5",
+      "unit_price": "208.67",
+      "line_total": "1043.35"
+    },
+    {
+      "description": "Freight charges",
+      "quantity": "24",
+      "unit_price": "108.40",
+      "line_total": "2601.60"
+    },
+    {
+      "description": "Software licence (annual)",
+      "quantity": "10",
+      "unit_price": "1073.48",
+      "line_total": "10734.80"
+    },
+    {
+      "description": "Cotton fabric (metre)",
+      "quantity": "3",
+      "unit_price": "5.42",
+      "line_total": "16.26"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: faint scan: low-contrast grey text on an off-white page"
+  ],
+  "subset": "hard",
+  "hard_kind": "faint"
+}

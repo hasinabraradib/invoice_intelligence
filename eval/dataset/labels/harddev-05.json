@@ -1,0 +1,40 @@
+{
+  "id": "harddev-05",
+  "file": "harddev-05.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-355",
+    "invoice_date": "2026-06-16",
+    "due_date": "2026-07-16",
+    "supplier_name": "Bluefin Logistics Inc.",
+    "customer_name": "Example Trading Co.",
+    "currency": "USD",
+    "subtotal": "2532.40",
+    "tax": "379.86",
+    "total": "2912.26"
+  },
+  "line_items": [
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "10",
+      "unit_price": "27.39",
+      "line_total": "273.90"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "10",
+      "unit_price": "225.85",
+      "line_total": "2258.50"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: rotated 8-12 degrees"
+  ],
+  "subset": "hard",
+  "hard_kind": "rotated"
+}

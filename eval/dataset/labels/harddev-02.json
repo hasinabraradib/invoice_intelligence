@@ -1,0 +1,40 @@
+{
+  "id": "harddev-02",
+  "file": "harddev-02.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-322",
+    "invoice_date": "2026-03-14",
+    "due_date": "2026-04-13",
+    "supplier_name": "Cobalt Software LLC",
+    "customer_name": "Demo Hospital Trust",
+    "currency": "USD",
+    "subtotal": "130.17",
+    "tax": "19.53",
+    "total": "149.70"
+  },
+  "line_items": [
+    {
+      "description": "Steel bolts M8",
+      "quantity": "24",
+      "unit_price": "0.84",
+      "line_total": "20.16"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "3",
+      "unit_price": "36.67",
+      "line_total": "110.01"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: heavy Gaussian noise and blur"
+  ],
+  "subset": "hard",
+  "hard_kind": "noisy_blur"
+}

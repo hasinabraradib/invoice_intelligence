@@ -1,0 +1,46 @@
+{
+  "id": "harddev-04",
+  "file": "harddev-04.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-344",
+    "invoice_date": "2026-09-29",
+    "due_date": "2026-10-29",
+    "supplier_name": "Karnaphuli Foods Ltd",
+    "customer_name": "Placeholder Bank PLC",
+    "currency": "BDT",
+    "subtotal": "963.11",
+    "tax": "144.47",
+    "total": "1107.58"
+  },
+  "line_items": [
+    {
+      "description": "Installation service",
+      "quantity": "10",
+      "unit_price": "83.93",
+      "line_total": "839.30"
+    },
+    {
+      "description": "Rice 25kg bag",
+      "quantity": "1",
+      "unit_price": "35.38",
+      "line_total": "35.38"
+    },
+    {
+      "description": "Office chair",
+      "quantity": "1",
+      "unit_price": "88.43",
+      "line_total": "88.43"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: low-resolution phone photo: 100 dpi, shear, uneven light, JPEG q30-40"
+  ],
+  "subset": "hard",
+  "hard_kind": "phone_photo"
+}

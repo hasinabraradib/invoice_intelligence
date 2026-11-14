@@ -1,0 +1,46 @@
+{
+  "id": "harddev-01",
+  "file": "harddev-01.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-311",
+    "invoice_date": "2026-09-21",
+    "due_date": "2026-10-21",
+    "supplier_name": "Jamuna Paper Mills",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "BDT",
+    "subtotal": "193.13",
+    "tax": "28.97",
+    "total": "222.10"
+  },
+  "line_items": [
+    {
+      "description": "Toner cartridge",
+      "quantity": "1",
+      "unit_price": "117.73",
+      "line_total": "117.73"
+    },
+    {
+      "description": "Steel bolts M8",
+      "quantity": "2",
+      "unit_price": "0.59",
+      "line_total": "1.18"
+    },
+    {
+      "description": "LED panel 60x60",
+      "quantity": "3",
+      "unit_price": "24.74",
+      "line_total": "74.22"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: heavy Gaussian noise and blur"
+  ],
+  "subset": "hard",
+  "hard_kind": "noisy_blur"
+}

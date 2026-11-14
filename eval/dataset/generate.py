@@ -583,7 +583,27 @@ def degrade_hard(pdf: bytes, kind: str, rng: random.Random) -> bytes:
     return jpeg(Image.fromarray(arr), quality)
 
 
-def build_hard(rng: random.Random) -> list[tuple[Invoice, str]]:
+def render_hard(hard: Invoice, kind: str, rng: random.Random) -> tuple[str, bytes, str]:
+    """(file name, bytes, file type) for one hard invoice; consumes `rng` for damage."""
+    if kind == "crowded_pdf":
+        return f"{hard.id}.pdf", pdf_bytes(lambda c: draw_crowded(c, hard)), "pdf_digital"
+    if kind == "two_column_pdf":
+        return f"{hard.id}.pdf", pdf_bytes(lambda c: draw_two_column(c, hard)), "pdf_digital"
+    # Scanned crowded / two-column layouts get ordinary scan damage ("plain"); the other
+    # kinds use the plain invoice layout with their own damage.
+    layouts = {"crowded_scan": draw_crowded, "two_column_scan": draw_two_column}
+    if kind in layouts:
+        source = pdf_bytes(lambda c: layouts[kind](c, hard))
+        damage = "plain"
+    else:
+        source = pdf_bytes(lambda c: draw_invoice(c, hard, 0, [hard.lines]))
+        damage = kind
+    return f"{hard.id}.jpg", degrade_hard(source, damage, rng), "image_scan"
+
+
+def build_hard(
+    rng: random.Random, prefix: str = "hard", number_prefix: str = "HD"
+) -> list[tuple[Invoice, str]]:
     plan = [
         "noisy_blur",
         "noisy_blur",
@@ -615,8 +635,8 @@ def build_hard(rng: random.Random) -> list[tuple[Invoice, str]]:
         out.append(
             (
                 Invoice(
-                    id=f"hard-{n:02d}",
-                    invoice_number=f"HD-{inv_date.year}-{300 + n * 11}",
+                    id=f"{prefix}-{n:02d}",
+                    invoice_number=f"{number_prefix}-{inv_date.year}-{300 + n * 11}",
                     invoice_date=inv_date,
                     due_date=inv_date + timedelta(days=30),
                     supplier_name=supplier,
@@ -1040,42 +1060,23 @@ def main() -> None:
         pdf = pdf_bytes(lambda c, x=extra, n=n: draw_invoice(c, x, n % 3, [x.lines]))
         add_file(name, pdf, "pdf_digital", "dev", [label(extra, name, "pdf_digital", "dev")])
 
-    # The "hard" subset (test split only): realistic damage and layouts, reported as its
-    # own row next to the clean numbers. Own RNG: earlier files stay byte-identical.
-    hard_rng = random.Random(SEED + 2)  # noqa: S311 (reproducible test data)
-    for hard, kind in build_hard(hard_rng):
-        if kind == "crowded_pdf":
-            name, data, ftype = (
-                f"{hard.id}.pdf",
-                pdf_bytes(lambda c, h=hard: draw_crowded(c, h)),
-                "pdf_digital",
-            )
-        elif kind == "two_column_pdf":
-            name, data, ftype = (
-                f"{hard.id}.pdf",
-                pdf_bytes(lambda c, h=hard: draw_two_column(c, h)),
-                "pdf_digital",
-            )
-        else:
-            # Scanned crowded / two-column layouts get ordinary scan damage ("plain"); the
-            # other kinds use the plain invoice layout with their own damage.
-            layouts = {"crowded_scan": draw_crowded, "two_column_scan": draw_two_column}
-            if kind in layouts:
-                source = pdf_bytes(lambda c, h=hard, d=layouts[kind]: d(c, h))
-                damage = "plain"
-            else:
-                source = pdf_bytes(lambda c, h=hard: draw_invoice(c, h, 0, [h.lines]))
-                damage = kind
-            name, data, ftype = (
-                f"{hard.id}.jpg",
-                degrade_hard(source, damage, hard_rng),
-                "image_scan",
-            )
-        lid = label(hard, name, ftype, "test")
-        labels[lid]["subset"] = "hard"
-        labels[lid]["hard_kind"] = kind
-        add_file(name, data, ftype, "test", [lid], role="invoice")
-        files[-1]["subset"] = "hard"
+    # The "hard" subset (test split): realistic damage and layouts, reported as its own row
+    # next to the clean numbers. Own RNG: earlier files stay byte-identical.
+    # The "hard dev" set: the same kinds of damage with a different seed and its own ids
+    # and invoice numbers, in the dev split. Work on robustness is measured only on it; the
+    # hard test files stay held out.
+    for prefix, number_prefix, seed, hard_split in (
+        ("hard", "HD", SEED + 2, "test"),
+        ("harddev", "HV", SEED + 3, "dev"),
+    ):
+        hard_rng = random.Random(seed)  # noqa: S311 (reproducible test data)
+        for hard, kind in build_hard(hard_rng, prefix, number_prefix):
+            name, data, ftype = render_hard(hard, kind, hard_rng)
+            lid = label(hard, name, ftype, hard_split)
+            labels[lid]["subset"] = "hard"
+            labels[lid]["hard_kind"] = kind
+            add_file(name, data, ftype, hard_split, [lid], role="invoice")
+            files[-1]["subset"] = "hard"
 
     for lid, data in labels.items():
         (LABELS / f"{lid}.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")

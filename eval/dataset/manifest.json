@@ -1,7 +1,7 @@
 {
   "seed": 20261114,
   "note": "Synthetic data only. Ground truth = printed values. Rebuild: make eval-dataset.",
-  "invoice_count": 55,
+  "invoice_count": 67,
   "files": [
     {
       "file": "batch-6-invoices.pdf",
@@ -199,6 +199,162 @@
       "expected_segments": null,
       "sha256": "b61a574037cb1904be93b63c794e21ed6ad18f2bff676eea3de49a378a944de7",
       "size_bytes": 317031,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-01.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-01"
+      ],
+      "expected_segments": null,
+      "sha256": "02457c311e93a4c89bcbe0ee8ae782e0f7d83630f4421b391164a5cbf5063d57",
+      "size_bytes": 700625,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-02.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-02"
+      ],
+      "expected_segments": null,
+      "sha256": "a51bb4fa0490ac7872517650766b71e69d82bfd4f34410d475a3ff1f985c6a7b",
+      "size_bytes": 835947,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-03.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-03"
+      ],
+      "expected_segments": null,
+      "sha256": "034f2933c29eab0662e3941dd85dd984cc619af77e760676db5ae44ef0eccd7d",
+      "size_bytes": 99593,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-04.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-04"
+      ],
+      "expected_segments": null,
+      "sha256": "94eb457fe24c1c27dcb88a8022240cee5a7e7245ebb138fbf57fe030a3e2ce7d",
+      "size_bytes": 64523,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-05.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-05"
+      ],
+      "expected_segments": null,
+      "sha256": "ebb53bf597bde25f83404afe19f587a59a5af67b0ba893b8f40271797f1f47f2",
+      "size_bytes": 354497,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-06.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-06"
+      ],
+      "expected_segments": null,
+      "sha256": "3acb678d70182b67094ebf5d6047c19111a4b95f1567be2afed7fe9dad1bcc9c",
+      "size_bytes": 293587,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-07.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-07"
+      ],
+      "expected_segments": null,
+      "sha256": "d6ae1e23832d1a36b1bace3ae334417d0cc49e5696ba99dddcf3848909087c0a",
+      "size_bytes": 570906,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-08.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-08"
+      ],
+      "expected_segments": null,
+      "sha256": "e181319ec4aa0b794d31d787ba2a54db2f104db270baab16fc2bf2913f19d031",
+      "size_bytes": 368077,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-09.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-09"
+      ],
+      "expected_segments": null,
+      "sha256": "0cb45a56e1dfe585580a6a37f59805f55c1077d88ab5b8881420817e9f1b1eb3",
+      "size_bytes": 3211,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-10.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-10"
+      ],
+      "expected_segments": null,
+      "sha256": "350718cd666514338683c5ec471f9ea9fea2f813b9ee83667e1c20ce918dfbf1",
+      "size_bytes": 359747,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-11.pdf",
+      "file_type": "pdf_digital",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-11"
+      ],
+      "expected_segments": null,
+      "sha256": "73aefadd8432b682bf46f94df6fac71a4c1c0090ea9e88d8accf1bf0cde1a2ce",
+      "size_bytes": 44129,
+      "subset": "hard"
+    },
+    {
+      "file": "harddev-12.jpg",
+      "file_type": "image_scan",
+      "split": "dev",
+      "role": "invoice",
+      "invoices": [
+        "harddev-12"
+      ],
+      "expected_segments": null,
+      "sha256": "5225c272a0a73cd31977d03982f8efb4b30aa9de2ae52072df0dce93c49b1c7e",
+      "size_bytes": 391343,
       "subset": "hard"
     },
     {

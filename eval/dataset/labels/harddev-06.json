@@ -1,0 +1,40 @@
+{
+  "id": "harddev-06",
+  "file": "harddev-06.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-366",
+    "invoice_date": "2026-07-22",
+    "due_date": "2026-08-21",
+    "supplier_name": "Lisboa Textiles Lda",
+    "customer_name": "Sample Retail Ltd",
+    "currency": "EUR",
+    "subtotal": "593.33",
+    "tax": "89.00",
+    "total": "682.33"
+  },
+  "line_items": [
+    {
+      "description": "Office chair",
+      "quantity": "1",
+      "unit_price": "196.31",
+      "line_total": "196.31"
+    },
+    {
+      "description": "Network switch 24-port",
+      "quantity": "2",
+      "unit_price": "198.51",
+      "line_total": "397.02"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: rotated 8-12 degrees"
+  ],
+  "subset": "hard",
+  "hard_kind": "rotated"
+}

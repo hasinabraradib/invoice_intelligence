@@ -1,0 +1,172 @@
+{
+  "id": "harddev-10",
+  "file": "harddev-10.jpg",
+  "file_type": "image_scan",
+  "split": "dev",
+  "segment": null,
+  "fields": {
+    "invoice_number": "HV-2026-410",
+    "invoice_date": "2026-09-20",
+    "due_date": "2026-10-20",
+    "supplier_name": "Meghna Traders Ltd",
+    "customer_name": "Example Trading Co.",
+    "currency": "BDT",
+    "subtotal": "49167.43",
+    "tax": "7375.11",
+    "total": "56542.54"
+  },
+  "line_items": [
+    {
+      "description": "Cotton fabric (metre) - lot 1",
+      "quantity": "5",
+      "unit_price": "6.89",
+      "line_total": "34.45"
+    },
+    {
+      "description": "Safety gloves (pair) - lot 2",
+      "quantity": "24",
+      "unit_price": "5.17",
+      "line_total": "124.08"
+    },
+    {
+      "description": "Maintenance visit - lot 3",
+      "quantity": "24",
+      "unit_price": "63.51",
+      "line_total": "1524.24"
+    },
+    {
+      "description": "Calibration certificate - lot 4",
+      "quantity": "1",
+      "unit_price": "62.95",
+      "line_total": "62.95"
+    },
+    {
+      "description": "A4 paper (box of 5 reams) - lot 5",
+      "quantity": "2",
+      "unit_price": "14.84",
+      "line_total": "29.68"
+    },
+    {
+      "description": "Toner cartridge - lot 6",
+      "quantity": "5",
+      "unit_price": "106.19",
+      "line_total": "530.95"
+    },
+    {
+      "description": "Steel bolts M8 - lot 7",
+      "quantity": "1",
+      "unit_price": "0.96",
+      "line_total": "0.96"
+    },
+    {
+      "description": "LED panel 60x60 - lot 8",
+      "quantity": "2",
+      "unit_price": "43.40",
+      "line_total": "86.80"
+    },
+    {
+      "description": "Installation service - lot 9",
+      "quantity": "5",
+      "unit_price": "181.86",
+      "line_total": "909.30"
+    },
+    {
+      "description": "Rice 25kg bag - lot 10",
+      "quantity": "24",
+      "unit_price": "37.69",
+      "line_total": "904.56"
+    },
+    {
+      "description": "Office chair - lot 11",
+      "quantity": "5",
+      "unit_price": "207.94",
+      "line_total": "1039.70"
+    },
+    {
+      "description": "Network switch 24-port - lot 12",
+      "quantity": "5",
+      "unit_price": "105.97",
+      "line_total": "529.85"
+    },
+    {
+      "description": "Freight charges - lot 13",
+      "quantity": "24",
+      "unit_price": "387.32",
+      "line_total": "9295.68"
+    },
+    {
+      "description": "Software licence (annual) - lot 14",
+      "quantity": "24",
+      "unit_price": "1167.02",
+      "line_total": "28008.48"
+    },
+    {
+      "description": "Cotton fabric (metre) - lot 15",
+      "quantity": "1",
+      "unit_price": "2.79",
+      "line_total": "2.79"
+    },
+    {
+      "description": "Safety gloves (pair) - lot 16",
+      "quantity": "3",
+      "unit_price": "4.37",
+      "line_total": "13.11"
+    },
+    {
+      "description": "Maintenance visit - lot 17",
+      "quantity": "2",
+      "unit_price": "93.02",
+      "line_total": "186.04"
+    },
+    {
+      "description": "Calibration certificate - lot 18",
+      "quantity": "24",
+      "unit_price": "91.79",
+      "line_total": "2202.96"
+    },
+    {
+      "description": "A4 paper (box of 5 reams) - lot 19",
+      "quantity": "10",
+      "unit_price": "12.67",
+      "line_total": "126.70"
+    },
+    {
+      "description": "Toner cartridge - lot 20",
+      "quantity": "10",
+      "unit_price": "42.44",
+      "line_total": "424.40"
+    },
+    {
+      "description": "Steel bolts M8 - lot 21",
+      "quantity": "3",
+      "unit_price": "1.29",
+      "line_total": "3.87"
+    },
+    {
+      "description": "LED panel 60x60 - lot 22",
+      "quantity": "5",
+      "unit_price": "33.73",
+      "line_total": "168.65"
+    },
+    {
+      "description": "Installation service - lot 23",
+      "quantity": "10",
+      "unit_price": "292.26",
+      "line_total": "2922.60"
+    },
+    {
+      "description": "Rice 25kg bag - lot 24",
+      "quantity": "1",
+      "unit_price": "34.63",
+      "line_total": "34.63"
+    }
+  ],
+  "ambiguous_fields": [],
+  "expected_flags": [],
+  "duplicate_of": null,
+  "notes": [
+    "hard: crowded layout, 20+ line items, scanned"
+  ],
+  "subset": "hard",
+  "hard_kind": "crowded_scan"
+}
