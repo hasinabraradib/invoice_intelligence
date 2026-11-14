@@ -126,6 +126,22 @@ async def test_llm_usage_is_saved_on_the_job_and_summed_over_attempts(api, run_j
     assert job["llm_cached_input_tokens"] == 800
 
 
+async def test_embedding_failure_in_the_worker_finishes_the_job_with_a_warning(
+    api, run_job, tmp_path
+):
+    """Regression: the pipeline rolls back after a failed embedding, which expired the
+    worker's `job` object; reading job.id afterwards crashed with MissingGreenlet."""
+    from app.search.embedder import FakeEmbedder
+
+    uploaded = await _upload(api, "inv.pdf", factories.text_pdf(tmp_path / "a.pdf", 1).read_bytes())
+    llm = FakeLLMClient(GOOD_REPLY)
+    llm.usage.calls = 1  # so the usage is saved after the rollback
+    outcome = await run_job(uploaded["job_id"], llm, embedder=FakeEmbedder(fail=True))
+    assert outcome in ("processed", "needs_review")
+    status = (await api.get(f"/documents/{uploaded['document_id']}/status")).json()
+    assert status["job_status"] == "succeeded" and "keyword search still works" in status["error"]
+
+
 async def test_stuck_running_job_is_requeued(db_session, queue):
     repo = Repository(db_session)
     doc = await repo.create_document(

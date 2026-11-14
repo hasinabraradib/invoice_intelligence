@@ -63,6 +63,9 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
             job = await repo.get_job(job.id)
         if job is None or job.status != JobStatus.QUEUED:
             return "skipped"  # duplicate message, or already handled: nothing to do
+        # Plain copies: a rollback inside the pipeline expires `job`, and reloading it later
+        # would need database I/O at a point where SQLAlchemy cannot do it (MissingGreenlet).
+        job_uuid, attempts_before = job.id, job.attempts
         document = await repo.get_document(job.document_id)
         try:
             llm = ctx["llm_factory"]()
@@ -74,26 +77,31 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
         try:
             with anyio.fail_after(job_timeout(pages, settings)):
                 outcome = await process_document(
-                    document.id, session, llm, settings, job_id=job.id, embedder=ctx.get("embedder")
+                    document.id,
+                    session,
+                    llm,
+                    settings,
+                    job_id=job_uuid,
+                    embedder=ctx.get("embedder"),
                 )
         except TimeoutError:
             # The run was cancelled mid-way: reset the session, then read attempts afresh.
             await session.rollback()
             attempts = await session.scalar(
-                select(ProcessingJob.attempts).where(ProcessingJob.id == job.id)
+                select(ProcessingJob.attempts).where(ProcessingJob.id == job_uuid)
             )
             outcome = await record_failure(
                 session,
                 document.id,
-                job.id,
+                job_uuid,
                 "job timed out",
                 temporary=True,
                 attempts=attempts,
                 settings=settings,
             )
         except TEMPORARY_ERRORS as exc:  # e.g. the database went away mid-job
-            raise Retry(defer=retry_delay(job.attempts + 1, settings)) from exc
-        await _save_llm_usage(session, job.id, llm)
+            raise Retry(defer=retry_delay(attempts_before + 1, settings)) from exc
+        await _save_llm_usage(session, job_uuid, llm)
 
     if outcome.retry:
         raise Retry(defer=retry_delay(outcome.attempts, settings))

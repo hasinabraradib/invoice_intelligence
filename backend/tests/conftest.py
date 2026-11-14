@@ -210,7 +210,7 @@ async def run_job(settings, database_url, embedder):
 
     engine = create_async_engine(database_url, poolclass=NullPool)
 
-    async def run(job_id, llm, job_try=1):
+    async def run(job_id, llm, job_try=1, embedder=embedder):
         def factory():
             if isinstance(llm, Exception):
                 raise llm  # e.g. ValueError: LLM not configured
