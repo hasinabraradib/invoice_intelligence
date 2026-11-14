@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+import threading
 from pathlib import Path
 
 import pypdfium2 as pdfium
@@ -12,6 +13,13 @@ from app.parsing.models import FileKind
 
 PREVIEW_WIDTH = 1200  # sharp enough to read on a laptop, ~200-400 KB per page
 MAX_HEIGHT = 6000  # stop absurdly tall pages from becoming huge images
+
+
+# PDFium is not thread-safe: two threads rendering at the same time can crash the whole
+# process. The API renders previews in a thread pool (thumbnails load in parallel), so
+# every PDFium call goes through this lock. Rendering is fast and cached, so this costs
+# little. (The worker parses PDFs in separate processes, which is safe.)
+_PDFIUM = threading.Lock()
 
 
 class NoPreview(Exception):
@@ -43,6 +51,11 @@ def page_preview(source: Path, page: int, cache_dir: Path) -> Path:
 
 
 def _pdf_page(source: Path, page: int) -> Image.Image:
+    with _PDFIUM:
+        return _render_pdf_page(source, page)
+
+
+def _render_pdf_page(source: Path, page: int) -> Image.Image:
     pdf = pdfium.PdfDocument(source)
     try:
         if not 1 <= page <= len(pdf):
