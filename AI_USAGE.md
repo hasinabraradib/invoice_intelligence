@@ -18,6 +18,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-14 | 5e: AI assistant | Claude Code (Claude Opus 5.5) | Native tool calling for Gemini/Groq; agent loop (max 6 tool steps) over read tools wrapping existing services and fixed SQL sums/counts per currency; write tools that only propose actions, confirmed by the user, with expiry and audit trail; code-level guard against injected instructions; conversations/messages/actions tables; SSE streaming with Stop; chat as home page with greeting, suggestions, tool trace, citations, confirmation cards, attachments; safe Markdown renderer; 15-question eval set and scoring script. Fixed an approval bug in batch documents found on the way. | _To fill in after review_ |
 | 2026-11-14 | 5f: OpenAI provider | Claude Code (Claude Opus 5.5) | Add OpenAI as a third LLM provider (LLM_PROVIDER=openai, OPENAI_API_KEY, default gpt-6-luna with reasoning effort none/low, temperature dropped only if the model rejects it) over httpx: strict JSON-schema extraction, native tool calling, temperature 0, same timeout/retry/backoff; record token usage for cost; mock-server tests (shapes, tool calls, 429 retry, invalid-JSON repair); live check on one synthetic invoice and one short assistant conversation; check that .env is ignored and no key is in git history. | _To fill in after review_ |
 | 2026-11-14 | 6a: Real-provider check + evaluation | Claude Code (Claude Opus 5.5) | Confirm 5d and parallel OCR are complete; real OpenAI runs on synthetic samples and one assistant conversation (question, sum, proposed correction) over SSE; fix what they find; sanitised real replies as fixtures; concurrency cap for rate limits; fixed-seed labelled synthetic dataset (41 invoices, 7 file types, planted defects, dev/test split) with a real-data template; make eval end to end through API and worker with field, line item, flag, duplicate, segmentation, cross-check, timing and cost metrics; docs/evaluation.md; latest accuracy on the dashboard. | _To fill in after review_ |
+| 2026-11-14 | 6a follow-ups: rule fix, assistant miss, hard subset | Claude Code (Claude Opus 5.5) | Fix the no-subtotal line-sum rule with unit tests and dev examples, reporting pre-fix test results as the headline; find and fix the root cause of the assistant's "no Umbrella Trading invoice" miss with a regression test; add a hard test subset (noise, blur, phone photos, 8-12° rotation, faint scans, crowded and two-column layouts) reported as its own row; re-run make eval. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -110,4 +111,22 @@ Why the extraction prompt looks the way it does:
 - **Isolation.** The evaluation runs in its own compose project with a fresh database,
   because duplicate detection and the assistant see every document; it never touches dev
   data.
+
+## Follow-ups to step 6a
+
+- **Report the held-out result, not the improved one.** The line-sum bug was found on the
+  test split, so the headline stays the pre-fix test result and the post-fix result is
+  labelled next to it. The fix also got unit tests and two new dev invoices, so it is
+  covered outside the test split.
+- **Measure the cause before fixing.** The assistant miss looked like a retrieval
+  threshold problem. Asking the same question 8 times with the real model showed it was
+  keyword search requiring every word, after the model chose keyword mode. Similarities,
+  the supplier filter and the batch mapping were measured and ruled out first.
+- **A harder subset found a production bug, not just lower numbers.** Crowded pages hung
+  the embedding model (torch's fused attention on CPU never returns for longer inputs), and
+  the hung thread couldn't be cancelled. It was fixed with eager attention (identical
+  vectors), and the regression tests fail without the fix.
+- **Don't judge flags on the hard subset by precision.** Its documents have no planted
+  defects, so the useful measure is whether a misread reaches review unflagged. It never
+  did (7/7 flagged).
 

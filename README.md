@@ -392,28 +392,31 @@ _To be written._
 ## Evaluation
 
 Measured end to end through the API and worker with the real provider (OpenAI
-`gpt-6-luna`), on 41 labelled **synthetic** invoices (digital and scanned PDFs, photos,
-XLSX, CSV, a 9-page batch, a ledger and a purchase order). Headline numbers for the
-**test split** (26 invoices); full tables, failure examples and limitations are in
-[docs/evaluation.md](docs/evaluation.md):
+`gpt-6-luna`), on 55 labelled **synthetic** invoices: digital and scanned PDFs, photos,
+XLSX, CSV, a 9-page batch, a ledger, a purchase order, and a "hard" subset of damaged and
+crowded documents. Full tables, failure examples and limitations are in
+[docs/evaluation.md](docs/evaluation.md).
 
-| Metric | Test split |
-|---|---|
-| Field accuracy (9 header fields, correctly empty counts as right) | 100% |
-| Invented values (false fills) / missing values | 0% / 0% |
-| Line items F1 | 100% |
-| Validation flags precision / recall | 93.8% / 100% (1 false flag: a known rule bug) |
-| Batch segmentation (exact page ranges) | 6/6 |
-| Cross-check planted findings found | 6/6 (ledger and purchase order) |
-| Duplicate pair flagged | 1/1, no false alarms |
-| Assistant (15 questions, right number and citation) | 14/15 |
-| Time per document p50 / p95 | 9.3 s / 27.0 s |
-| Cost per document (at $0.10 / $0.50 per M tokens) | about $0.0009 |
+| | Clean test (26 invoices) | Hard subset (12, test) |
+|---|---|---|
+| Field accuracy (9 header fields; correctly empty counts as right) | **100%** | **75.0%** |
+| Invented values / missing values | 0% / 0% | none invented / 13.9% (11.1% misread) |
+| Line items F1 | 100% | 85.9% |
+| Validation flags precision / recall | **93.8% / 100%** before the line-sum fix (headline); 100% / 100% after it | 7 of 7 invoices with an error flagged for review |
+| Batch segmentation, cross-check findings, duplicate pair | 6/6, 6/6, 1/1 | – |
+| Time per document p50 / p95 | 9.3 s / 15 s | 14 s / 47 s |
 
-These are clean, machine-generated documents, so treat them as an **upper bound** for real
-invoices. The first run found a real bug (dates from Excel cells were lost), which was
-fixed on the dev split before this run. Label real invoices in `eval/dataset/real/` and run
-`make eval ARGS=--real` for numbers that mean more.
+The assistant answers 15/15 questions with the right number and citation, and cost is
+about $0.001 per document at $0.10 / $0.50 per million tokens. The headline flag numbers
+are from before a rule bug found on the held-out test split was fixed; the post-fix result
+is shown beside them, not instead of them (see docs/evaluation.md for why). The evaluation
+also found real bugs that are now fixed: dates from Excel cells were lost, keyword search
+failed on natural questions, and embedding a long page hung the worker.
+
+The clean numbers are an **upper bound**. The hard subset shows the drop on bad images:
+phone photos and heavy noise cause misreads, though every one was flagged for review.
+Label real invoices in `eval/dataset/real/` and run `make eval ARGS=--real` for numbers
+that mean more.
 
 ```bash
 make eval-dataset   # regenerate the dataset (fixed seed, byte-identical)
