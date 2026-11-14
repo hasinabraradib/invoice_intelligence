@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down demo frontend-deps test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down demo walkthrough frontend-deps test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 # It also adds a random API key (API_KEYS) if .env has none. The key stays in .env and in
@@ -77,6 +77,27 @@ e2e: frontend-deps
 demo: eval-dataset
 	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/eval/dataset/files:/demo:ro" api \
 		python scripts/seed_demo.py /demo
+
+# Walkthrough video (silent, subtitles only) from docs/walkthrough/script.md. Uses a fresh,
+# isolated stack ("invoice-walkthrough" on ports 3100/8100, your dev stack is untouched),
+# seeded with synthetic files plus the latest stored evaluation run, and the real LLM from
+# .env. Six files are uploaded on camera, so they are left out of the seed. Needs ffmpeg.
+# Output (git-ignored): walkthrough-output/walkthrough.mp4 and walkthrough.srt.
+# KEEP=1 leaves the stack running afterwards.
+WT := $(COMPOSE) -p invoice-walkthrough -f docker-compose.yml -f docker-compose.walkthrough.yml
+WT_SEED := inv-02.pdf,inv-02-purchase-order.pdf,inv-06.pdf,inv-06-copy.jpg,inv-01-scanned.pdf,inv-08.jpg,inv-09.pdf,inv-05.csv,inv-11.pdf,harddev-03.jpg,ledger-batch.xlsx
+walkthrough: eval-dataset frontend-deps
+	@command -v ffmpeg > /dev/null || (echo "ffmpeg is needed (e.g. brew install ffmpeg)" && exit 1)
+	cd frontend && npx playwright install chromium
+	$(WT) down -v
+	$(WT) up -d --build --wait
+	$(WT) run --rm --no-deps -e DEMO_FILES="$(WT_SEED)" -v "$(CURDIR)/eval/dataset/files:/demo:ro" api \
+		python scripts/seed_demo.py /demo
+	$(WT) run --rm --no-deps -v "$(CURDIR)/eval/results:/results:ro" api python scripts/store_eval_run.py /results
+	rm -rf walkthrough-output && mkdir -p walkthrough-output
+	node frontend/e2e/walkthrough/record.mjs
+	node frontend/e2e/walkthrough/compose.mjs
+	@test "$(KEEP)" = "1" || $(WT) down -v
 
 # Rewrite the "Runtime prompts" section of docs/prompts.md from the code.
 prompts-doc: env

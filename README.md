@@ -131,6 +131,7 @@ Phone layouts, open pickers and the previous design: [docs/screenshots/](docs/sc
 | [Test results](docs/test-results.md) | Counts, coverage per package and the slowest tests, with the raw JUnit and coverage files |
 | [Prompts](docs/prompts.md) | The prompts used to build the project, and the runtime prompts the system sends |
 | [AI usage](AI_USAGE.md) | Which AI tools were used, for what, and how their output was reviewed and tested |
+| [Walkthrough script](docs/walkthrough/script.md) | The silent, subtitled video walkthrough, scene by scene; `make walkthrough` records it |
 | [Project rules](CLAUDE.md) | The rules every change follows |
 
 ## Design decisions and trade-offs
@@ -252,7 +253,7 @@ appears on the dashboard under "Latest evaluation".
 
 ## Security
 
-Every API route except `/health` needs an API key, which only the web server holds. Uploads,
+Every API route that touches data needs an API key, which only the web server holds. Uploads,
 the assistant and search are rate-limited, both servers send strict security headers, and
 the app containers run as non-root on read-only file systems. Dependency audits and a
 full-history secret scan are recorded. Details and the threat model:

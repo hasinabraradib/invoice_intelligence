@@ -1,0 +1,19 @@
+# Isolated stack for recording the walkthrough video (`make walkthrough`), run as compose
+# project "invoice-walkthrough". It has its own database, Redis, uploads and model volumes,
+# so recording never touches your dev data, and it uses other ports so it can run next to
+# your dev stack: the app on localhost:3100, the API (for the /docs scene) on localhost:8100.
+services:
+  frontend:
+    ports: !override
+      - "127.0.0.1:3100:3000"
+    restart: "no"
+  api:
+    ports:
+      - "127.0.0.1:8100:8000"
+    restart: "no"
+  worker:
+    restart: "no"
+  postgres:
+    restart: "no"
+  redis:
+    restart: "no"

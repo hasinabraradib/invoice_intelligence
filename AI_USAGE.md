@@ -314,3 +314,27 @@ Why the extraction prompt looks the way it does:
     data loss.
 - **Not reproduced exactly.** The fresh-clone timing reused already-present base images and
   Python dependency layers, and says so in the README.
+
+## Walkthrough video
+
+- **Automated from my script.** The recorded walkthrough (an assignment deliverable) was
+  produced automatically with Playwright from my script, [docs/walkthrough/script.md](docs/walkthrough/script.md).
+  The recorder reads every subtitle from that file, performs the action on screen, then
+  holds while the subtitle shows (2.5 words per second, at least 2 seconds). `make
+  walkthrough` regenerates everything on a fresh, isolated stack with synthetic data only
+  and the real LLM provider.
+- **Silent, subtitles only.** No voice or music. The subtitles are burned in with ffmpeg,
+  and also written to `walkthrough.srt` with the timings measured during the recording.
+  Video files are never committed (`walkthrough-output/` is git-ignored).
+- **It found a real crash.** The first full run failed: the API process died with a
+  segmentation fault when several page thumbnails were rendered at once, because PDFium is
+  not thread-safe and previews render in a thread pool. On the dev stack Docker restarted
+  the API silently, so it had gone unnoticed. PDFium calls now go through one lock, with a
+  regression test that renders 144 previews from 16 threads in a child process (it aborted
+  before the fix).
+- **Checked by looking.** A frame from every subtitle was extracted and reviewed for
+  readable subtitles, nothing cut off, and no empty states or endless spinners. Making the
+  video also caught two documentation errors, both now fixed: the docs said every route
+  except `/health` needs the key, but the API schema pages are open too (they hold no data),
+  and a guide link pointed the interactive docs at a path the proxy doesn't serve.
+

@@ -33,6 +33,10 @@ DEMO = [
     "ledger-batch.xlsx",
 ]
 FINISHED = {"processed", "needs_review", "failed", "partially_failed"}
+# DEMO_FILES (comma-separated) replaces the list above, e.g. for the walkthrough recording,
+# which uploads some files on camera instead.
+if os.environ.get("DEMO_FILES"):
+    DEMO = [name.strip() for name in os.environ["DEMO_FILES"].split(",") if name.strip()]
 
 
 def main() -> int:

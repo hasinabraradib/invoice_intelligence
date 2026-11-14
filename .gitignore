@@ -50,3 +50,8 @@ eval/dataset/real/*
 # Logs and local tool output (raw test reports are kept on purpose in docs/test-results/)
 *.log
 .gitleaks-report*
+
+# Walkthrough video output (video files are never committed)
+walkthrough-output/
+*.mp4
+*.webm
