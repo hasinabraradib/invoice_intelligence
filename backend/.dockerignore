@@ -6,6 +6,7 @@
 .ruff_cache
 uploads
 *.egg-info
-.coverage*
+.coverage
+.coverage.*
 coverage.xml
 htmlcov
