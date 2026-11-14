@@ -119,7 +119,29 @@ Uploads return `202 Accepted` at once with a `job_id`; poll the status endpoint 
 document is `processed`, `needs_review` or `failed`. Temporary problems (LLM rate limits or
 outages, timeouts, database hiccups) are retried with exponential backoff, up to
 `JOB_MAX_ATTEMPTS`. Permanent ones (corrupt file, password protected...) fail at once.
-Jobs left "running" by a crashed worker are requeued when the worker restarts.
+
+**Hardened against hangs.** A thread can't be killed, so a library call that never returns
+used to stall a job and everything queued behind it (this happened: see "Embedding model"
+below). Now:
+
+- **CPU-heavy steps run in killable processes.** Parsing, OCR and embedding each run in a
+  pool of long-lived worker processes. Every call has a hard timeout:
+  `PARSE_TIMEOUT_SECONDS` per document, `OCR_TASK_TIMEOUT_SECONDS` per page, and
+  `EMBED_TIMEOUT_SECONDS` per batch of `EMBED_BATCH_CHUNKS` chunks. On timeout the process
+  is killed and replaced, and no thread or lock is left behind. LLM calls stay in threads:
+  they wait on the network and the HTTP client times them out.
+- **What a timeout does depends on the step.** A parse timeout fails the document (that
+  file would hang again). An OCR timeout fails only that page. An embedding timeout or
+  failure finishes the document with a warning, and keyword search still works.
+- **Heartbeats and a watchdog.** A running job writes a heartbeat every
+  `HEARTBEAT_SECONDS` while it makes progress. Every minute (and at startup) each worker's
+  watchdog takes jobs with no heartbeat for `STUCK_JOB_MINUTES` and retries them, or fails
+  them once their attempts are used up. Claiming is atomic, so two workers never take the
+  same job.
+- **The worker recycles itself.** If its event loop stops ticking for
+  `WORKER_LOOP_STALL_SECONDS`, or one of its own jobs stalls, the worker exits and Docker
+  (`restart: unless-stopped`) starts a fresh one. `docker compose ps` shows the worker's
+  liveness healthcheck, alongside those of the api, Postgres and Redis.
 
 ### Batch documents (many invoices in one PDF)
 
@@ -229,7 +251,17 @@ off or failing, hybrid falls back to keyword-only and `mode=semantic` returns 50
 
 Keyword snippets highlight matches with `<mark>`; semantic snippets are plain text. Both are
 HTML-escaped. The embedding model runs locally (no API key). It downloads once (~90 MB) into
-the `models` Docker volume. Documents processed before semantic search existed can be
+the `models` Docker volume.
+
+**Embedding model: eager attention, pinned versions.** The model is loaded with
+`attn_implementation="eager"`. With torch 2.15 on CPU (seen on aarch64), the default fused
+"SDPA" attention kernel never returned for inputs over about 128 tokens when it used more
+than one thread, and a long invoice page is about 500 tokens. The worker sat for 43 minutes
+with 40 jobs queued behind one page. Measured on that page: SDPA with 10 or 4 threads hung,
+SDPA with 1 thread took 0.17 s, and eager with 10 threads took 0.25 s. Eager attention gives
+the same vectors (cosine 1.0), so stored embeddings stay valid. `torch`, `transformers` and
+`sentence-transformers` are pinned to exact versions in `backend/pyproject.toml`. Upgrade
+them together, then run `pytest -m slow`, which times a 512-token page. Documents processed before semantic search existed can be
 indexed with:
 
 ```bash

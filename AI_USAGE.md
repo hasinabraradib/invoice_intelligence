@@ -19,6 +19,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-14 | 5f: OpenAI provider | Claude Code (Claude Opus 5.5) | Add OpenAI as a third LLM provider (LLM_PROVIDER=openai, OPENAI_API_KEY, default gpt-6-luna with reasoning effort none/low, temperature dropped only if the model rejects it) over httpx: strict JSON-schema extraction, native tool calling, temperature 0, same timeout/retry/backoff; record token usage for cost; mock-server tests (shapes, tool calls, 429 retry, invalid-JSON repair); live check on one synthetic invoice and one short assistant conversation; check that .env is ignored and no key is in git history. | _To fill in after review_ |
 | 2026-11-14 | 6a: Real-provider check + evaluation | Claude Code (Claude Opus 5.5) | Confirm 5d and parallel OCR are complete; real OpenAI runs on synthetic samples and one assistant conversation (question, sum, proposed correction) over SSE; fix what they find; sanitised real replies as fixtures; concurrency cap for rate limits; fixed-seed labelled synthetic dataset (41 invoices, 7 file types, planted defects, dev/test split) with a real-data template; make eval end to end through API and worker with field, line item, flag, duplicate, segmentation, cross-check, timing and cost metrics; docs/evaluation.md; latest accuracy on the dashboard. | _To fill in after review_ |
 | 2026-11-14 | 6a follow-ups: rule fix, assistant miss, hard subset | Claude Code (Claude Opus 5.5) | Fix the no-subtotal line-sum rule with unit tests and dev examples, reporting pre-fix test results as the headline; find and fix the root cause of the assistant's "no Umbrella Trading invoice" miss with a regression test; add a hard test subset (noise, blur, phone photos, 8-12° rotation, faint scans, crowded and two-column layouts) reported as its own row; re-run make eval. | _To fill in after review_ |
+| 2026-11-14 | 6b: Hardening the worker against hangs | Claude Code (Claude Opus 5.5) | After the embedding deadlock: run parsing, OCR and embedding in killable process pools with a hard timeout per call; embedding problems never block or fail a document; job heartbeats, a watchdog that retries or fails stuck jobs, and a worker that recycles itself; Docker healthchecks and restart policies; regression tests (512-token page within 5 s, a step that sleeps forever is killed and the next job runs, the watchdog picks up a stuck job); pin torch/transformers/sentence-transformers and document eager attention. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -130,3 +131,26 @@ Why the extraction prompt looks the way it does:
   defects, so the useful measure is whether a misread reaches review unflagged. It never
   did (7/7 flagged).
 
+## Hardening the worker (step 6b)
+
+- **Kill processes, not threads.** A hung thread can't be stopped, and it keeps its locks;
+  that is how one long page blocked 40 jobs. Every CPU-heavy step now runs in a small pool
+  of long-lived spawn processes. Each call has a hard timeout, and the reply is awaited on
+  the event loop (a reader on the pipe), not in a helper thread, so a timeout leaves nothing
+  behind. The pool generalises the earlier parallel-OCR pattern, which also gained a
+  per-page timeout.
+- **What a timeout means depends on the step.** A parse timeout is a permanent failure
+  (the same file would hang again). A crashed process is temporary (often memory). An OCR
+  timeout fails one page. An embedding timeout only costs the semantic index.
+- **Heartbeat on progress, not just on being alive.** The heartbeat stops when the job's
+  progress stops, so a job stuck on anything is caught even when its worker is healthy.
+  The watchdog claims stuck jobs atomically, and a monitor thread (which works even when
+  the event loop is blocked) restarts the worker. A blocked loop can't run anything else.
+- **Tests drove out a real bug.** The first "embedding times out" test crashed the job: a
+  rollback had expired the worker's `job` object, and reading `job.id` afterwards raised
+  MissingGreenlet. It was fixed in its own commit, with a test that fails without the fix.
+  Tests that patch code in-process use explicit inline pools; everything else runs the real
+  process pools.
+- **Pinned and documented.** torch, transformers and sentence-transformers are pinned to
+  the measured versions, with the reason (eager attention) in pyproject.toml and the
+  README, and a slow test that times a 512-token page.
