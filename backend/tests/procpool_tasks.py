@@ -31,3 +31,16 @@ def crash() -> None:
 
 def fail(message: str) -> None:
     raise ValueError(message)
+
+
+def stuck_parse(path: str, filename: str, limits) -> None:
+    """Stands in for app.steps.parse_task: a parser that never returns."""
+    sleep_forever()
+
+
+class StuckEmbedder:
+    """An embedder whose model call never returns (the torch SDPA hang)."""
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        sleep_forever()
+        return []

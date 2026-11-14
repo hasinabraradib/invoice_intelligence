@@ -4,7 +4,6 @@ arq app.worker.WorkerSettings
 
 import logging
 import uuid
-from pathlib import Path
 from typing import Any
 
 import anyio
@@ -18,10 +17,10 @@ from app.db import create_engine, create_sessionmaker
 from app.extraction.llm import UnconfiguredLLM, get_llm_client
 from app.jobs import ArqQueue, job_timeout, requeue_stuck_jobs, retry_delay
 from app.models import JobStatus, ProcessingJob
-from app.parsing.dispatch import count_pages
 from app.pipeline import TEMPORARY_ERRORS, process_document, record_failure
 from app.repository import Repository
 from app.search.embedder import get_embedder
+from app.steps import StepPools, count_pages_task, default_pools
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("worker")
@@ -35,12 +34,16 @@ async def startup(ctx: dict[str, Any]) -> None:
     ctx["queue"] = ArqQueue(settings.redis_url)
     ctx["llm_factory"] = lambda: get_llm_client(settings)
     ctx["embedder"] = get_embedder(settings)  # model loads on first use, then stays loaded
+    # Parsing, OCR and embedding run in killable processes, kept for the worker's life.
+    ctx["pools"] = StepPools.create(settings)
     async with ctx["sessionmaker"]() as session:
         await requeue_stuck_jobs(Repository(session), ctx["queue"], settings.stuck_job_minutes)
     logger.info("worker ready (concurrency=%d)", settings.worker_concurrency)
 
 
 async def shutdown(ctx: dict[str, Any]) -> None:
+    if ctx.get("pools"):
+        ctx["pools"].close()
     await ctx["queue"].close()
     await ctx["engine"].dispose()
 
@@ -73,7 +76,7 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
             # No LLM configured: ledgers still process; PDFs fail where the LLM is needed.
             llm = UnconfiguredLLM(str(exc))
 
-        pages = await anyio.to_thread.run_sync(count_pages, Path(document.storage_path))
+        pages = await _count_pages(ctx, document.storage_path)
         try:
             with anyio.fail_after(job_timeout(pages, settings)):
                 outcome = await process_document(
@@ -83,6 +86,7 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
                     settings,
                     job_id=job_uuid,
                     embedder=ctx.get("embedder"),
+                    pools=ctx.get("pools"),
                 )
         except TimeoutError:
             # The run was cancelled mid-way: reset the session, then read attempts afresh.
@@ -106,6 +110,16 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
     if outcome.retry:
         raise Retry(defer=retry_delay(outcome.attempts, settings))
     return outcome.status
+
+
+async def _count_pages(ctx: dict[str, Any], path: str) -> int:
+    """Only sizes the job timeout, so a file that cannot be counted quickly counts as 1;
+    parsing itself has its own hard timeout."""
+    pools = ctx.get("pools") or default_pools(ctx["settings"])
+    try:
+        return await pools.parse.run(count_pages_task, path, timeout=30)
+    except Exception:
+        return 1
 
 
 async def _save_llm_usage(session: Any, job_id: uuid.UUID, llm: Any) -> None:

@@ -7,13 +7,15 @@ process can be killed, so a job timeout really stops the work (a thread cannot b
   processes; only the short text result comes back.
 - Memory stays bounded: at most 2 x workers pages are in flight at a time.
 - Results are applied in page order, whatever order they finish in.
-- On cancellation (job timeout) or error the pool is terminated: pending pages are
-  dropped and the worker processes are killed.
+- Every page has a hard timeout: a page that hangs (render, preprocessing or Tesseract)
+  has its process killed and replaced, and the page is reported as failed.
+- On cancellation (job timeout) pending pages are dropped and busy processes are killed.
+- With the worker's long-lived pool (app.steps) processes are reused across documents;
+  without one, a pool is created for this document and closed afterwards.
 """
 
 import asyncio
 import logging
-import multiprocessing
 import os
 import time
 from collections.abc import Awaitable, Callable
@@ -24,6 +26,7 @@ from app.ocr.engine import LOW_CONFIDENCE_WARNING, OcrError, OcrOptions, ocr_pag
 from app.ocr.pipeline import _image_frames, _pdf_pages
 from app.ocr.preprocess import preprocess
 from app.parsing.models import FileKind, PageText, ParsedDocument
+from app.procpool import ProcessPool, StepTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -85,25 +88,27 @@ async def ocr_document_parallel(
     workers: int,
     on_page: Callable[[int], Awaitable[None]] | None = None,
     task: PageTask = ocr_page_task,
+    pool: ProcessPool | None = None,
+    page_timeout: float = 180,
 ) -> ParsedDocument:
-    """Like ocr_document, but pages run in parallel processes. on_page(n) is awaited after
-    each finished page with how many are done."""
+    """Like ocr_document, but pages run in parallel processes, each with a hard timeout.
+    on_page(n) is awaited after each finished page with how many are done."""
     options = options or OcrOptions()
     doc = parsed.model_copy(deep=True)  # never mutate the caller's object
     targets = {page.page_number: page for page in doc.pages if page.needs_ocr}
     if not targets:
         return doc
 
-    loop = asyncio.get_running_loop()
-    # "spawn": start clean processes instead of forking one that already runs threads.
-    # maxtasksperchild: replace workers now and then so memory cannot creep up.
-    processes = min(workers, len(targets))
-    pool = multiprocessing.get_context("spawn").Pool(
-        processes=processes,
-        initializer=_init_worker,
-        initargs=(max(1, _cores() // processes),),
-        maxtasksperchild=100,
-    )
+    own_pool = pool is None
+    if pool is None:
+        processes = min(workers, len(targets))
+        pool = ProcessPool(
+            "ocr-document",  # its processes are named ocr-document-worker
+            size=processes,
+            initializer=_init_worker,
+            initargs=(max(1, _cores() // processes),),
+            max_calls=100,
+        )
     in_flight = asyncio.Semaphore(2 * workers)  # bounds memory: pages queued + running
     progress_lock = asyncio.Lock()  # on_page touches the database: one at a time
     stop = asyncio.Event()  # set when tesseract is missing: no point in continuing
@@ -116,18 +121,14 @@ async def ocr_document_parallel(
         async with in_flight:
             if stop.is_set():
                 return
-            future: asyncio.Future[dict[str, Any]] = loop.create_future()
-
-            def finish(value: dict[str, Any]) -> None:  # runs in the pool's result thread
-                loop.call_soon_threadsafe(lambda: future.done() or future.set_result(value))
-
-            pool.apply_async(
-                task,
-                (*args, number, options.model_dump()),
-                callback=finish,
-                error_callback=lambda exc: finish({"page": number, "error": type(exc).__name__}),
-            )
-            results[number] = await future
+            try:
+                results[number] = await pool.run(
+                    task, *args, number, options.model_dump(), timeout=page_timeout
+                )
+            except StepTimeout:
+                results[number] = {"page": number, "error": "OCR timed out"}
+            except Exception as exc:  # the process died, or the task failed
+                results[number] = {"page": number, "error": type(exc).__name__}
         if results[number].get("unavailable"):
             stop.set()
         async with progress_lock:
@@ -138,10 +139,8 @@ async def ocr_document_parallel(
     try:
         await asyncio.gather(*(run(n) for n in sorted(targets)))
     finally:
-        # Normal end, error or timeout: kill the workers. Synchronous on purpose: awaiting
-        # inside a cancelled scope would be interrupted before the processes are gone.
-        pool.terminate()
-        pool.join()
+        if own_pool:
+            pool.close()  # cancelled pages already had their processes killed
 
     ok = 0
     for number in sorted(targets):  # apply in page order

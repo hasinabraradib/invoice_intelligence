@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import time
 import types
 
 import pytest
@@ -47,3 +48,29 @@ def test_real_model_embeds_a_crowded_page_quickly(settings):
         subprocess.run([sys.executable, "-c", code, CROWDED_PAGE], check=True, timeout=120)  # noqa: S603
     except subprocess.TimeoutExpired:
         pytest.fail("embedding a long page hung (fused attention kernel?)")
+
+
+@pytest.mark.slow
+@pytest.mark.anyio
+async def test_a_512_token_page_embeds_within_5_seconds_in_the_worker_pool(settings):
+    """The production path: the embedding step's own process, real model, hard timeout."""
+    from transformers import AutoTokenizer
+
+    from app.procpool import ProcessPool
+    from app.steps import embed_task
+
+    page = " ".join([CROWDED_PAGE] * 2)  # well past 512 word-pieces; the model reads 512
+    tokens = len(AutoTokenizer.from_pretrained(settings.embedding_model)(page)["input_ids"])
+    assert tokens >= 512
+
+    pool = ProcessPool("embed", size=1)
+    embedder = LocalEmbedder(settings.embedding_model)
+    try:
+        await pool.run(embed_task, embedder, ["warm up: load the model"], timeout=120)
+        started = time.monotonic()
+        vectors = await pool.run(embed_task, embedder, [page], timeout=30)
+        elapsed = time.monotonic() - started
+    finally:
+        pool.close()
+    assert len(vectors) == 1 and len(vectors[0]) == 384
+    assert elapsed < 5, f"embedding a 512-token page took {elapsed:.1f} s"

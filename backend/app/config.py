@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     job_timeout_max_seconds: int = Field(default=3600, gt=0)
     worker_concurrency: int = Field(default=2, ge=1, le=32)
     stuck_job_minutes: int = Field(default=30, ge=1)
+    # Hard timeout per call of each CPU-heavy step; the step's process is killed on timeout.
+    parse_timeout_seconds: float = Field(default=300, gt=0)  # one document's text layer
+    ocr_task_timeout_seconds: float = Field(default=180, gt=0)  # one page: render + OCR
+    embed_timeout_seconds: float = Field(default=60, gt=0)  # one batch of chunks
+    embed_batch_chunks: int = Field(default=64, ge=1, le=512)
 
     # Batch documents: invoices extracted at the same time per document (keep it within
     # your LLM provider's rate limit), and pages per LLM call when classifying unclear pages.

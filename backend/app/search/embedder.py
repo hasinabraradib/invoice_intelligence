@@ -28,6 +28,18 @@ class LocalEmbedder:
         self._model = None
         self._lock = threading.Lock()  # one encode at a time; also guards the first load
 
+    # Sent to the embedding worker process without the loaded model or the lock (neither
+    # can be pickled); the process loads its own model once and keeps it (cache_key).
+    def __getstate__(self) -> dict:
+        return {"model_name": self.model_name, "_max_seq_length": self._max_seq_length}
+
+    def __setstate__(self, state: dict) -> None:
+        self.__init__(state["model_name"], state["_max_seq_length"])
+
+    @property
+    def cache_key(self) -> tuple:
+        return ("local", self.model_name, self._max_seq_length)
+
     def _load(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer  # heavy: import lazily

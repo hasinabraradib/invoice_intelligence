@@ -1,5 +1,6 @@
 """Batch PDFs: many invoices in one document, resumable per-invoice processing."""
 
+import dataclasses
 import hashlib
 import re
 import threading
@@ -13,6 +14,7 @@ import app.models as m
 from app.extraction.llm import FakeLLMClient, LLMError
 from app.pipeline import process_document
 from app.repository import Repository
+from app.steps import default_pools, parse_task
 
 pytestmark = pytest.mark.anyio
 
@@ -185,16 +187,30 @@ async def test_unclear_pages_are_classified_by_the_llm(db_session, tmp_path, set
     assert [(i.page_start, i.page_end) for i in invoices] == [(1, 2), (3, 3)]
 
 
-async def test_failure_in_segment_two_then_retry_redoes_only_segment_two(
-    api, run_job, tmp_path, monkeypatch
-):
-    import app.pipeline as pipeline
+class _CountingParsePool:
+    """Wraps the real parse process pool and counts parse calls (not page counts)."""
 
-    parses = []
-    real_parse = pipeline.parse_document
-    monkeypatch.setattr(
-        pipeline, "parse_document", lambda *a, **kw: parses.append(1) or real_parse(*a, **kw)
-    )
+    def __init__(self, inner):
+        self.inner, self.parses = inner, 0
+
+    async def run(self, fn, *args, **kwargs):
+        if fn is parse_task:
+            self.parses += 1
+        return await self.inner.run(fn, *args, **kwargs)
+
+    def close(self):
+        pass
+
+
+def counting_pools(settings):
+    shared = default_pools(settings)
+    return dataclasses.replace(shared, parse=_CountingParsePool(shared.parse))
+
+
+async def test_failure_in_segment_two_then_retry_redoes_only_segment_two(
+    api, run_job, tmp_path, settings
+):
+    pools = counting_pools(settings)  # real process pools; counts parse calls
     pdf = make_pdf(tmp_path / "batch.pdf", BATCH).read_bytes()
     uploaded = (await api.post("/documents", files=[("files", ("batch.pdf", pdf))])).json()[
         "results"
@@ -202,14 +218,14 @@ async def test_failure_in_segment_two_then_retry_redoes_only_segment_two(
     llm = BatchLLM(fail={"B-200": 1})
 
     with pytest.raises(Retry):
-        await run_job(uploaded["job_id"], llm)
+        await run_job(uploaded["job_id"], llm, pools=pools)
     status = (await api.get(f"/documents/{uploaded['document_id']}/status")).json()
     assert (status["segments_done"], status["segments_total"]) == (2, 3)
     assert "invoice 2 (pages 2-3)" in status["error"]
 
-    assert await run_job(uploaded["job_id"], llm) == "processed"
+    assert await run_job(uploaded["job_id"], llm, pools=pools) == "processed"
     assert sorted(llm.extractions) == ["A-100", "B-200", "B-200", "C-300"]  # only #2 again
-    assert len(parses) == 1  # the retry reused the saved page texts (no re-parse/OCR)
+    assert pools.parse.parses == 1  # the retry reused the saved page texts (no re-parse/OCR)
     status = (await api.get(f"/documents/{uploaded['document_id']}/status")).json()
     assert (status["segments_done"], status["segments_total"], status["attempts"]) == (3, 3, 2)
 
@@ -320,19 +336,14 @@ async def _upload_batch(api, tmp_path):
 
 @pytest.mark.parametrize("how", ["retry-failed", "reprocess-only-failed"])
 async def test_partial_failure_then_retry_redoes_only_the_failed_invoice(
-    api, run_job, tmp_path, monkeypatch, how
+    api, run_job, tmp_path, settings, how
 ):
-    import app.pipeline as pipeline
-
-    parses = []
-    real_parse = pipeline.parse_document
-    monkeypatch.setattr(
-        pipeline, "parse_document", lambda *a, **kw: parses.append(1) or real_parse(*a, **kw)
-    )
+    pools = counting_pools(settings)  # real process pools; counts parse calls
     uploaded = await _upload_batch(api, tmp_path)
     doc_id = uploaded["document_id"]
 
-    assert await run_job(uploaded["job_id"], BatchLLM(broken={"B-200"})) == "partially_failed"
+    broken = BatchLLM(broken={"B-200"})
+    assert await run_job(uploaded["job_id"], broken, pools=pools) == "partially_failed"
     status = (await api.get(f"/documents/{doc_id}/status")).json()
     assert status["status"] == "partially_failed" and status["job_status"] == "failed"
     assert "1 of 3 invoice(s) failed: invoice 2 (pages 2-3)" in status["error"]
@@ -350,10 +361,10 @@ async def test_partial_failure_then_retry_redoes_only_the_failed_invoice(
             await api.post(f"/documents/{doc_id}/reprocess", params={"only_failed": "true"})
         ).json()["job_id"]
     fixed = BatchLLM()
-    assert await run_job(job_id, fixed) == "processed"
+    assert await run_job(job_id, fixed, pools=pools) == "processed"
 
     assert fixed.extractions == ["B-200"]  # only the failed invoice was redone
-    assert len(parses) == 1  # page texts reused: no second parse (or OCR)
+    assert pools.parse.parses == 1  # page texts reused: no second parse (or OCR)
     result = (await api.get(f"/documents/{doc_id}/result")).json()["invoices"]
     assert [i["extracted"] for i in result] == [True, True, True]
     assert result[1]["fields"]["invoice_number"]["value"] == "B-200"

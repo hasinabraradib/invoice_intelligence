@@ -1,6 +1,7 @@
 """Build a document's semantic index: page texts -> chunks -> embeddings -> text_chunks."""
 
 import uuid
+from typing import Any
 
 import anyio
 from sqlalchemy import delete, select
@@ -18,18 +19,33 @@ async def index_document(
     *,
     chunk_tokens: int = 500,
     overlap_tokens: int = 50,
+    pool: Any = None,
+    step_timeout: float = 60,
+    batch: int = 64,
 ) -> int:
     """Replace this document's chunks (idempotent: re-running never adds duplicates).
     Reads the page texts already saved for it. Returns the number of chunks. The caller
-    commits."""
+    commits.
+
+    With `pool` (app.steps), the model runs in a killable worker process, `batch` chunks
+    per call, each call with a hard `step_timeout` (StepTimeout). Without one, in a thread."""
     rows = await session.execute(
         select(PageText.page_number, PageText.text)
         .where(PageText.document_id == document_id)
         .order_by(PageText.page_number)
     )
     chunks = chunk_pages([(r.page_number, r.text) for r in rows], chunk_tokens, overlap_tokens)
-    # The model is CPU-heavy and synchronous: run it in a thread.
-    vectors = await anyio.to_thread.run_sync(embedder.embed, [c.text for c in chunks])
+    texts = [c.text for c in chunks]
+    if pool is not None:
+        from app.steps import embed_task  # avoid an import cycle at module load
+
+        vectors = []
+        for start in range(0, len(texts), batch):
+            vectors += await pool.run(
+                embed_task, embedder, texts[start : start + batch], timeout=step_timeout
+            )
+    else:  # the model is CPU-heavy and synchronous: at least keep the event loop free
+        vectors = await anyio.to_thread.run_sync(embedder.embed, texts)
     if len(vectors) != len(chunks) or any(len(v) != DIM for v in vectors):
         raise ValueError("embedder returned vectors of the wrong number or size")
 

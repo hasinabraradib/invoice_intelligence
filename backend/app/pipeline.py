@@ -47,14 +47,15 @@ from app.ledger.store import ledger_pages, save_ledgers
 from app.models import DocumentStatus, Invoice, JobStatus, ValidationIssue
 from app.ocr.engine import OcrOptions
 from app.ocr.parallel import ocr_document_parallel
-from app.parsing.dispatch import parse_document
 from app.parsing.errors import DocumentError
 from app.parsing.models import ParseLimits
+from app.procpool import StepCrashed, StepTimeout
 from app.repository import Repository
 from app.search.embedder import Embedder
 from app.search.indexing import index_document
 from app.segmentation import Segment, segment_document
 from app.segmentation.classifier import llm_page_classifier
+from app.steps import StepPools, default_pools
 from app.validation.duplicates import find_duplicate_issues
 from app.validation.rules import validate_invoice
 
@@ -105,8 +106,10 @@ async def process_document(
     *,
     job_id: uuid.UUID | None = None,
     embedder: Embedder | None = None,
+    pools: StepPools | None = None,
 ) -> ProcessOutcome:
     settings = settings or get_settings()
+    pools = pools or default_pools(settings)  # CPU-heavy steps run in killable processes
     repo = Repository(session)
     document = await repo.get_document(document_id)
     if document is None:
@@ -146,7 +149,7 @@ async def process_document(
             await stage("resuming")
             pages = await repo.load_source_pages(document_id)
         else:
-            pages, page_count, sheets = await _read_pages(path, filename, settings, stage)
+            pages, page_count, sheets = await _read_pages(path, filename, settings, stage, pools)
             await repo.save_page_texts(document_id, pages, page_count=page_count, job_id=job_id)
             if sheets:  # spreadsheets: store rows, recognise ledgers (lists of invoices)
                 await save_ledgers(session, await repo.get_document(document_id), sheets)
@@ -264,6 +267,11 @@ async def process_document(
                 embedder,
                 chunk_tokens=settings.embed_chunk_tokens,
                 overlap_tokens=settings.embed_chunk_overlap,
+                # In a killable process with a hard timeout per batch: a model call that
+                # never returns (or fails) only costs the semantic index, never the job.
+                pool=pools.embed,
+                step_timeout=pools.embed_timeout,
+                batch=pools.embed_batch,
             )
             await session.commit()
         except Exception as exc:
@@ -300,24 +308,27 @@ async def process_document(
 
 
 async def _read_pages(
-    path: Path, filename: str, settings: Settings, stage: Stage
+    path: Path, filename: str, settings: Settings, stage: Stage, pools: StepPools
 ) -> tuple[list[SourcePage], int, list]:
     """Parse, then OCR the pages without text. Returns (pages, page_count, sheets)."""
-    # CPU-heavy, synchronous work runs in a thread so the event loop stays free.
+    # CPU-heavy work runs in a worker process with a hard timeout: a file that makes the
+    # parser hang has its process killed instead of blocking the worker.
     await stage("parsing")
-    parsed = await anyio.to_thread.run_sync(
-        functools.partial(
-            parse_document,
-            path,
-            filename,
-            ParseLimits(
-                max_pdf_pages=settings.max_pdf_pages,
-                max_sheet_rows=settings.max_sheet_rows,
-                max_sheet_columns=settings.max_sheet_columns,
-            ),
-            run_ocr=False,
-        )
+    limits = ParseLimits(
+        max_pdf_pages=settings.max_pdf_pages,
+        max_sheet_rows=settings.max_sheet_rows,
+        max_sheet_columns=settings.max_sheet_columns,
     )
+    try:
+        parsed = await pools.parse.run(
+            pools.parse_fn, str(path), filename, limits, timeout=pools.parse_timeout
+        )
+    except StepTimeout as exc:  # the same file would hang again: do not retry
+        raise PipelineError(
+            f"reading the file took longer than {exc.seconds:g} s and was stopped"
+        ) from exc
+    except StepCrashed as exc:  # e.g. out of memory: may work on a retry
+        raise PipelineError("the file reader stopped unexpectedly", temporary=True) from exc
     already = len(parsed.pages) - parsed.pages_needing_ocr
     await stage("parsing", pages_total=len(parsed.pages), pages_done=already)
 
@@ -340,6 +351,8 @@ async def _read_pages(
             ),
             workers=settings.ocr_workers,
             on_page=progress,
+            pool=pools.ocr,  # None (inline test pools): a pool just for this document
+            page_timeout=settings.ocr_task_timeout_seconds,
         )
     await stage("segmenting", pages_done=len(parsed.pages))
     pages = source_pages(parsed)

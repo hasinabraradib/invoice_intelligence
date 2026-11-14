@@ -12,6 +12,7 @@ from app.config import Settings
 from app.extraction.llm import FakeLLMClient
 from app.pipeline import process_document
 from app.repository import Repository
+from app.steps import StepPools
 from tests import factories
 
 pytestmark = pytest.mark.anyio
@@ -176,7 +177,14 @@ async def test_bad_page_does_not_fail_the_document(db_session, tmp_path, setting
     monkeypatch.setattr(pdf_parser.pdfplumber.page.Page, "extract_text", flaky)
     doc_id = await _document(db_session, factories.text_pdf(tmp_path / "inv.pdf", pages=2))
 
-    outcome = await process_document(doc_id, db_session, FakeLLMClient(GOOD_REPLY), settings)
+    # The patch lives in this process, so parse here (inline) rather than in a worker.
+    outcome = await process_document(
+        doc_id,
+        db_session,
+        FakeLLMClient(GOOD_REPLY),
+        settings,
+        pools=StepPools.inline(settings),
+    )
 
     assert outcome.status in (m.DocumentStatus.PROCESSED, m.DocumentStatus.NEEDS_REVIEW)
     assert await _count(db_session, m.PageText) == 1  # the good page is kept

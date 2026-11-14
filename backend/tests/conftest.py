@@ -210,7 +210,7 @@ async def run_job(settings, database_url, embedder):
 
     engine = create_async_engine(database_url, poolclass=NullPool)
 
-    async def run(job_id, llm, job_try=1, embedder=embedder):
+    async def run(job_id, llm, job_try=1, pools=None, embedder=embedder):
         def factory():
             if isinstance(llm, Exception):
                 raise llm  # e.g. ValueError: LLM not configured
@@ -222,6 +222,7 @@ async def run_job(settings, database_url, embedder):
             "embedder": embedder,
             "sessionmaker": async_sessionmaker(engine, expire_on_commit=False),
             "job_try": job_try,  # arq's attempt counter for this message
+            "pools": pools,  # None: the shared default process pools
         }
         return await process_job(ctx, str(job_id))
 

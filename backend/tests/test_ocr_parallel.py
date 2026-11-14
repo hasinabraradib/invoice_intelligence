@@ -15,6 +15,11 @@ from tests import factories, ocr_tasks
 pytestmark = pytest.mark.anyio
 
 
+def _document_workers():
+    """This document's OCR processes (the shared step pools may legitimately be alive)."""
+    return [p for p in multiprocessing.active_children() if p.name == "ocr-document-worker"]
+
+
 def scanned(pages: int) -> ParsedDocument:
     return ParsedDocument(
         file_kind=FileKind.PDF,
@@ -36,7 +41,7 @@ async def test_results_keep_page_order_and_progress_counts_each_page(tmp_path):
     assert [p.text for p in doc.pages] == [f"text of page {n}" for n in range(1, 7)]
     assert all(p.source == "ocr" and not p.needs_ocr for p in doc.pages)
     assert seen == [1, 2, 3, 4, 5, 6]
-    assert multiprocessing.active_children() == []  # workers are gone afterwards
+    assert _document_workers() == []  # workers are gone afterwards
 
 
 async def test_timeout_really_stops_the_work(tmp_path):
@@ -48,7 +53,7 @@ async def test_timeout_really_stops_the_work(tmp_path):
     elapsed = time.perf_counter() - started
 
     assert elapsed < 6  # did not wait for the 60-second pages
-    assert multiprocessing.active_children() == []  # worker processes were terminated
+    assert _document_workers() == []  # worker processes were terminated
 
 
 async def test_missing_tesseract_stops_early(tmp_path):
