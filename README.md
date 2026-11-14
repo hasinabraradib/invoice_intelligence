@@ -106,15 +106,24 @@ cd frontend && API_URL=http://localhost:8000 npm run gen:api   # regenerate API 
 `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`) is the API address *as the browser
 sees it*. It's baked in when the image is built.
 
-**Design.** The design system lives in `frontend/src/app/globals.css`: colour, radius and shadow
-tokens on `:root`, with a separately tuned dark palette under `prefers-color-scheme: dark`. It
-uses Geist (via `next/font`), one indigo accent, and soft status tints that always come with a
-text label. Money uses tabular figures. Motion is limited to fades, hover lift, count-up
-numbers, progress bars and the streaming caret, and is turned off under
-`prefers-reduced-motion`. Shared pieces are in `frontend/src/components/` (`ui.tsx`,
-`Badges.tsx`, `Feedback.tsx`, `charts.tsx`). The sidebar becomes an icon rail on tablets and
-a bottom tab bar on phones. Every page was checked at 375, 768 and 1440 px in both themes,
-including a keyboard pass for visible focus.
+**Design.** The design system lives in `frontend/src/app/globals.css`:
+- a warm cream page, a near-black sidebar and black pill buttons;
+- four soft pastels (butter, pink, sage, periwinkle) for summary cards and status pills, which
+  always carry a word;
+- a separately tuned warm dark mode (WCAG AA);
+- Geist, with tabular numbers for money and dates.
+
+The controls are custom and keyboard accessible (`frontend/src/components/controls/`):
+- a Radix UI Select;
+- a searchable document picker;
+- an "Invoice date" range with presets and a calendar;
+- a filter toolbar with removable chips;
+- reasons on disabled buttons.
+
+Motion is limited to fades, hover lift and count-up numbers, and is off under
+`prefers-reduced-motion`. Every page was checked at 375, 768 and 1440 px in both themes,
+including a keyboard pass for visible focus. Before/after shots and the list of changes:
+[docs/screenshots/](docs/screenshots/).
 
 | Light | Dark |
 |---|---|

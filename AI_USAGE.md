@@ -222,3 +222,23 @@ Why the extraction prompt looks the way it does:
   - thumbnails were empty boxes before they loaded;
   - the batch invoice switcher wrapped badly.
 
+## Visual redesign (pastel, colour-blocked)
+
+- **Inspiration, not a copy.** The brief came with a reference screenshot of another product.
+  I took the style direction only: cream background, a black sidebar, pastel summary blocks
+  and pill buttons. The name, logo, illustrations and layout were not reused, and the
+  decorative shapes are my own simple SVGs.
+- **Contrast measured, not eyeballed.** A script computed WCAG ratios for every text and
+  background pair in both themes. Two pairs failed (muted text on sage in dark mode, and the
+  "faint" grey), and both were darkened until they passed.
+- **Custom controls built on Radix where it matters.** The Select uses Radix UI for keyboard
+  and ARIA behaviour. The calendar is a small in-house component rather than a date-picker
+  library whose current major version I couldn't verify. The new controls have their own unit
+  tests (date maths, keyboard picking, chips and Clear all, presets, range ordering).
+- **A bug caught by an existing test.** The first version of the disabled-button hint swapped
+  its wrapper when the button became enabled. That remounted the button, so it lost focus and
+  identity; the approve-dialog test caught it, and the wrapper is now always rendered.
+- **Environment issue.** The Mac's disk filled up during the work and Docker's storage
+  returned I/O errors. With the user's agreement, only caches were cleared (npm cache and my
+  own scratch screenshots). Docker recovered after a restart, and no project data was lost.
+
