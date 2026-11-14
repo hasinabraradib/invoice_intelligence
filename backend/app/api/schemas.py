@@ -86,6 +86,9 @@ class JobView(BaseModel):
     llm_input_tokens: int = 0
     llm_output_tokens: int = 0
     llm_cached_input_tokens: int = 0
+    llm_vision_calls: int = 0  # the vision fallback's share of the above
+    llm_vision_input_tokens: int = 0
+    llm_vision_output_tokens: int = 0
 
 
 class InvoiceSummary(BaseModel):
@@ -176,6 +179,9 @@ class FieldView(BaseModel):
     page: int | None = None
     confidence: float = 0.0
     reasons: list[str] = Field(default_factory=list)
+    # "vision": read from the page image by the model because OCR could not read it; not
+    # grounded in OCR text, so the invoice is always marked for review.
+    source: Literal["text", "vision"] = "text"
 
 
 class LineItemView(BaseModel):

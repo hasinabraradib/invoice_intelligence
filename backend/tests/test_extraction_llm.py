@@ -109,6 +109,9 @@ def test_token_usage_is_summed_over_successful_calls_only():
         "input_tokens": 200,
         "output_tokens": 50,
         "cached_input_tokens": 0,
+        "vision_calls": 0,
+        "vision_input_tokens": 0,
+        "vision_output_tokens": 0,
     }
 
     reply = {
@@ -128,6 +131,9 @@ def test_missing_usage_counts_the_call_with_zero_tokens():
         "input_tokens": 0,
         "output_tokens": 0,
         "cached_input_tokens": 0,
+        "vision_calls": 0,
+        "vision_input_tokens": 0,
+        "vision_output_tokens": 0,
     }
 
 

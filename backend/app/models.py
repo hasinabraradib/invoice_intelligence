@@ -137,6 +137,10 @@ class ProcessingJob(Base):
     llm_input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     llm_output_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     llm_cached_input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # The vision fallback's share of the totals above (page images sent to the model).
+    llm_vision_calls: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    llm_vision_input_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    llm_vision_output_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -257,7 +261,7 @@ class PageText(Base):
         ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
     page_number: Mapped[int] = mapped_column(Integer)
-    source: Mapped[str] = mapped_column(String(20))  # text_layer | ocr | sheet
+    source: Mapped[str] = mapped_column(String(20))  # text_layer | ocr | sheet | vision
     text: Mapped[str] = mapped_column(Text)
     ocr_confidence: Mapped[float | None] = mapped_column(Float)
     # Postgres keeps this up to date itself. 'simple' = no language-specific stemming,

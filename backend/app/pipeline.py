@@ -36,6 +36,7 @@ from app.extraction.llm import LLMClient
 from app.extraction.prompt import SourcePage, source_pages
 from app.extraction.schema import ALL_FIELDS
 from app.extraction.service import ExtractionResult, extract_from_pages
+from app.extraction.vision import extract_from_images
 from app.invoices import (
     apply_review_state,
     boundary_issue,
@@ -55,13 +56,15 @@ from app.search.embedder import Embedder
 from app.search.indexing import index_document
 from app.segmentation import Segment, segment_document
 from app.segmentation.classifier import llm_page_classifier
-from app.steps import StepPools, default_pools
+from app.steps import StepPools, default_pools, render_page_task
 from app.validation.duplicates import find_duplicate_issues
+from app.validation.rules import ValidationIssue as RuleIssue
 from app.validation.rules import validate_invoice
 
 logger = logging.getLogger(__name__)
 
 # Exceptions that mean "try again later", not "this document is broken".
+VISION_EXTRACTED = "VISION_EXTRACTED"
 TEMPORARY_ERRORS = (TimeoutError, ConnectionError, OperationalError, InterfaceError)
 
 Stage = Callable[..., Awaitable[None]]
@@ -193,7 +196,17 @@ async def process_document(
             )
         await stage("extracting", segments_done=finished, segments_total=len(segments))
         failures = await _extract_segments(
-            session, repo, document_id, job_id, pending, pages, llm, settings, finished
+            session,
+            repo,
+            document_id,
+            job_id,
+            pending,
+            pages,
+            llm,
+            settings,
+            finished,
+            path=path,
+            pools=pools,
         )
     except DocumentError as exc:
         return await record_failure(
@@ -370,8 +383,13 @@ async def _extract_segments(
     llm: LLMClient,
     settings: Settings,
     already_done: int,
+    *,
+    path: Path,
+    pools: StepPools,
 ) -> list[_SegmentFailure]:
-    """Extract segments concurrently; save each one as soon as it is ready."""
+    """Extract segments concurrently; save each one as soon as it is ready. A segment
+    whose pages OCR could not read (confidence below OCR_MIN_CONFIDENCE) is read from the
+    page images instead, when the provider can (the vision fallback)."""
     failures: list[_SegmentFailure] = []
     limiter = anyio.CapacityLimiter(settings.segment_concurrency)  # LLM calls in flight
     db_lock = anyio.Lock()  # one AsyncSession: database work is done one segment at a time
@@ -380,13 +398,24 @@ async def _extract_segments(
     async def run(segment: Segment) -> None:
         nonlocal done
         own_pages = [p for p in pages if segment.page_start <= p.number <= segment.page_end]
-        try:
-            result = await anyio.to_thread.run_sync(
-                functools.partial(
-                    extract_from_pages, own_pages, llm, chunk_tokens=settings.llm_chunk_tokens
-                ),
-                limiter=limiter,
+        transcripts: dict[int, str] = {}
+        result: ExtractionResult | None = None
+        vision_note = None
+        low = wants_vision(own_pages, llm, settings)
+        if low:
+            result, transcripts, vision_note = await _vision_extract(
+                own_pages, llm, settings, path, pools, limiter
             )
+        try:
+            if result is None:
+                result = await anyio.to_thread.run_sync(
+                    functools.partial(
+                        extract_from_pages, own_pages, llm, chunk_tokens=settings.llm_chunk_tokens
+                    ),
+                    limiter=limiter,
+                )
+                if vision_note:
+                    result.warnings.append(vision_note)
         except Exception as exc:  # a bug inside extraction: this segment fails, others go on
             logger.exception("extraction crashed for segment %d", segment.index)
             failures.append(
@@ -400,6 +429,11 @@ async def _extract_segments(
             return
         async with db_lock:
             try:
+                for number in low if result.source == "vision" else []:
+                    if transcripts.get(number):  # the better reading, for search too
+                        await repo.replace_page_text(
+                            document_id, number, transcripts[number], "vision"
+                        )
                 await _save_segment(repo, document_id, job_id, segment, result, settings)
                 done += 1
                 await repo.update_job(job_id, segments_done=done)
@@ -419,6 +453,72 @@ async def _extract_segments(
         for segment in segments:
             group.start_soon(run, segment)
     return failures
+
+
+def wants_vision(pages: list[SourcePage], llm: LLMClient, settings: Settings) -> list[int]:
+    """The page numbers OCR could not read well enough (confidence below
+    OCR_MIN_CONFIDENCE after preprocessing), if this invoice should be read from its page
+    images instead; [] otherwise (fallback off, provider cannot read images, nothing below
+    the threshold, or too many pages)."""
+    if not settings.vision_fallback_enabled or not getattr(llm, "supports_images", False):
+        return []
+    low = sorted(
+        {
+            p.number
+            for p in pages
+            if p.ocr_confidence is not None and p.ocr_confidence < settings.ocr_min_confidence
+        }
+    )
+    if not low or len({p.number for p in pages}) > settings.vision_max_pages:
+        return []
+    return low
+
+
+async def _vision_extract(
+    pages: list[SourcePage],
+    llm: LLMClient,
+    settings: Settings,
+    path: Path,
+    pools: StepPools,
+    limiter: anyio.CapacityLimiter,
+) -> tuple[ExtractionResult | None, dict[int, str], str | None]:
+    """(result, transcripts, note). result None means: use the OCR text instead, and add
+    `note` (why the vision fallback did not work) as a warning."""
+    numbers = sorted({p.number for p in pages})
+    try:
+        images = [
+            (
+                number,
+                await pools.parse.run(
+                    render_page_task,
+                    str(path),
+                    number,
+                    settings.vision_image_max_side,
+                    timeout=pools.parse_timeout,
+                ),
+            )
+            for number in numbers
+        ]
+        result, transcripts = await anyio.to_thread.run_sync(
+            functools.partial(extract_from_images, images, llm), limiter=limiter
+        )
+    except Exception as exc:
+        logger.warning("vision fallback failed: %s", type(exc).__name__)
+        return None, {}, f"vision fallback failed ({type(exc).__name__}); used the OCR text"
+    if not result.ok:
+        logger.warning("vision fallback failed: %s", result.failure_reason)
+        return None, {}, "vision fallback failed; used the OCR text"
+    return result, transcripts, None
+
+
+def vision_issue() -> RuleIssue:
+    return RuleIssue(
+        code=VISION_EXTRACTED,
+        severity="warning",
+        field=None,
+        message="OCR could not read this invoice, so its values were read from the page "
+        "image by the model. They could not be checked against OCR text: please check them.",
+    )
 
 
 async def _save_segment(
@@ -456,6 +556,9 @@ async def _save_segment(
         [*issues, *cross],
         report.needs_review or any(i.severity == "error" for i in [*duplicates, *cross]),
     )
+    if result.source == "vision":  # never grounded in OCR text: always reviewed
+        issues.append(vision_issue())
+        needs_review = True
     if segment.recheck:  # boundaries moved: corrections were kept but must be re-checked
         issues.append(boundary_issue(segment))
         needs_review = True

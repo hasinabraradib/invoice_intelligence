@@ -194,6 +194,7 @@ async def test_correction_is_audited_revalidated_and_survives_reprocess(
         "page": None,
         "confidence": 1.0,
         "reasons": None,
+        "source": "text",
     }
     assert "LINE_ITEMS_SUM_MISMATCH" in [i["code"] for i in result["issues"]]
     assert result["needs_review"] is True

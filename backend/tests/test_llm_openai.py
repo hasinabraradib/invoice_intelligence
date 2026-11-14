@@ -75,6 +75,9 @@ def test_complete_json_request_shape_and_usage():
         "input_tokens": 120,
         "output_tokens": 30,
         "cached_input_tokens": 0,
+        "vision_calls": 0,
+        "vision_input_tokens": 0,
+        "vision_output_tokens": 0,
     }
 
 

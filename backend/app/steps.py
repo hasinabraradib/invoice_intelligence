@@ -33,6 +33,35 @@ def parse_task(path: str, filename: str, limits: ParseLimits) -> ParsedDocument:
     return parse_document(Path(path), filename, limits, run_ocr=False)
 
 
+def render_page_task(path: str, number: int, max_side: int) -> bytes:
+    """One page as a grayscale PNG, at most `max_side` pixels, for the vision fallback."""
+    import io
+
+    from PIL import Image
+
+    from app.ocr.pipeline import _image_frames, _pdf_pages
+    from app.parsing.file_types import detect_file_kind
+    from app.parsing.models import FileKind
+
+    file = Path(path)
+    pages = (
+        _pdf_pages(file, [number], 200)
+        if detect_file_kind(file) is FileKind.PDF
+        else _image_frames(file, [number])
+    )
+    try:
+        _, image, _, error = next(iter(pages))
+    finally:
+        pages.close()
+    if image is None:
+        raise ValueError(error or "page could not be rendered")
+    picture = Image.fromarray(image).convert("L")
+    picture.thumbnail((max_side, max_side))
+    out = io.BytesIO()
+    picture.save(out, "PNG", optimize=True)
+    return out.getvalue()
+
+
 def count_pages_task(path: str) -> int:
     return count_pages(Path(path))
 

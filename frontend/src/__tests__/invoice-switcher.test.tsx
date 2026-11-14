@@ -8,7 +8,7 @@ function invoice(segment: number, start: number, end: number, number: string, ne
   return {
     invoice_id: `id-${segment}`, document_id: "doc", segment_index: segment, page_start: start, page_end: end,
     extracted: true, needs_review: needsReview, overall_confidence: 0.9, extracted_at: "2026-01-01T00:00:00Z",
-    fields: { invoice_number: { value: number, status: "found", confidence: 0.95, reasons: [] } },
+    fields: { invoice_number: { value: number, status: "found", confidence: 0.95, reasons: [], source: "text" } },
     line_items: [], issues: [], duplicates: [],
   } as InvoiceResult;
 }

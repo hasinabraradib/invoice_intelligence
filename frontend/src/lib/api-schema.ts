@@ -934,6 +934,12 @@ export interface components {
             confidence: number;
             /** Reasons */
             reasons?: string[];
+            /**
+             * Source
+             * @default text
+             * @enum {string}
+             */
+            source: "text" | "vision";
         };
         /** FileError */
         FileError: {
@@ -1214,6 +1220,21 @@ export interface components {
              * @default 0
              */
             llm_cached_input_tokens: number;
+            /**
+             * Llm Vision Calls
+             * @default 0
+             */
+            llm_vision_calls: number;
+            /**
+             * Llm Vision Input Tokens
+             * @default 0
+             */
+            llm_vision_input_tokens: number;
+            /**
+             * Llm Vision Output Tokens
+             * @default 0
+             */
+            llm_vision_output_tokens: number;
         };
         /** LedgerRowView */
         LedgerRowView: {

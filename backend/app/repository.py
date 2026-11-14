@@ -349,6 +349,17 @@ class Repository:
         )
         return list(rows)
 
+    async def replace_page_text(
+        self, document_id: uuid.UUID, page_number: int, text: str, source: str
+    ) -> None:
+        """Swap a page's text (e.g. unreadable OCR text for the vision transcription), so
+        keyword and semantic search see the better reading."""
+        await self.session.execute(
+            update(PageText)
+            .where(PageText.document_id == document_id, PageText.page_number == page_number)
+            .values(text=text, source=source)
+        )
+
     async def get_page_texts(self, document_id: uuid.UUID) -> list[PageText]:
         rows = await self.session.scalars(
             select(PageText)

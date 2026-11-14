@@ -5,6 +5,7 @@ Security: the API key travels in a request header (never in the URL, which could
 logged), and we never log prompts or responses.
 """
 
+import base64
 import contextlib
 import json
 import logging
@@ -83,6 +84,10 @@ class TokenUsage:
     input_tokens: int = 0  # all prompt tokens, cached ones included
     output_tokens: int = 0
     cached_input_tokens: int = 0  # prompt-cache hits (usually billed at a discount)
+    # The share of the above spent on page images (the vision fallback), for its cost.
+    vision_calls: int = 0
+    vision_input_tokens: int = 0
+    vision_output_tokens: int = 0
 
     def as_dict(self) -> dict[str, int]:
         return {
@@ -90,6 +95,9 @@ class TokenUsage:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "cached_input_tokens": self.cached_input_tokens,
+            "vision_calls": self.vision_calls,
+            "vision_input_tokens": self.vision_input_tokens,
+            "vision_output_tokens": self.vision_output_tokens,
         }
 
 
@@ -107,6 +115,8 @@ Message = dict[str, Any]
 class LLMClient(Protocol):
     name: str
     usage: TokenUsage  # tokens billed so far by this client
+    # True if complete_json_with_images works (the model reads page images).
+    supports_images: bool
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Send the prompts, return the parsed JSON object (raise LLMError otherwise)."""
@@ -238,12 +248,20 @@ class _HttpClient:
         self._usage_lock = threading.Lock()
         self._slots = _request_slots(max_concurrent_requests)
 
-    def _record_usage(self, input_tokens: Any, output_tokens: Any, cached: Any = 0) -> None:
+    supports_images = False
+
+    def _record_usage(
+        self, input_tokens: Any, output_tokens: Any, cached: Any = 0, *, vision: bool = False
+    ) -> None:
         with self._usage_lock:
             self.usage.calls += 1
             self.usage.input_tokens += _int(input_tokens)
             self.usage.output_tokens += _int(output_tokens)
             self.usage.cached_input_tokens += _int(cached)
+            if vision:
+                self.usage.vision_calls += 1
+                self.usage.vision_input_tokens += _int(input_tokens)
+                self.usage.vision_output_tokens += _int(output_tokens)
 
     def _post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
         # The slot is held through retries, so a rate-limited request doesn't let another
@@ -372,12 +390,14 @@ class _ChatCompletionsClient(_HttpClient):
     # meet its rules (every key required, no extra keys).
     STRICT_SCHEMA = False
 
-    def _send(self, body: dict[str, Any]) -> dict[str, Any]:
+    def _send(self, body: dict[str, Any], *, vision: bool = False) -> dict[str, Any]:
         """POST, record token usage, return the first choice's message."""
         data = self._post(self.URL, {"Authorization": f"Bearer {self._api_key}"}, body)
         usage = data.get("usage") or {}
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
-        self._record_usage(usage.get("prompt_tokens"), usage.get("completion_tokens"), cached)
+        self._record_usage(
+            usage.get("prompt_tokens"), usage.get("completion_tokens"), cached, vision=vision
+        )
         try:
             message = data["choices"][0]["message"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -387,6 +407,30 @@ class _ChatCompletionsClient(_HttpClient):
         if message.get("refusal"):  # safety refusal instead of an answer; retrying won't help
             raise LLMError(f"{self.LABEL} refused to answer")
         return message
+
+    def complete_json_with_images(
+        self, system: str, user: str, images: list[bytes], schema: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Like complete_json, with PNG page images after the text (vision models only)."""
+        if not self.supports_images:
+            raise LLMError(f"{self.LABEL} model {self.model} cannot read images here")
+        json_schema: dict[str, Any] = {"name": "invoice_vision", "schema": schema}
+        if self.STRICT_SCHEMA:
+            json_schema["strict"] = True
+        content: list[dict[str, Any]] = [{"type": "text", "text": user}]
+        for png in images:
+            url = "data:image/png;base64," + base64.b64encode(png).decode("ascii")
+            content.append({"type": "image_url", "image_url": {"url": url, "detail": "high"}})
+        body = {
+            "model": self.model,
+            "temperature": 0,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": content},
+            ],
+            "response_format": {"type": "json_schema", "json_schema": json_schema},
+        }
+        return parse_json_object(self._send(body, vision=True).get("content") or "")
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         json_schema: dict[str, Any] = {"name": "invoice_extraction", "schema": schema}
@@ -485,6 +529,7 @@ class OpenAIClient(_ChatCompletionsClient):
     LABEL = "OpenAI"
     URL = "https://api.openai.com/v1/chat/completions"
     STRICT_SCHEMA = True
+    supports_images = True  # gpt-6-luna and the other current OpenAI models read images
     DROPPABLE = ("temperature", "reasoning_effort")
 
     def __init__(self, *args: Any, reasoning_effort: str | None = "none", **kwargs: Any) -> None:
@@ -492,7 +537,7 @@ class OpenAIClient(_ChatCompletionsClient):
         self.reasoning_effort = reasoning_effort
         self.dropped_params: set[str] = set()
 
-    def _send(self, body: dict[str, Any]) -> dict[str, Any]:
+    def _send(self, body: dict[str, Any], *, vision: bool = False) -> dict[str, Any]:
         body = dict(body)
         if self.reasoning_effort:
             body["reasoning_effort"] = self.reasoning_effort
@@ -500,7 +545,7 @@ class OpenAIClient(_ChatCompletionsClient):
             for param in self.dropped_params:
                 body.pop(param, None)
             try:
-                return super()._send(body)
+                return super()._send(body, vision=vision)
             except LLMError as exc:
                 param = self._rejected_param(exc, body)
                 if param is None:
@@ -525,6 +570,7 @@ class UnconfiguredLLM:
 
     name = "none"
     model = "none"
+    supports_images = False
 
     def __init__(self, reason: str) -> None:
         self.reason = reason
@@ -547,8 +593,15 @@ class FakeLLMClient:
     name = "fake"
     model = "fake"
 
-    def __init__(self, *replies: Any, chat: list[Any] | None = None) -> None:
+    def __init__(
+        self, *replies: Any, chat: list[Any] | None = None, vision: list[Any] | None = None
+    ) -> None:
         self._replies = list(replies)
+        # Scripted replies to complete_json_with_images (dict, str or Exception); with
+        # none, the fake says it cannot read images, like a text-only provider.
+        self._vision = list(vision or [])
+        self.supports_images = bool(vision)
+        self.vision_calls: list[dict[str, Any]] = []
         self.calls: list[dict[str, Any]] = []
         # Scripted chat turns: ChatReply, Exception, or function(messages, tools) -> reply.
         # The last one repeats when the script runs out.
@@ -568,6 +621,16 @@ class FakeLLMClient:
         if isinstance(reply, Exception):
             raise reply
         return reply
+
+    def complete_json_with_images(
+        self, system: str, user: str, images: list[bytes], schema: dict[str, Any]
+    ) -> dict[str, Any]:
+        self.vision_calls.append({"system": system, "user": user, "images": images})
+        self.usage.vision_calls += 1
+        reply = self._vision.pop(0) if len(self._vision) > 1 else self._vision[0]
+        if isinstance(reply, Exception):
+            raise reply
+        return parse_json_object(reply) if isinstance(reply, str) else reply
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         self.calls.append({"system": system, "user": user, "schema": schema})

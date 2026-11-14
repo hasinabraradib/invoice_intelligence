@@ -59,6 +59,9 @@ class FieldResult(BaseModel):
     page: int | None = None
     confidence: float = 0.0
     reasons: list[str] = Field(default_factory=list)  # why the status/confidence was lowered
+    # "text": read from the text layer or OCR text and checked against it. "vision": read
+    # from the page image by the model (OCR unreadable); never grounded in OCR text.
+    source: Literal["text", "vision"] = "text"
 
 
 class LineItemResult(BaseModel):
@@ -73,6 +76,7 @@ class ExtractionResult(BaseModel):
     failure_reason: str | None = None
     retryable: bool = False  # True if the failure was temporary (rate limit, outage)
     provider: str
+    source: Literal["text", "vision"] = "text"  # "vision": the image fallback was used
     fields: dict[str, FieldResult] = Field(default_factory=dict)
     line_items: list[LineItemResult] = Field(default_factory=list)
     supplier_key: str | None = None  # for duplicate detection later

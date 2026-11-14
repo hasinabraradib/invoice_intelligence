@@ -163,7 +163,7 @@ async def _count_pages(ctx: dict[str, Any], path: str) -> int:
 async def _save_llm_usage(session: Any, job_id: uuid.UUID, llm: Any) -> None:
     """Add this attempt's provider usage to the job (summed over retries)."""
     usage = getattr(llm, "usage", None)
-    if usage is None or not usage.calls:
+    if usage is None or not (usage.calls or usage.vision_calls):
         return
     await session.execute(
         update(ProcessingJob)
@@ -174,6 +174,11 @@ async def _save_llm_usage(session: Any, job_id: uuid.UUID, llm: Any) -> None:
             llm_output_tokens=ProcessingJob.llm_output_tokens + usage.output_tokens,
             llm_cached_input_tokens=ProcessingJob.llm_cached_input_tokens
             + usage.cached_input_tokens,
+            llm_vision_calls=ProcessingJob.llm_vision_calls + usage.vision_calls,
+            llm_vision_input_tokens=ProcessingJob.llm_vision_input_tokens
+            + usage.vision_input_tokens,
+            llm_vision_output_tokens=ProcessingJob.llm_vision_output_tokens
+            + usage.vision_output_tokens,
         )
     )
     await session.commit()

@@ -113,6 +113,13 @@ class Settings(BaseSettings):
     # Extra cleanup for images that look like phone photos, comma-separated, from
     # warp (page edges + perspective), flatten (shadows / uneven light), clahe (contrast).
     # Default "flatten": the only step measured to help on the hard dev set.
+    # Vision fallback: pages whose OCR confidence stays below OCR_MIN_CONFIDENCE are sent
+    # as images to the LLM (if the provider reads images). Fields from it are marked
+    # source "vision" and always reviewed. Up to VISION_MAX_PAGES pages per invoice,
+    # each downscaled to VISION_IMAGE_MAX_SIDE pixels (cost).
+    vision_fallback_enabled: bool = True
+    vision_max_pages: int = Field(default=4, ge=1, le=20)
+    vision_image_max_side: int = Field(default=1600, ge=512, le=4096)
     ocr_photo_steps: str = Field(
         default="flatten", pattern=r"^((warp|flatten|clahe)(,(warp|flatten|clahe))*)?$"
     )
