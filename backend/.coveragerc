@@ -1,0 +1,6 @@
+# Coverage settings for `make test-report`. SQLAlchemy's async engine runs database code
+# inside greenlets; without "greenlet" here, coverage misses those lines.
+[run]
+source = app
+concurrency = greenlet, thread
+data_file = /tmp/.coverage

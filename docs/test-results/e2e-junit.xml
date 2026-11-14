@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="9.108091">
+<testsuite name="smoke.spec.ts" timestamp="2026-11-14T18:36:03.206Z" hostname="chromium" tests="1" failures="0" skipped="0" time="8.053" errors="0">
+<testcase name="upload, review, correct, approve, search" classname="smoke.spec.ts" time="8.053">
+</testcase>
+</testsuite>
+</testsuites>
