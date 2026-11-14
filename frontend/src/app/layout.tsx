@@ -18,6 +18,9 @@ export const viewport: Viewport = {
   ],
 };
 
+// Rendered per request so Next.js can put the CSP nonce (src/proxy.ts) on its scripts.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>

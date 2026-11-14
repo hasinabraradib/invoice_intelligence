@@ -1,0 +1,8 @@
+# Optional, for development only: publish the API on localhost:8000 (for /docs, curl and
+# `npm run dev` without the container). Every route except /health still needs the key:
+#   curl -H "X-API-Key: $API_KEY" http://localhost:8000/documents
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+services:
+  api:
+    ports:
+      - "127.0.0.1:8000:8000"

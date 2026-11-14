@@ -41,6 +41,10 @@ RUN useradd --create-home --uid 10001 app \
     && chown -R app:app /data/uploads /models /app
 
 COPY --chown=app:app . .
+# The container's root file system is read-only (docker-compose.yml): tool caches and
+# coverage data go to /tmp, which is a small tmpfs.
+ENV RUFF_CACHE_DIR=/tmp/ruff-cache \
+    COVERAGE_FILE=/tmp/.coverage
 USER app
 
 EXPOSE 8000

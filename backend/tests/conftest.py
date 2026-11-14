@@ -35,11 +35,14 @@ from app.config import Settings, get_settings  # noqa: E402
 from app.db import get_session  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.search.embedder import FakeEmbedder  # noqa: E402
+from app.security import MemoryRateLimiter, get_rate_limiter  # noqa: E402
 
 TABLES = (
     "documents, processing_jobs, invoices, line_items, validation_issues, corrections, "
     "page_texts, conversations, eval_runs"  # CASCADE also empties tables that point at these
 )
+TEST_API_KEY = "test-key-0123456789"
+AUTH = {"X-API-Key": TEST_API_KEY}
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -66,6 +69,7 @@ def settings(upload_dir):
         ocr_enabled=False,
         embeddings_enabled=False,
         semantic_min_similarity=0.15,  # fake embedder scale, see test_search_semantic
+        api_keys=TEST_API_KEY,
     )
 
 
@@ -121,6 +125,7 @@ async def db_session(database_url):
 @pytest.fixture
 def client(settings, database_url):
     app = create_app()
+    limiter = MemoryRateLimiter()
     # Endpoints receive settings and sessions via Depends(); tests swap in their own.
     app.dependency_overrides[get_settings] = lambda: settings
     # NullPool: TestClient runs the app on its own event loop, so never reuse connections.
@@ -131,8 +136,9 @@ def client(settings, database_url):
             yield session
 
     app.dependency_overrides[get_session] = test_session
+    app.dependency_overrides[get_rate_limiter] = lambda: limiter
     # Using TestClient as a context manager runs the app's startup/shutdown (lifespan).
-    with TestClient(app) as test_client:
+    with TestClient(app, headers=AUTH) as test_client:
         yield test_client
     asyncio.run(_truncate(database_url))
 
@@ -196,8 +202,12 @@ async def api(settings, database_url, queue, embedder, assistant_llm):
         engine, expire_on_commit=False
     )
     app.dependency_overrides[get_assistant_llm] = lambda: assistant_llm.llm
+    limiter = MemoryRateLimiter()
+    app.dependency_overrides[get_rate_limiter] = lambda: limiter
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://test", headers=AUTH
+    ) as client:
         yield client
     await engine.dispose()
     await _truncate(database_url)

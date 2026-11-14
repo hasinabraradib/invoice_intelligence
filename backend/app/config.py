@@ -86,10 +86,20 @@ class Settings(BaseSettings):
     # 0.08-0.11, unrelated text <= 0.12. 0.20 sits between them.
     semantic_min_similarity: float = Field(default=0.20, ge=-1, le=1)
 
-    # Browsers may call the API from these origins (the Next.js dev server by default).
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # Auth: comma-separated keys accepted in the X-API-Key header. Every route except
+    # /health needs one; with none set, those routes answer 503 (fail closed). The browser
+    # never sees a key: the Next.js server adds it when it forwards requests.
+    api_keys: SecretStr | None = None
+    # Requests per minute per client (0 = no limit), counted in Redis.
+    rate_limit_uploads_per_minute: int = Field(default=30, ge=0)
+    rate_limit_assistant_per_minute: int = Field(default=20, ge=0)
+    rate_limit_search_per_minute: int = Field(default=60, ge=0)
 
-    @field_validator("llm_model", "llm_api_key", "openai_api_key", mode="before")
+    # Browsers do not call the API directly (the frontend server proxies), so no origin is
+    # allowed by default. Add one only for a deliberate direct-browser setup.
+    cors_origins: list[str] = []
+
+    @field_validator("llm_model", "llm_api_key", "openai_api_key", "api_keys", mode="before")
     @classmethod
     def _blank_is_none(cls, value):
         # "LLM_MODEL=" in .env gives "", which should mean "not set".

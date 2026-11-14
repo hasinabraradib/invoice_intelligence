@@ -15,11 +15,17 @@ from app.filters import DocumentFilters
 from app.models import DocumentStatus
 from app.search import SearchHit, SearchMode, SemanticUnavailable, search
 from app.search.embedder import Embedder
+from app.security import rate_limit
 
 router = APIRouter(tags=["search"])
 
 
-@router.get("/search", response_model=Page[SearchHit], summary="Search document text")
+@router.get(
+    "/search",
+    response_model=Page[SearchHit],
+    summary="Search document text",
+    dependencies=[Depends(rate_limit("search"))],
+)
 async def search_documents(
     session: Annotated[AsyncSession, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],

@@ -25,7 +25,9 @@ export type LedgerView = S["LedgerView"];
 export type LedgerRowView = S["LedgerRowView"];
 export type Paged<T> = { items: T[]; total: number; limit: number; offset: number };
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+/** The browser calls the API through this app's own server (src/app/api/[...path]), which
+ * adds the API key. The key is never part of the browser bundle. */
+export const API_URL = "/api";
 
 /** The backend's error format: {"error": {"code": ..., "message": ...}}. */
 export class ApiError extends Error {

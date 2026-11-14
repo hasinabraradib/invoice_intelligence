@@ -13,6 +13,8 @@ _CODES = {
     409: "conflict",
     413: "too_large",
     415: "unsupported_media_type",
+    401: "unauthorized",
+    429: "rate_limited",
     422: "validation_error",
     503: "unavailable",
 }
@@ -46,7 +48,11 @@ def _body(code: str, message: str, details=None) -> dict:
 def install(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
-        return JSONResponse(_body(exc.code, exc.message), status_code=exc.status_code)
+        retry_after = getattr(exc, "retry_after", None)
+        headers = {"Retry-After": str(retry_after)} if retry_after else None
+        return JSONResponse(
+            _body(exc.code, exc.message), status_code=exc.status_code, headers=headers
+        )
 
     @app.exception_handler(HTTPException)
     async def _http_error(_: Request, exc: HTTPException) -> JSONResponse:

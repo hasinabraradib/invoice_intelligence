@@ -40,6 +40,7 @@ from app.config import Settings, get_settings
 from app.dashboard import dashboard_stats
 from app.db import get_session
 from app.models import AssistantAction, ChatMessage, Conversation
+from app.security import rate_limit
 
 router = APIRouter(tags=["assistant"])
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -143,6 +144,7 @@ async def get_conversation(conversation_id: uuid.UUID, session: Session) -> Conv
 @router.post(
     "/assistant/conversations/{conversation_id}/messages",
     responses=ERRORS,
+    dependencies=[Depends(rate_limit("assistant"))],
     response_class=StreamingResponse,
     summary="Send a message; the answer streams back as Server-Sent Events",
 )

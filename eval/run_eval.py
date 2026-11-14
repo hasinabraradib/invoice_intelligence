@@ -45,7 +45,11 @@ BEGIN, END = "<!-- eval:begin -->", "<!-- eval:end -->"
 
 class Api:
     def __init__(self, base: str) -> None:
-        self.http = httpx.Client(base_url=base, timeout=120)
+        # The API needs a key (X-API-Key). Inside the api container API_KEYS is set; use the
+        # first key. API_KEY overrides it when running from elsewhere.
+        key = os.environ.get("API_KEY") or os.environ.get("API_KEYS", "").split(",")[0].strip()
+        headers = {"X-API-Key": key} if key else {}
+        self.http = httpx.Client(base_url=base, timeout=120, headers=headers)
 
     def upload(self, paths: list[Path]) -> list[dict]:
         results = []

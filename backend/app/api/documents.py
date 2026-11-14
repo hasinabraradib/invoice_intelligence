@@ -53,6 +53,7 @@ from app.parsing.file_types import detect_file_kind, extension_warning
 from app.parsing.models import FileKind
 from app.previews import NoPreview, PageNotFound, page_preview
 from app.repository import JobInProgress, Repository
+from app.security import rate_limit
 from app.storage import StoredFile, sanitize_filename, save_upload
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,7 @@ KIND_BY_MIME = {mime: kind for kind, mime in MIME_TYPES.items()}
     "",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=UploadResponse,
+    dependencies=[Depends(rate_limit("upload"))],
     summary="Upload invoices (processed in the background)",
 )
 async def upload_documents(

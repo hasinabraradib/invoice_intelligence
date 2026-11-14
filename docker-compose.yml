@@ -12,6 +12,14 @@ x-backend: &backend
   volumes:
     - uploads:/data/uploads
     - models:/models   # embedding model cache (downloaded once)
+  # Hardening: the image already runs as an unprivileged user (uid 10001). The root file
+  # system is read-only; only the volumes above and a small /tmp are writable. No Linux
+  # capabilities, and no privilege escalation through setuid binaries.
+  read_only: true
+  tmpfs:
+    - /tmp:size=512m
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
   depends_on:
     postgres:
       condition: service_healthy   # wait until pg_isready succeeds, not just "container started"
@@ -24,8 +32,8 @@ services:
     <<: *backend
     # Apply DB migrations, then start the web server. (No migrations exist yet: a no-op.)
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
-    ports:
-      - "127.0.0.1:8000:8000"   # bind to localhost only, not to every network interface
+    # No `ports:`: only the frontend server talks to the API (with the API key), over the
+    # compose network. For direct access while developing, see docker-compose.dev.yml.
     healthcheck:
       # The slim image has no curl, so use Python's standard library to call /health.
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
@@ -54,14 +62,22 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        # The BROWSER calls the API, so this is the API address as seen from your machine.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    # The browser only talks to this server. Its route handlers forward /api/* to the API
+    # and add the key; the key is a server-side variable, never part of the browser bundle.
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      API_KEY: ${FRONTEND_API_KEY:-${API_KEYS:-}}
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3000:3000"   # localhost only, not every network interface
     depends_on:
       - api
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+      - /app/.next/cache:size=256m,uid=1000,gid=1000
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
 
   postgres:
     # Official Postgres + the pgvector extension (needed later for semantic search).
@@ -79,10 +95,14 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
-    # No `ports:` on purpose: only other containers need the database.
+    # No `ports:` on purpose: only other containers need the database. The official image
+    # starts as root only to fix volume ownership, then drops to the postgres user.
+    security_opt: ["no-new-privileges:true"]
 
   redis:
     image: redis:7-alpine
+    # Runs as the redis user after the entrypoint; no ports published.
+    security_opt: ["no-new-privileges:true"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

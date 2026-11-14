@@ -4,8 +4,11 @@ COMPOSE := docker compose
 .PHONY: up down test lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
+# It also adds a random API key (API_KEYS) if .env has none. The key stays in .env and in
+# the frontend *server*; the browser never sees it.
 env:
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
+	@grep -q '^API_KEYS=..*' .env || (printf '\nAPI_KEYS=%s\n' "$$(openssl rand -hex 32)" >> .env && echo "Added a random API key (API_KEYS) to .env")
 
 up: env  ## Build images and start all services in the background
 	$(COMPOSE) up -d --build --wait
@@ -14,7 +17,7 @@ down:  ## Stop and remove containers (named volumes, i.e. data, are kept)
 	$(COMPOSE) down
 
 test: env  ## Run the test suite inside the backend image (Python 3.12, same deps as prod)
-	$(COMPOSE) run --rm --build --no-deps api pytest
+	$(COMPOSE) run --rm --build --no-deps api pytest -p no:cacheprovider
 
 lint: env  ## Check lint rules and formatting (no changes made)
 	$(COMPOSE) run --rm --build --no-deps api sh -c "ruff check . && ruff format --check ."

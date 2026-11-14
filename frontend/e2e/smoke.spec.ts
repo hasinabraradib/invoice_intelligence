@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-const API = process.env.E2E_API_URL ?? "http://localhost:8000";
+// The API is reached through the web server's proxy (it adds the key), like the browser does.
+const API = process.env.E2E_API_URL ?? "http://localhost:3000/api";
 const WEB = process.env.E2E_WEB_URL ?? "http://localhost:3000";
 
 /** A tiny one-page text PDF built by hand (no binary fixture in git). */

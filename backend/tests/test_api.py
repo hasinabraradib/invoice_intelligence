@@ -383,17 +383,30 @@ async def test_error_format_for_404_and_422(api):
     assert (await api.get(f"/documents/{uuid.uuid4()}/result")).status_code == 404
 
 
-async def test_cors_allows_the_frontend_origin(api):
-    response = await api.options(
-        "/documents",
-        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "GET"},
+async def test_cors_allows_only_configured_origins(monkeypatch):
+    # By default no browser origin is allowed (the frontend server proxies). An origin
+    # added to CORS_ORIGINS on purpose is allowed, and nothing else.
+    import httpx
+
+    import app.main as main
+    from app.config import Settings
+
+    monkeypatch.setattr(
+        main, "get_settings", lambda: Settings(cors_origins=["https://app.example"])
     )
-    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
-    evil = await api.options(
-        "/documents",
-        headers={"Origin": "http://evil.example", "Access-Control-Request-Method": "GET"},
-    )
-    assert "access-control-allow-origin" not in evil.headers
+    transport = httpx.ASGITransport(app=main.create_app())
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        allowed = await client.options(
+            "/documents",
+            headers={"Origin": "https://app.example", "Access-Control-Request-Method": "GET"},
+        )
+        assert allowed.headers["access-control-allow-origin"] == "https://app.example"
+        assert "x-api-key" in allowed.headers["access-control-allow-headers"].lower()
+        evil = await client.options(
+            "/documents",
+            headers={"Origin": "http://evil.example", "Access-Control-Request-Method": "GET"},
+        )
+        assert "access-control-allow-origin" not in evil.headers
 
 
 def test_snippet_is_html_escaped_except_marks():

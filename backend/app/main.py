@@ -4,7 +4,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
@@ -22,6 +22,7 @@ from app.api import (
 from app.config import get_settings
 from app.db import create_engine, create_sessionmaker
 from app.jobs import ArqQueue
+from app.security import RedisRateLimiter, SecurityHeadersMiddleware, require_api_key
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -47,6 +48,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.engine = create_engine(settings.database_url)
     app.state.sessionmaker = create_sessionmaker(app.state.engine)
     app.state.redis = Redis.from_url(settings.redis_url)
+    app.state.rate_limiter = RedisRateLimiter(app.state.redis)
+    if not settings.api_keys:
+        logging.getLogger(__name__).error(
+            "API_KEYS is not set: every route except /health answers 503"
+        )
     app.state.queue = ArqQueue(settings.redis_url)
     try:
         yield
@@ -69,12 +75,15 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=get_settings().cors_origins,
-        allow_methods=["GET", "POST", "PATCH"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PATCH", "PUT"],
+        allow_headers=["Content-Type", "X-API-Key"],
     )
+    app.add_middleware(SecurityHeadersMiddleware)
     errors.install(app)
-    for module in (health, assistant, documents, invoices, crosschecks, search, jobs, evaluation):
-        app.include_router(module.router)
+    # /health stays open (Docker healthchecks, load balancers); everything else needs a key.
+    app.include_router(health.router)
+    for module in (assistant, documents, invoices, crosschecks, search, jobs, evaluation):
+        app.include_router(module.router, dependencies=[Depends(require_api_key)])
     return app
 
 
