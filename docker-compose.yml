@@ -38,6 +38,18 @@ services:
     <<: *backend
     # arq worker: picks queued jobs from Redis and runs the processing pipeline.
     command: arq app.worker.WorkerSettings
+    # A tiny init as PID 1 reaps killed step processes (parse/OCR/embedding pools).
+    init: true
+    stop_grace_period: 30s
+    # Liveness: the worker's event loop touches this file every 5 s. If the loop blocks,
+    # the worker exits by itself (WORKER_LOOP_STALL_SECONDS) and `restart` brings it back;
+    # the healthcheck shows the state in `docker compose ps`.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys, time; sys.exit(0 if time.time() - os.path.getmtime('/tmp/worker-alive') < 90 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
 
   frontend:
     build:
