@@ -1,167 +1,167 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="72" failures="0" errors="0" time="1.423744499">
-    <testsuite name="src/__tests__/assistant.test.tsx" timestamp="2026-11-14T18:36:02.446Z" hostname="Mac" tests="10" failures="0" errors="0" skipped="0" time="0.139627417">
-        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; renders bold, lists, code and safe links" time="0.095254042">
+<testsuites name="vitest tests" tests="72" failures="0" errors="0" time="1.359934293">
+    <testsuite name="src/__tests__/assistant.test.tsx" timestamp="2026-11-14T19:03:22.510Z" hostname="Mac" tests="10" failures="0" errors="0" skipped="0" time="0.140754917">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; renders bold, lists, code and safe links" time="0.092703875">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; never turns text into HTML" time="0.002605042">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; never turns text into HTML" time="0.001275083">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; only allows http(s) and in-app links" time="0.000361917">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="safe markdown &gt; only allows http(s) and in-app links" time="0.000121875">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="server-sent events &gt; parses blocks" time="0.000982875">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="server-sent events &gt; parses blocks" time="0.000332208">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="server-sent events &gt; handles events split across network chunks" time="0.006524542">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="server-sent events &gt; handles events split across network chunks" time="0.00332225">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; greets with live numbers" time="0.000226333">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; greets with live numbers" time="0.000205625">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; suggests what fits the data, at most four" time="0.000127083">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; suggests what fits the data, at most four" time="0.000112625">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; links citations to the review page at the page" time="0.000066208">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="greeting and suggestions &gt; links citations to the review page at the page" time="0.000061667">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="pending action card &gt; changes nothing until Confirm, then calls the API" time="0.0284275">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="pending action card &gt; changes nothing until Confirm, then calls the API" time="0.038546833">
         </testcase>
-        <testcase classname="src/__tests__/assistant.test.tsx" name="pending action card &gt; shows expired actions without buttons" time="0.0032215">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/__tests__/components.test.tsx" timestamp="2026-11-14T18:36:02.447Z" hostname="Mac" tests="9" failures="0" errors="0" skipped="0" time="0.278846916">
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; shows the status in words" time="0.018508375">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; has a label for partly failed batches" time="0.001104041">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status found has text" time="0.000931791">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status missing has text" time="0.0007075">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status uncertain has text" time="0.001730792">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status corrected has text" time="0.000922">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; approves at once when there are no errors" time="0.121950417">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; requires an override reason while errors remain" time="0.119210334">
-        </testcase>
-        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; closes on Escape and needs a reviewer name" time="0.0125735">
+        <testcase classname="src/__tests__/assistant.test.tsx" name="pending action card &gt; shows expired actions without buttons" time="0.002846084">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/controls.test.tsx" timestamp="2026-11-14T18:36:02.447Z" hostname="Mac" tests="11" failures="0" errors="0" skipped="0" time="0.674886291">
-        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; round-trips ISO dates in local time and rejects impossible ones" time="0.001213834">
+    <testsuite name="src/__tests__/components.test.tsx" timestamp="2026-11-14T19:03:22.511Z" hostname="Mac" tests="9" failures="0" errors="0" skipped="0" time="0.254184708">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; shows the status in words" time="0.016679083">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; builds a six-week grid starting on Monday" time="0.000487375">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; has a label for partly failed batches" time="0.001084333">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; labels ranges and computes presets" time="0.023879292">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status found has text" time="0.002485167">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="Select &gt; is labelled, opens a themed menu and maps the empty option" time="0.192281125">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status missing has text" time="0.003283917">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DocumentPicker &gt; filters by filename or supplier and picks with the keyboard" time="0.073268875">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status uncertain has text" time="0.001161334">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DocumentPicker &gt; leaves out the document picked on the other side" time="0.023942625">
+        <testcase classname="src/__tests__/components.test.tsx" name="status badges &gt; field status corrected has text" time="0.000698458">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="Filters toolbar &gt; starts empty, shows removable chips and clears all" time="0.156283375">
+        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; approves at once when there are no errors" time="0.095964208">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DateRange &gt; applies a preset and a picked range" time="0.063140416">
+        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; requires an override reason while errors remain" time="0.119176583">
         </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DateRange &gt; orders the two clicked dates" time="0.127128208">
-        </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DisabledHint and Switch &gt; explains why a button is disabled, and keeps the button when it is enabled" time="0.003865584">
-        </testcase>
-        <testcase classname="src/__tests__/controls.test.tsx" name="DisabledHint and Switch &gt; toggles as a switch" time="0.007665084">
+        <testcase classname="src/__tests__/components.test.tsx" name="approve dialog &gt; closes on Escape and needs a reviewer name" time="0.012158042">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/crosscheck.test.ts" timestamp="2026-11-14T18:36:02.448Z" hostname="Mac" tests="4" failures="0" errors="0" skipped="0" time="0.008076375">
-        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; links the invoice page on side A and the ledger row on side B" time="0.005712792">
+    <testsuite name="src/__tests__/controls.test.tsx" timestamp="2026-11-14T19:03:22.512Z" hostname="Mac" tests="11" failures="0" errors="0" skipped="0" time="0.670614833">
+        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; round-trips ISO dates in local time and rejects impossible ones" time="0.001067542">
         </testcase>
-        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; links invoice pages on both sides for PDF vs PDF" time="0.000302917">
+        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; builds a six-week grid starting on Monday" time="0.000463875">
         </testcase>
-        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; has no link for a side that has nothing (missing in PDF)" time="0.000388833">
+        <testcase classname="src/__tests__/controls.test.tsx" name="date helpers &gt; labels ranges and computes presets" time="0.02333625">
         </testcase>
-        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; labels kinds in words" time="0.000103583">
+        <testcase classname="src/__tests__/controls.test.tsx" name="Select &gt; is labelled, opens a themed menu and maps the empty option" time="0.19523375">
         </testcase>
-    </testsuite>
-    <testsuite name="src/__tests__/evaluation.test.ts" timestamp="2026-11-14T18:36:02.448Z" hostname="Mac" tests="3" failures="0" errors="0" skipped="0" time="0.004315042">
-        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; formats rates, seconds and cost" time="0.002168667">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DocumentPicker &gt; filters by filename or supplier and picks with the keyboard" time="0.071661708">
         </testcase>
-        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; shows the hard subset next to the clean accuracy" time="0.000470583">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DocumentPicker &gt; leaves out the document picked on the other side" time="0.02475525">
         </testcase>
-        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; shows a dash, not zero, for numbers the run did not produce" time="0.0000765">
+        <testcase classname="src/__tests__/controls.test.tsx" name="Filters toolbar &gt; starts empty, shows removable chips and clears all" time="0.15029075">
         </testcase>
-    </testsuite>
-    <testsuite name="src/__tests__/invoice-switcher.test.tsx" timestamp="2026-11-14T18:36:02.448Z" hostname="Mac" tests="2" failures="0" errors="0" skipped="0" time="0.267365875">
-        <testcase classname="src/__tests__/invoice-switcher.test.tsx" name="invoice switcher &gt; is hidden for a single invoice" time="0.013303125">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DateRange &gt; applies a preset and a picked range" time="0.063798583">
         </testcase>
-        <testcase classname="src/__tests__/invoice-switcher.test.tsx" name="invoice switcher &gt; lists invoices with pages and moves between them" time="0.252864833">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DateRange &gt; orders the two clicked dates" time="0.127144458">
         </testcase>
-    </testsuite>
-    <testsuite name="src/__tests__/issues.test.ts" timestamp="2026-11-14T18:36:02.449Z" hostname="Mac" tests="2" failures="0" errors="0" skipped="0" time="0.002182083">
-        <testcase classname="src/__tests__/issues.test.ts" name="issueLabel &gt; names known codes in plain language" time="0.001023834">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DisabledHint and Switch &gt; explains why a button is disabled, and keeps the button when it is enabled" time="0.003646708">
         </testcase>
-        <testcase classname="src/__tests__/issues.test.ts" name="issueLabel &gt; falls back to a readable version of unknown codes, and says when there is none" time="0.00023425">
+        <testcase classname="src/__tests__/controls.test.tsx" name="DisabledHint and Switch &gt; toggles as a switch" time="0.00789725">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/proxy.test.ts" timestamp="2026-11-14T18:36:02.449Z" hostname="Mac" tests="5" failures="0" errors="0" skipped="0" time="0.003545083">
-        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; forwards only known API paths" time="0.001400375">
+    <testsuite name="src/__tests__/crosscheck.test.ts" timestamp="2026-11-14T19:03:22.512Z" hostname="Mac" tests="4" failures="0" errors="0" skipped="0" time="0.015745375">
+        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; links the invoice page on side A and the ledger row on side B" time="0.001496417">
         </testcase>
-        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; adds the key and the user&apos;s address, and drops cookies and auth headers" time="0.000681042">
+        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; links invoice pages on both sides for PDF vs PDF" time="0.000162917">
         </testcase>
-        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; passes back only safe response headers and keeps SSE unbuffered" time="0.000254708">
+        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; has no link for a side that has nothing (missing in PDF)" time="0.000099083">
         </testcase>
-        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; never points the browser at the API directly" time="0.000079292">
-        </testcase>
-        <testcase classname="src/__tests__/proxy.test.ts" name="page CSP &gt; allows scripts only from this origin or with the nonce" time="0.000196709">
+        <testcase classname="src/__tests__/crosscheck.test.ts" name="cross-check evidence links &gt; labels kinds in words" time="0.000082167">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/snippet.test.tsx" timestamp="2026-11-14T18:36:02.449Z" hostname="Mac" tests="4" failures="0" errors="0" skipped="0" time="0.035602709">
-        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; turns &lt;mark&gt; tags into mark elements" time="0.025326042">
+    <testsuite name="src/__tests__/evaluation.test.ts" timestamp="2026-11-14T19:03:22.512Z" hostname="Mac" tests="3" failures="0" errors="0" skipped="0" time="0.00240025">
+        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; formats rates, seconds and cost" time="0.001124334">
         </testcase>
-        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; keeps escaped script text as text and never creates elements from it" time="0.005194083">
+        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; shows the hard subset next to the clean accuracy" time="0.000393709">
         </testcase>
-        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; does not treat other tags as markup" time="0.002926458">
-        </testcase>
-        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; handles plain text, empty input and unknown entities" time="0.000132042">
+        <testcase classname="src/__tests__/evaluation.test.ts" name="evaluationTiles &gt; shows a dash, not zero, for numbers the run did not produce" time="0.000070375">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/validation.test.ts" timestamp="2026-11-14T18:36:02.449Z" hostname="Mac" tests="22" failures="0" errors="0" skipped="0" time="0.009296708">
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 1320.00" time="0.003513">
+    <testsuite name="src/__tests__/invoice-switcher.test.tsx" timestamp="2026-11-14T19:03:22.513Z" hostname="Mac" tests="2" failures="0" errors="0" skipped="0" time="0.226998417">
+        <testcase classname="src/__tests__/invoice-switcher.test.tsx" name="invoice switcher &gt; is hidden for a single invoice" time="0.008037291">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 1,320.5" time="0.000360375">
+        <testcase classname="src/__tests__/invoice-switcher.test.tsx" name="invoice switcher &gt; lists invoices with pages and moves between them" time="0.217565459">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts -45" time="0.000125875">
+    </testsuite>
+    <testsuite name="src/__tests__/issues.test.ts" timestamp="2026-11-14T19:03:22.513Z" hostname="Mac" tests="2" failures="0" errors="0" skipped="0" time="0.001764709">
+        <testcase classname="src/__tests__/issues.test.ts" name="issueLabel &gt; names known codes in plain language" time="0.000914625">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 0.1" time="0.000282292">
+        <testcase classname="src/__tests__/issues.test.ts" name="issueLabel &gt; falls back to a readable version of unknown codes, and says when there is none" time="0.000109708">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1.234" time="0.000272666">
+    </testsuite>
+    <testsuite name="src/__tests__/proxy.test.ts" timestamp="2026-11-14T19:03:22.513Z" hostname="Mac" tests="5" failures="0" errors="0" skipped="0" time="0.005304334">
+        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; forwards only known API paths" time="0.002333041">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects abc" time="0.000079291">
+        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; adds the key and the user&apos;s address, and drops cookies and auth headers" time="0.001004042">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1e5" time="0.000152875">
+        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; passes back only safe response headers and keeps SSE unbuffered" time="0.000235875">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 12." time="0.000080166">
+        <testcase classname="src/__tests__/proxy.test.ts" name="API proxy rules &gt; never points the browser at the API directly" time="0.000063583">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1.2.3" time="0.000070916">
+        <testcase classname="src/__tests__/proxy.test.ts" name="page CSP &gt; allows scripts only from this origin or with the nonce" time="0.000190792">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects $5" time="0.000213708">
+    </testsuite>
+    <testsuite name="src/__tests__/snippet.test.tsx" timestamp="2026-11-14T19:03:22.513Z" hostname="Mac" tests="4" failures="0" errors="0" skipped="0" time="0.037801458">
+        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; turns &lt;mark&gt; tags into mark elements" time="0.0292">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; treats empty as clearing the value" time="0.000171542">
+        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; keeps escaped script text as text and never creates elements from it" time="0.003885042">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; quantities allow 4 decimals" time="0.00029">
+        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; does not treat other tags as markup" time="0.002607666">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; formats without floats" time="0.000348708">
+        <testcase classname="src/__tests__/snippet.test.tsx" name="snippet renderer &gt; handles plain text, empty input and unknown entities" time="0.000349541">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; accepts real ISO dates" time="0.000365292">
+    </testsuite>
+    <testsuite name="src/__tests__/validation.test.ts" timestamp="2026-11-14T19:03:22.513Z" hostname="Mac" tests="22" failures="0" errors="0" skipped="0" time="0.004365292">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 1320.00" time="0.001704917">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-02-30" time="0.000127666">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 1,320.5" time="0.000154916">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2025-02-29" time="0.000075917">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts -45" time="0.000060833">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 15/03/2026" time="0.000066625">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; accepts 0.1" time="0.000123917">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-3-5" time="0.000064958">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1.234" time="0.000105458">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-13-01" time="0.000064375">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects abc" time="0.000042334">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="approve override rule &gt; needs a reviewer, and a reason only when errors remain" time="0.000190541">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1e5" time="0.000037125">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="misc &gt; checks uploads before sending" time="0.00030025">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 12." time="0.000035958">
         </testcase>
-        <testcase classname="src/__tests__/validation.test.ts" name="misc &gt; builds anchors for issue links" time="0.000234666">
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects 1.2.3" time="0.000036625">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; rejects $5" time="0.000095792">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; treats empty as clearing the value" time="0.000059459">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; quantities allow 4 decimals" time="0.000106042">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="money &gt; formats without floats" time="0.000139584">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; accepts real ISO dates" time="0.000134166">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-02-30" time="0.000049875">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2025-02-29" time="0.000038167">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 15/03/2026" time="0.000034791">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-3-5" time="0.000033708">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="dates &gt; rejects 2026-13-01" time="0.000033416">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="approve override rule &gt; needs a reviewer, and a reason only when errors remain" time="0.000086458">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="misc &gt; checks uploads before sending" time="0.000125083">
+        </testcase>
+        <testcase classname="src/__tests__/validation.test.ts" name="misc &gt; builds anchors for issue links" time="0.000113167">
         </testcase>
     </testsuite>
 </testsuites>

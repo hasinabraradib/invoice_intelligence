@@ -199,7 +199,7 @@ make e2e            # browser smoke test against the running stack (upload, revi
 make test-report    # all of the above with coverage + JUnit -> docs/test-results.md
 ```
 
-The latest results are in [docs/test-results.md](docs/test-results.md): backend 420 passed
+The latest results are in [docs/test-results.md](docs/test-results.md): backend 419 passed
 (including slow tests) with 91.5% line coverage, 72 frontend tests, and the end-to-end smoke
 test passed.
 
