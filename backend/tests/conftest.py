@@ -41,7 +41,8 @@ TABLES = (
     "documents, processing_jobs, invoices, line_items, validation_issues, corrections, "
     "page_texts, conversations, eval_runs"  # CASCADE also empties tables that point at these
 )
-TEST_API_KEY = "test-key-0123456789"
+# A fake key that only the in-process test app accepts (not a secret).
+TEST_API_KEY = "test-key-0123456789"  # gitleaks:allow
 AUTH = {"X-API-Key": TEST_API_KEY}
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

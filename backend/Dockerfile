@@ -35,6 +35,10 @@ RUN uv pip install --system --no-cache --index-url https://download.pytorch.org/
 RUN if [ "$INSTALL_DEV" = "true" ]; then EXTRA="--extra dev"; else EXTRA=""; fi \
     && uv pip install --system --no-cache -r pyproject.toml $EXTRA
 
+# The base image's own packaging tools: upgraded past known advisories (pip-audit,
+# docs/security/pip-audit.txt). The app does not use them at run time.
+RUN uv pip install --system --no-cache --upgrade "pip>=26.2" "setuptools>=84.1"
+
 # Run as an unprivileged user: if the app is ever compromised it is not root in the container.
 RUN useradd --create-home --uid 10001 app \
     && mkdir -p /data/uploads /models \

@@ -1,0 +1,6 @@
+6:18PM INF scan completed in 14.1s
+6:18PM WRN leaks found: 1
+
+Reviewed: the one finding is /repo/.env line 25 (generic-api-key), the local
+configuration file holding a real provider key. It is git-ignored (.gitignore line 2)
+and the history scan (gitleaks-history.txt) confirms it was never committed.

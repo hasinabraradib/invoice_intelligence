@@ -1,0 +1,6 @@
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+No known vulnerabilities found
+Name  Skip Reason
+----- -------------------------------------------------------------------------
+torch Dependency not found on PyPI and could not be audited: torch (2.15.0+cpu)
+exit=0
