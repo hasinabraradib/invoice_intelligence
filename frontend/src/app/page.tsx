@@ -12,6 +12,7 @@ import { percent } from "@/lib/format";
 import { ChatMessage, type UIMessage } from "@/components/chat/ChatMessage";
 import { SkeletonRows } from "@/components/Feedback";
 import { errorMessage, useToast } from "@/components/Toast";
+import { ArrowUp, ArrowUpRight, ChevronDown, History, Paperclip, Plus, Sparkles, Square, Upload } from "lucide-react";
 
 type Attachment = {
   key: string; name: string; progress: number; documentId?: string; status?: string;
@@ -162,31 +163,75 @@ function Assistant() {
   }
 
   const empty = messages.length === 0;
+  const live = stats.data
+    ? [
+        stats.data.invoices_need_review ? { label: `${stats.data.invoices_need_review} to review`, href: "/review", tone: "text-warning" } : null,
+        stats.data.jobs_running + stats.data.jobs_queued ? { label: `${stats.data.jobs_running + stats.data.jobs_queued} processing`, href: "/documents?status=processing", tone: "text-info" } : null,
+        stats.data.documents_failed ? { label: `${stats.data.documents_failed} failed`, href: "/documents?status=failed", tone: "text-danger" } : null,
+      ].filter((x): x is { label: string; href: string; tone: string } => x !== null)
+    : [];
   return (
-    <div className="grid gap-4 md:grid-cols-[13rem_minmax(0,1fr)]">
+    <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside aria-label="Conversations" className="min-w-0">
-        <details className="md:hidden">
-          <summary className="btn-secondary w-full cursor-pointer">History</summary>
-          <History items={history.data?.items ?? []} current={conversationId} />
+        <details className="card p-3 lg:hidden">
+          <summary className="focus-ring flex cursor-pointer list-none items-center justify-between rounded-lg px-1 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center gap-2"><History className="size-4 text-muted" aria-hidden="true" /> Conversations</span>
+            <ChevronDown className="size-4 text-muted" aria-hidden="true" />
+          </summary>
+          <div className="mt-3">
+            <Link href="/" className="btn-secondary mb-2 w-full" onClick={() => setMessages([])}><Plus className="size-4" aria-hidden="true" /> New chat</Link>
+            <HistoryList items={history.data?.items ?? []} current={conversationId} />
+          </div>
         </details>
-        <div className="hidden md:block">
-          <Link href="/" className="btn-primary mb-2 w-full" onClick={() => setMessages([])}>New chat</Link>
-          <History items={history.data?.items ?? []} current={conversationId} />
+        <div className="sticky top-10 hidden lg:block">
+          <Link href="/" className="btn-primary mb-4 w-full" onClick={() => setMessages([])}><Plus className="size-4" aria-hidden="true" /> New chat</Link>
+          <p className="eyebrow mb-2 px-2">Recent</p>
+          <HistoryList items={history.data?.items ?? []} current={conversationId} />
         </div>
       </aside>
 
-      <section aria-label="Chat" className="card relative flex min-h-[70vh] min-w-0 flex-col"
+      <section aria-label="Chat" className="relative flex min-h-[calc(100vh-11rem)] min-w-0 flex-col md:min-h-[calc(100vh-6rem)]"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); attach(e.dataTransfer.files); }}>
-        {dragging ? <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-accent bg-accent-soft text-sm font-medium">Drop invoices to upload</div> : null}
-        <div className="flex-1 space-y-4 overflow-y-auto pb-4" aria-live="polite">
+        {dragging ? (
+          <div className="pointer-events-none absolute inset-0 z-20 grid animate-fade-in place-items-center rounded-card border-2 border-dashed border-accent bg-accent-soft/90 backdrop-blur-sm">
+            <div className="text-center">
+              <Upload className="mx-auto mb-2 size-6 text-accent-ink" aria-hidden="true" />
+              <p className="font-medium text-ink">Drop invoices to upload</p>
+              <p className="text-sm text-muted">PDF, images, XLSX or CSV</p>
+            </div>
+          </div>
+        ) : null}
+        <div className="mx-auto w-full max-w-3xl flex-1 space-y-7 pb-6" aria-live="polite">
           {empty ? (
-            <div className="space-y-4 py-6">
-              <h1 className="text-2xl font-semibold">{greeting(stats.data, new Date().getHours())}</h1>
-              <p className="text-sm text-muted">Ask about your invoices, upload new ones, or ask me to correct, approve or cross-check something. I always ask before changing anything.</p>
-              <ul className="flex flex-wrap gap-2" aria-label="Suggestions">
+            <div className="flex min-h-[50vh] flex-col items-center justify-center py-10 text-center">
+              <span aria-hidden="true" className="mb-5 grid size-12 animate-fade-up place-items-center rounded-2xl border border-accent-line bg-accent-soft text-accent-ink shadow-soft">
+                <Sparkles className="size-5" strokeWidth={1.75} />
+              </span>
+              <h1 className="max-w-xl animate-fade-up text-balance text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                {greeting(stats.data, new Date().getHours())}
+              </h1>
+              <p className="mt-3 max-w-md animate-fade-up text-sm text-muted">
+                Ask about your invoices, upload new ones, or ask me to correct, approve or cross-check something. I always ask before changing anything.
+              </p>
+              {live.length > 0 ? (
+                <ul className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Right now">
+                  {live.map((item) => (
+                    <li key={item.label}>
+                      <Link href={item.href} className={`focus-ring chip hover:border-line-strong ${item.tone}`}>{item.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <ul className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2" aria-label="Suggestions">
                 {suggestions(stats.data).map((s) => (
-                  <li key={s}><button type="button" className="btn-secondary rounded-full text-xs" onClick={() => void send(s)}>{s}</button></li>
+                  <li key={s}>
+                    <button type="button" className="focus-ring card card-hover flex w-full items-center justify-between gap-3 p-3.5 text-left text-sm text-ink-2"
+                      onClick={() => void send(s)}>
+                      {s}
+                      <ArrowUpRight className="size-4 shrink-0 text-faint" aria-hidden="true" />
+                    </button>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -197,46 +242,58 @@ function Assistant() {
           <div ref={bottom} />
         </div>
 
-        {attachments.length > 0 ? (
-          <ul className="mb-2 flex flex-wrap gap-2" aria-label="Attached files">
-            {attachments.map((a) => (
-              <li key={a.key} className="rounded-full border border-line-strong bg-surface-2 px-2 py-0.5 text-xs">
-                📎 {a.name} · {a.error ? <span className="text-danger">{a.error}</span>
-                  : a.progress < 1 ? `uploading ${percent(a.progress)}`
-                  : a.documentId ? <Link className="btn-link text-xs" href={`/documents/${a.documentId}`}>{a.status === "duplicate" ? "already uploaded" : `${a.status ?? "uploaded"}${a.stage && !FINAL.has(a.status ?? "") ? ` · ${a.stage}` : ""}`}</Link>
-                  : "…"}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        <form className="flex items-end gap-2 border-t border-line pt-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-          <input ref={fileInput} id="chat-file" type="file" multiple accept={ACCEPTED_EXTENSIONS.join(",")} className="sr-only"
-            onChange={(e) => { attach(e.target.files); e.target.value = ""; }} />
-          <button type="button" className="btn-secondary px-2" onClick={() => fileInput.current?.click()} aria-label="Attach invoices">📎</button>
-          <label htmlFor="chat-input" className="sr-only">Message</label>
-          <textarea id="chat-input" rows={1} className="input max-h-40 min-h-10 flex-1 resize-y" placeholder="Ask about your invoices…"
-            value={text} onChange={(e) => setText(e.target.value)} maxLength={4000}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }} />
-          {streaming ? (
-            <button type="button" className="btn-secondary" onClick={() => abort.current?.abort()}>Stop</button>
-          ) : (
-            <button type="submit" className="btn-primary">Send</button>
-          )}
-        </form>
+        <div className="sticky bottom-20 z-10 mx-auto w-full max-w-3xl bg-gradient-to-t from-bg via-bg to-transparent pt-4 md:bottom-4">
+          {attachments.length > 0 ? (
+            <ul className="mb-2 flex flex-wrap gap-2" aria-label="Attached files">
+              {attachments.map((a) => (
+                <li key={a.key} className="chip bg-surface">
+                  <Paperclip className="size-3.5 text-faint" aria-hidden="true" />
+                  <span className="max-w-40 truncate">{a.name}</span>
+                  <span className="text-muted">·</span>
+                  {a.error ? <span className="text-danger">{a.error}</span>
+                    : a.progress < 1 ? <span className="num text-muted">uploading {percent(a.progress)}</span>
+                    : a.documentId ? <Link className="btn-link text-xs" href={`/documents/${a.documentId}`}>{a.status === "duplicate" ? "already uploaded" : `${a.status ?? "uploaded"}${a.stage && !FINAL.has(a.status ?? "") ? ` · ${a.stage}` : ""}`}</Link>
+                    : "…"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <form className="flex items-end gap-2 rounded-[1.75rem] border border-line bg-surface p-2 shadow-lift transition-colors focus-within:border-accent-line" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+            <input ref={fileInput} id="chat-file" type="file" multiple accept={ACCEPTED_EXTENSIONS.join(",")} className="sr-only"
+              onChange={(e) => { attach(e.target.files); e.target.value = ""; }} />
+            <button type="button" className="btn-ghost size-10 shrink-0 rounded-full p-0" onClick={() => fileInput.current?.click()} aria-label="Attach invoices">
+              <Paperclip className="size-[18px]" aria-hidden="true" />
+            </button>
+            <label htmlFor="chat-input" className="sr-only">Message</label>
+            <textarea id="chat-input" rows={1} className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-[15px] text-ink outline-none placeholder:text-faint"
+              placeholder="Ask about your invoices…"
+              value={text} onChange={(e) => setText(e.target.value)} maxLength={4000}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }} />
+            {streaming ? (
+              <button type="button" className="btn-secondary size-10 shrink-0 rounded-full p-0" onClick={() => abort.current?.abort()} aria-label="Stop">
+                <Square className="size-3.5 fill-current" aria-hidden="true" />
+              </button>
+            ) : (
+              <button type="submit" className="btn-primary size-10 shrink-0 rounded-full p-0" aria-label="Send" disabled={!text.trim() && !attachments.some((a) => a.documentId && !a.sent)}>
+                <ArrowUp className="size-[18px]" aria-hidden="true" />
+              </button>
+            )}
+          </form>
+          <p className="mt-2 text-center text-[11px] text-faint">Answers cite their sources. Changes need your confirmation.</p>
+        </div>
       </section>
     </div>
   );
 }
 
-function History({ items, current }: { items: { id: string; title?: string | null }[]; current: string | null }) {
-  if (items.length === 0) return <p className="mt-2 text-xs text-muted">No conversations yet.</p>;
+function HistoryList({ items, current }: { items: { id: string; title?: string | null }[]; current: string | null }) {
+  if (items.length === 0) return <p className="px-2 text-xs text-muted">No conversations yet.</p>;
   return (
-    <ul className="mt-2 space-y-1">
+    <ul className="space-y-0.5">
       {items.map((c) => (
         <li key={c.id}>
           <Link href={`/?c=${c.id}`} aria-current={c.id === current ? "page" : undefined}
-            className={`focus-ring block truncate rounded px-2 py-1 text-sm ${c.id === current ? "bg-surface-3" : "hover:bg-surface-2"}`}>
+            className={`focus-ring block truncate rounded-xl px-2.5 py-2 text-sm transition-colors ${c.id === current ? "bg-surface font-medium text-ink shadow-soft" : "text-muted hover:bg-surface-2 hover:text-ink"}`}>
             {c.title ?? "Untitled"}
           </Link>
         </li>
