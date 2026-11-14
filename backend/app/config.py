@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     job_timeout_max_seconds: int = Field(default=3600, gt=0)
     worker_concurrency: int = Field(default=2, ge=1, le=32)
     stuck_job_minutes: int = Field(default=30, ge=1)
+    # Watchdog: running jobs write a heartbeat this often while they make progress; the
+    # worker exits (Docker restarts it) if its event loop stops ticking for this long.
+    heartbeat_seconds: float = Field(default=30, gt=0)
+    worker_loop_stall_seconds: float = Field(default=120, gt=0)
+    worker_liveness_file: str = "/tmp/worker-alive"  # noqa: S108 (read by the healthcheck)
     # Hard timeout per call of each CPU-heavy step; the step's process is killed on timeout.
     parse_timeout_seconds: float = Field(default=300, gt=0)  # one document's text layer
     ocr_task_timeout_seconds: float = Field(default=180, gt=0)  # one page: render + OCR

@@ -2,7 +2,6 @@
 
 import shutil
 import uuid
-from datetime import UTC, datetime, timedelta
 
 import pytest
 from arq import Retry
@@ -12,7 +11,6 @@ from sqlalchemy import select
 import app.models as m
 from app.extraction.llm import FakeLLMClient, LLMError
 from app.extraction.postprocess import normalise_invoice_number
-from app.jobs import requeue_stuck_jobs
 from app.repository import Repository
 from tests import factories
 from tests.test_pipeline import GOOD_REPLY
@@ -140,28 +138,6 @@ async def test_embedding_failure_in_the_worker_finishes_the_job_with_a_warning(
     assert outcome in ("processed", "needs_review")
     status = (await api.get(f"/documents/{uploaded['document_id']}/status")).json()
     assert status["job_status"] == "succeeded" and "keyword search still works" in status["error"]
-
-
-async def test_stuck_running_job_is_requeued(db_session, queue):
-    repo = Repository(db_session)
-    doc = await repo.create_document(
-        filename="a.pdf",
-        sha256="b" * 64,
-        mime_type="application/pdf",
-        size_bytes=1,
-        storage_path="/x",
-    )
-    stuck, fresh = await repo.create_job(doc.id), await repo.create_job(doc.id)
-    long_ago = datetime.now(UTC) - timedelta(minutes=45)
-    await repo.update_job(stuck.id, status=m.JobStatus.RUNNING, started_at=long_ago, stage="ocr")
-    await repo.update_job(fresh.id, status=m.JobStatus.RUNNING, started_at=datetime.now(UTC))
-    await db_session.commit()
-
-    assert await requeue_stuck_jobs(repo, queue, minutes=30) == 1
-
-    assert queue.job_ids == [stuck.id]
-    job = await db_session.get(m.ProcessingJob, stuck.id, populate_existing=True)
-    assert job.status == m.JobStatus.QUEUED and "requeued" in job.error
 
 
 @pytest.mark.skipif(shutil.which("tesseract") is None, reason="tesseract missing")

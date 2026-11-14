@@ -2,12 +2,13 @@
 arq app.worker.WorkerSettings
 """
 
+import asyncio
 import logging
 import uuid
 from typing import Any
 
 import anyio
-from arq import Retry
+from arq import Retry, cron
 from arq.connections import RedisSettings
 from sqlalchemy import select, update
 
@@ -15,12 +16,13 @@ from app.config import get_settings
 from app.crosscheck.service import run_cross_check
 from app.db import create_engine, create_sessionmaker
 from app.extraction.llm import UnconfiguredLLM, get_llm_client
-from app.jobs import ArqQueue, job_timeout, requeue_stuck_jobs, retry_delay
+from app.jobs import ArqQueue, job_timeout, recover_stuck_jobs, retry_delay
 from app.models import JobStatus, ProcessingJob
 from app.pipeline import TEMPORARY_ERRORS, process_document, record_failure
 from app.repository import Repository
 from app.search.embedder import get_embedder
 from app.steps import StepPools, count_pages_task, default_pools
+from app.watchdog import Liveness, job_heartbeat
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("worker")
@@ -36,12 +38,24 @@ async def startup(ctx: dict[str, Any]) -> None:
     ctx["embedder"] = get_embedder(settings)  # model loads on first use, then stays loaded
     # Parsing, OCR and embedding run in killable processes, kept for the worker's life.
     ctx["pools"] = StepPools.create(settings)
-    async with ctx["sessionmaker"]() as session:
-        await requeue_stuck_jobs(Repository(session), ctx["queue"], settings.stuck_job_minutes)
+    # Exits the process (Docker restarts it) if the event loop blocks or a job stalls.
+    ctx["liveness"] = Liveness(
+        loop_stall_seconds=settings.worker_loop_stall_seconds,
+        file=settings.worker_liveness_file,
+    ).start()
+    await watchdog(ctx)  # jobs a crashed worker left behind
     logger.info("worker ready (concurrency=%d)", settings.worker_concurrency)
 
 
+async def watchdog(ctx: dict[str, Any]) -> None:
+    """Every minute (arq cron), in every worker: retry or fail jobs without a heartbeat."""
+    async with ctx["sessionmaker"]() as session:
+        await recover_stuck_jobs(Repository(session), ctx["queue"], ctx["settings"])
+
+
 async def shutdown(ctx: dict[str, Any]) -> None:
+    if ctx.get("liveness"):
+        ctx["liveness"].stop()
     if ctx.get("pools"):
         ctx["pools"].close()
     await ctx["queue"].close()
@@ -77,6 +91,7 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
             llm = UnconfiguredLLM(str(exc))
 
         pages = await _count_pages(ctx, document.storage_path)
+        heartbeat = asyncio.create_task(_heartbeat(ctx, job_uuid))
         try:
             with anyio.fail_after(job_timeout(pages, settings)):
                 outcome = await process_document(
@@ -105,11 +120,34 @@ async def process_job(ctx: dict[str, Any], job_id: str) -> str:
             )
         except TEMPORARY_ERRORS as exc:  # e.g. the database went away mid-job
             raise Retry(defer=retry_delay(attempts_before + 1, settings)) from exc
+        finally:
+            heartbeat.cancel()
         await _save_llm_usage(session, job_uuid, llm)
 
     if outcome.retry:
         raise Retry(defer=retry_delay(outcome.attempts, settings))
     return outcome.status
+
+
+async def _heartbeat(ctx: dict[str, Any], job_id: uuid.UUID) -> None:
+    settings = ctx["settings"]
+
+    def stalled(job: uuid.UUID, seconds: float) -> None:
+        # The watchdog (any worker) will retry or fail the job; this worker restarts so
+        # whatever it is stuck on is cleared too.
+        if ctx.get("liveness"):
+            ctx["liveness"].request_recycle(f"job {job} made no progress for {seconds:.0f} s")
+
+    try:
+        await job_heartbeat(
+            ctx["sessionmaker"],
+            job_id,
+            every=settings.heartbeat_seconds,
+            stuck_seconds=settings.stuck_job_minutes * 60,
+            on_stalled=stalled,
+        )
+    except Exception:  # a heartbeat problem must never break the job itself
+        logger.exception("heartbeat for job %s stopped", job_id)
 
 
 async def _count_pages(ctx: dict[str, Any], path: str) -> int:
@@ -153,6 +191,7 @@ class WorkerSettings:
 
     _settings = get_settings()
     functions = [process_job, run_cross_check_job]
+    cron_jobs = [cron(watchdog, minute=set(range(60)), run_at_startup=False)]  # every minute
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(_settings.redis_url)

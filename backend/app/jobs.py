@@ -14,7 +14,7 @@ from arq import create_pool
 from arq.connections import ArqRedis, RedisSettings
 
 from app.config import Settings
-from app.models import JobStatus
+from app.models import DocumentStatus
 from app.repository import Repository
 
 logger = logging.getLogger(__name__)
@@ -66,20 +66,31 @@ def job_timeout(page_count: int, settings: Settings) -> float:
     return float(min(seconds, settings.job_timeout_max_seconds))
 
 
-async def requeue_stuck_jobs(repo: Repository, queue: JobQueue, minutes: int) -> int:
-    """Jobs left "running" by a crashed worker go back to the queue. Safe because
-    processing is idempotent (re-running replaces results instead of adding rows)."""
-    stuck = await repo.stuck_jobs(minutes)
-    for job in stuck:
-        await repo.update_job(
-            job.id,
-            status=JobStatus.QUEUED,
-            stage=None,
-            error=f"requeued: stuck in running for over {minutes} min",
-        )
+async def recover_stuck_jobs(
+    repo: Repository, queue: JobQueue, settings: Settings
+) -> tuple[int, int]:
+    """The watchdog: running jobs with no heartbeat for STUCK_JOB_MINUTES (a crashed or
+    hung worker) are retried if they have attempts left, otherwise failed. Safe because
+    processing is idempotent (re-running replaces results instead of adding rows).
+    Returns (requeued, failed)."""
+    minutes = settings.stuck_job_minutes
+    stuck = await repo.claim_stuck_jobs(minutes)
+    retry = [job for job in stuck if job.attempts < settings.job_max_attempts]
+    give_up = [job for job in stuck if job.attempts >= settings.job_max_attempts]
+    for job in retry:
+        await repo.update_job(job.id, error=f"requeued: no heartbeat for over {minutes} min")
+    for job in give_up:
+        message = f"stopped: no progress for over {minutes} min, after {job.attempts} attempt(s)"
+        await repo.finish_job(job.id, error=message)
+        await repo.set_document_status(job.document_id, DocumentStatus.FAILED, error=message)
     await repo.session.commit()
-    for job in stuck:
+    for job in retry:
         await queue.enqueue(job.id)
     if stuck:
-        logger.warning("requeued %d stuck job(s)", len(stuck))
-    return len(stuck)
+        logger.warning(
+            "watchdog: %d stuck job(s): %d requeued, %d failed",
+            len(stuck),
+            len(retry),
+            len(give_up),
+        )
+    return len(retry), len(give_up)

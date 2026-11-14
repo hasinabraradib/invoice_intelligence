@@ -379,12 +379,18 @@ class Repository:
         )
         return bool(count)
 
-    async def stuck_jobs(self, older_than_minutes: int) -> list[ProcessingJob]:
+    async def claim_stuck_jobs(self, older_than_minutes: int) -> list[ProcessingJob]:
+        """Running jobs without a heartbeat (or, before the first one, a start) in the last
+        `older_than_minutes`, claimed atomically: set to queued in the same UPDATE, so two
+        watchdogs can never both take the same job. The caller decides retry or fail."""
         cutoff = _now() - timedelta(minutes=older_than_minutes)
+        last_sign_of_life = func.coalesce(ProcessingJob.heartbeat_at, ProcessingJob.started_at)
         rows = await self.session.scalars(
-            select(ProcessingJob).where(
-                ProcessingJob.status == JobStatus.RUNNING, ProcessingJob.started_at < cutoff
-            )
+            update(ProcessingJob)
+            .where(ProcessingJob.status == JobStatus.RUNNING, last_sign_of_life < cutoff)
+            .values(status=JobStatus.QUEUED, stage=None)
+            .returning(ProcessingJob)
+            .execution_options(populate_existing=True)
         )
         return list(rows)
 

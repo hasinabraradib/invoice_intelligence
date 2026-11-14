@@ -140,6 +140,9 @@ class ProcessingJob(Base):
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Written every HEARTBEAT_SECONDS while the job makes progress; the watchdog retries or
+    # fails a running job whose heartbeat (or start) is older than STUCK_JOB_MINUTES.
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _now()
 
 
