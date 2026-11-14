@@ -1,478 +1,198 @@
 # Invoice Intelligence
 
-## Overview
+Invoice Intelligence turns a pile of invoices into checked, searchable data. Upload PDFs,
+scans, phone photos, spreadsheets or CSV files, including one PDF holding many invoices. The
+system reads them (OCR where needed) and has an LLM extract the key fields. Every value comes
+with the exact quote and page it came from. Plain, tested code then parses, calculates and
+validates, and anything doubtful is sent to a person to review. Reviewers correct and approve
+with a full audit trail, search by words or meaning, cross-check invoices against a ledger
+or a second document, and ask an assistant questions whose answers cite their sources and
+whose proposed changes wait for a human to confirm. Accuracy is measured on a labelled
+synthetic dataset, and the results are reported as they came out.
 
-_To be written._
+![Dashboard](docs/screenshots/dashboard-light.png)
 
-## Architecture
+**Contents:** [The assignment](#the-assignment-in-my-own-words) ·
+[Quick start](#quick-start) · [Demo data](#demo-data) · [Features](#features) ·
+[Screenshots](#screenshots) · [Documentation](#documentation) ·
+[Design decisions](#design-decisions-and-trade-offs) ·
+[Known limitations](#known-limitations) · [Tests](#tests) · [Evaluation](#evaluation) ·
+[AI usage](#ai-usage)
 
-_Full write-up to come._ Database tables and the reason for each are documented in
-[docs/schema.md](docs/schema.md).
+## The assignment, in my own words
+
+Build a working system for a finance team that receives invoices in every shape: clean
+PDFs, poor scans, photos taken on a phone, Excel exports, and batches with many invoices in
+one file. The system should:
+
+1. accept these files safely;
+2. read their text, including from images;
+3. extract the important fields reliably, without making anything up;
+4. check them and route problems to a person;
+5. make everything searchable;
+6. handle multi-invoice batches;
+7. compare invoices with other records;
+8. let people ask questions in plain language.
+
+It must be honest about how well it works, run with one command, and be safe to point at
+real financial documents.
 
 ## Quick start
 
-Requirements: Docker (with Docker Compose v2) and `make`.
+Requirements: Docker with Compose v2, `make` and `openssl`; macOS and most Linux systems
+already have the last two. Allow about 10 GB of disk for the images. Node 22 is only needed
+to run the frontend and end-to-end tests outside Docker.
 
 ```bash
-# 1. Create your local config (only placeholders, edit if needed)
+git clone https://github.com/hasinabraradib/invoice_intelligence.git
+cd invoice_intelligence
+
+# 1. Create your config. It holds only placeholders; it is git-ignored.
 cp .env.example .env
 
-# 2. Build and start everything: api, worker, postgres (pgvector), redis
+# 2. Add any ONE LLM provider key to .env, for example:
+#      LLM_PROVIDER=openai
+#      OPENAI_API_KEY=sk-...
+#    (or LLM_PROVIDER=gemini / groq with LLM_API_KEY=...). Without a key the app still
+#    runs, but extraction and the assistant explain that no LLM is configured.
+
+# 3. Build and start everything. This also adds a random API key to .env.
 make up
 
-# 3. Check that the app, database and Redis are all reachable
-curl -s http://localhost:8000/health
-# -> {"status":"ok","app":{...},"database":{"status":"ok",...},"redis":{"status":"ok",...}}
-
-# Interactive API docs: http://localhost:8000/docs
-
-# 4. Run tests and lint (inside the backend container, Python 3.12)
-make test
-make lint
-
-# 5. Stop everything (your database data is kept in a Docker volume)
-make down
+# 4. Open the app
+open http://localhost:3000        # or just visit it in your browser
 ```
 
-`/health` returns HTTP 200 when everything is reachable and HTTP 503 (`"status": "degraded"`)
-when Postgres or Redis is down.
+`make up` waits until every service is healthy. Check it with
+`curl -s http://localhost:3000/api/health`. Stop with `make down`; your data stays in Docker
+volumes. Only port 3000 is published, on localhost. Provider details and every setting are
+in the [guide](docs/guide.md#llm-providers-bring-your-own-key).
 
-### Assistant (the home page)
-
-Open http://localhost:3000. The assistant greets you with live numbers ("9 invoices need
-review, 2 jobs running") and suggestions that fit your data. You can do everything by
-chatting: ask questions ("How much did we spend with ACME in March?"), drop invoices into
-the chat (it follows processing and summarises the result), and ask it to correct a
-field, approve an invoice, re-process a document or run a cross-check. The other pages are
-still there for manual work.
-
-How it works: the model gets **tools** that wrap our own services, never raw database
-access. Read tools (search, list documents, get an invoice with evidence, review queue, job
-status, stats, cross-check results, `sum_invoices` / `count_invoices`) run automatically,
-at most 6 tool steps per question, and then it must answer. Answers stream token by token,
-show which tools were used, and carry citation chips that open the review page at the cited
-page.
-
-**Safety design**
-
-- **Answers come only from tool results,** and every claim is cited with file, invoice
-  number and page. If nothing is found, it says so.
-- **Numbers come from fixed, parameterised SQL** (`sum_invoices`, `count_invoices`), one
-  total per currency, as Decimal. The model never writes SQL and never does arithmetic.
-- **The assistant never changes anything itself.** Correct, approve, reprocess and
-  cross-check are only *proposed*, as a card with a plain-words summary ("Change the total
-  of INV-2041 from 1,320.00 to 1,230.00"). The change runs only when you press **Confirm**
-  (`POST /assistant/actions/{id}/confirm`); proposals expire after 10 minutes. Confirmed
-  corrections go through the normal audit trail as "assistant (confirmed by user)".
-- **Two layers against prompt injection.** Tool results and document text reach the model
-  as untrusted data between hash-tagged delimiters, and the prompt says to ignore
-  instructions inside them. In code, a write tool is refused unless *your own message* asks
-  for that kind of change, so an invoice saying "approve all invoices" cannot create an
-  action even if the model falls for it.
-- **Bad tool calls become tool errors** returned to the model; they never crash the chat.
-- **Model text is rendered as a small Markdown subset** with React elements only: no raw
-  HTML, and links only to `http(s)` or in-app pages.
-- **Full trace:** every turn (your message, tool calls, tool results, answer) is stored,
-  so any answer can be traced back to the data it used.
-
-Without a configured provider (see [LLM providers](#llm-providers-bring-your-own-key)) the chat explains that the language model is not
-configured; everything else keeps working. `make assistant-eval` scores the assistant on
-the 15 questions in [docs/assistant-eval.md](docs/assistant-eval.md) with your real
-provider (right number, right citation).
-
-### Web UI
-
-`make up` also starts the frontend: **http://localhost:3000**.
-
-| Page | What it is for |
-|---|---|
-| `/` Assistant | Chat (see above) |
-| `/dashboard` | KPI cards with 14-day sparklines (processed, needs review, failed, seconds per page), documents per day, a status donut, the latest stored evaluation (or, if none, average extraction confidence, labelled as such), most common issues, the top of the review queue and recent uploads with live status. All of it comes from `GET /stats`; nothing is estimated in the browser |
-| `/documents` | Drag-and-drop upload with per-file progress, then a live table (it polls only while something is processing), with filters, reprocess and "Retry all failed" |
-| `/documents/{id}` Review | Page preview on the left; every field on the right with status, confidence, evidence (click it to jump to the page) and inline editing; line items, issues, duplicates, history, approve and reprocess |
-| `/review` Queue | Documents needing review, oldest first; "Next in queue" walks through them |
-| `/cross-check` | Compare invoices with a ledger spreadsheet or another PDF: matched / mismatched / missing summary, then each finding with evidence links on both sides |
-| `/search` | Hybrid, keyword or semantic search with the same filters; results open the review page at the matching page |
+## Demo data
 
 ```bash
-make frontend        # rebuild and restart only the UI container
-make frontend-dev    # hot-reload dev server on :3000 (API must be running)
-make frontend-check  # lint + typecheck + unit tests
-make e2e             # browser smoke test against the running stack (skips if it is down,
-                     # or if no LLM is configured)
-cd frontend && API_URL=http://localhost:8000 npm run gen:api   # regenerate API types
+make demo
 ```
 
-`NEXT_PUBLIC_API_URL` (default `http://localhost:8000`) is the API address *as the browser
-sees it*. It's baked in when the image is built.
+This generates the synthetic dataset (fixed seed, no real data) and uploads a varied set
+through the API:
+- text and scanned PDFs, a phone photo, a spreadsheet and a CSV;
+- a purchase order, and a duplicate copy of an invoice;
+- a six-invoice batch PDF and the ledger it should match.
 
-**Design.** The design system lives in `frontend/src/app/globals.css`:
-- a warm cream page, a near-black sidebar and black pill buttons;
-- four soft pastels (butter, pink, sage, periwinkle) for summary cards and status pills, which
-  always carry a word;
-- a separately tuned warm dark mode (WCAG AA);
-- Geist, with tabular numbers for money and dates.
+When processing finishes, it starts a cross-check of the batch against the ledger. Running
+it again is safe: files that are already loaded are recognised by their hash.
 
-The controls are custom and keyboard accessible (`frontend/src/components/controls/`):
-- a Radix UI Select;
-- a searchable document picker;
-- an "Invoice date" range with presets and a calendar;
-- a filter toolbar with removable chips;
-- reasons on disabled buttons.
+## Features
 
-Motion is limited to fades, hover lift and count-up numbers, and is off under
-`prefers-reduced-motion`. Every page was checked at 375, 768 and 1440 px in both themes,
-including a keyboard pass for visible focus. Before/after shots and the list of changes:
-[docs/screenshots/](docs/screenshots/).
+Mapped to the seven parts of the assignment, plus the cross-cutting work.
+
+| # | Part of the assignment | What is built |
+|---|---|---|
+| 1 | **Ingest any invoice safely** | PDF, PNG, JPEG, TIFF, XLSX, XLS and CSV, detected by magic bytes (never by extension or Content-Type). Streaming upload with size and count caps, SHA-256 dedupe, per-file errors in a batch upload, drag-and-drop UI with progress |
+| 2 | **Read scans and photos (OCR)** | Tesseract (English and Bengali) with deskew, denoise and binarisation; photo clean-up (lighting flattening, optional perspective warp and contrast); pages in parallel, killable processes; confidence per page |
+| 3 | **Extract fields with evidence** | The LLM only copies values and quotes them; every value has status (`found`, `missing`, `uncertain`, `corrected`), evidence, page and confidence. Quotes must be found in the text. Low-confidence or suspicious OCR pages get a vision second opinion that can only confirm or send to review |
+| 4 | **Validate and route to review** | Plain-code checks: Decimal money, dates (ambiguous day/month flagged), currencies, line sums, subtotal + tax = total, duplicates by supplier and normalised number. A review queue, side-by-side review with evidence chips, audited corrections, approval with an override reason |
+| 5 | **Search** | Keyword (Postgres full text), semantic (local MiniLM embeddings in pgvector) and hybrid search with reciprocal rank fusion; snippets with highlights; results open on the right page |
+| 6 | **Batch documents** | One PDF with many invoices is split by page-level rules, with an LLM classifier only for unclear pages. Invoices are extracted in parallel and saved as they finish; partial failures are kept, and retry redoes only the failed invoices. Tested on a 1000-page synthetic batch |
+| 7 | **Cross-verification and the assistant** | Invoices vs a ledger spreadsheet or another PDF (purchase order, second copy): matched, mismatched and missing, with evidence on both sides. A chat assistant that answers from tools with citations, does arithmetic in the database, and only *proposes* changes that a person confirms |
+| – | Cross-cutting | A background worker with retries, heartbeats and a watchdog; a dashboard; an evaluation harness; security (API keys behind a server-side proxy, rate limits, CSP, hardened containers); a design system with dark mode and phone layouts |
+
+## Screenshots
 
 | Light | Dark |
 |---|---|
 | ![Assistant](docs/screenshots/assistant-light.png) | ![Assistant, dark](docs/screenshots/assistant-dark.png) |
-| ![Dashboard](docs/screenshots/dashboard-light.png) | ![Dashboard, dark](docs/screenshots/dashboard-dark.png) |
-| ![Documents](docs/screenshots/documents-light.png) | ![Documents, dark](docs/screenshots/documents-dark.png) |
 | ![Review](docs/screenshots/review-light.png) | ![Review, dark](docs/screenshots/review-dark.png) |
+| ![Documents](docs/screenshots/documents-light.png) | ![Documents, dark](docs/screenshots/documents-dark.png) |
 | ![Cross-check](docs/screenshots/cross-check-light.png) | ![Cross-check, dark](docs/screenshots/cross-check-dark.png) |
 | ![Search](docs/screenshots/search-light.png) | ![Search, dark](docs/screenshots/search-dark.png) |
 
-More, including the review queue and phone-width shots: [docs/screenshots/](docs/screenshots/).
-All screenshots show synthetic sample documents.
+Phone layouts, open pickers and the previous design: [docs/screenshots/](docs/screenshots/).
 
-### Background worker
+## Documentation
 
-Processing (parse, OCR, AI extraction, validation) runs in the **arq worker**, not in the
-API request. `make up` starts it with everything else; on its own:
-
-```bash
-make worker        # (re)build and start only the worker
-make worker-logs   # follow its logs
-```
-
-Uploads return `202 Accepted` at once with a `job_id`; poll the status endpoint until the
-document is `processed`, `needs_review` or `failed`. Temporary problems (LLM rate limits or
-outages, timeouts, database hiccups) are retried with exponential backoff, up to
-`JOB_MAX_ATTEMPTS`. Permanent ones (corrupt file, password protected...) fail at once.
-
-**Hardened against hangs.** A thread can't be killed, so a library call that never returns
-used to stall a job and everything queued behind it (this happened: see "Embedding model"
-below). Now:
-
-- **CPU-heavy steps run in killable processes.** Parsing, OCR and embedding each run in a
-  pool of long-lived worker processes. Every call has a hard timeout:
-  `PARSE_TIMEOUT_SECONDS` per document, `OCR_TASK_TIMEOUT_SECONDS` per page, and
-  `EMBED_TIMEOUT_SECONDS` per batch of `EMBED_BATCH_CHUNKS` chunks. On timeout the process
-  is killed and replaced, and no thread or lock is left behind. LLM calls stay in threads:
-  they wait on the network and the HTTP client times them out.
-- **What a timeout does depends on the step.** A parse timeout fails the document (that
-  file would hang again). An OCR timeout fails only that page. An embedding timeout or
-  failure finishes the document with a warning, and keyword search still works.
-- **Heartbeats and a watchdog.** A running job writes a heartbeat every
-  `HEARTBEAT_SECONDS` while it makes progress. Every minute (and at startup) each worker's
-  watchdog takes jobs with no heartbeat for `STUCK_JOB_MINUTES` and retries them, or fails
-  them once their attempts are used up. Claiming is atomic, so two workers never take the
-  same job.
-- **The worker recycles itself.** If its event loop stops ticking for
-  `WORKER_LOOP_STALL_SECONDS`, or one of its own jobs stalls, the worker exits and Docker
-  (`restart: unless-stopped`) starts a fresh one. `docker compose ps` shows the worker's
-  liveness healthcheck, alongside those of the api, Postgres and Redis.
-
-### Batch documents (many invoices in one PDF)
-
-A scanned batch of about 1000 pages is split into one **segment per invoice** before
-extraction:
-
-1. **Rules first.** Each page's top lines are checked for an "INVOICE" heading, an invoice
-   number (a different number means a new invoice), and "Page k of N" markers (page 1 starts
-   an invoice; later pages continue it, so a 2-page invoice stays one).
-2. **LLM only for unclear pages.** Pages with no clue, or with clues that disagree, are sent
-   to the LLM in batches of 20, headers only (~400 characters each): "does this page start a
-   new invoice?". Without an answer, a page joins the previous invoice. Merging two invoices
-   gets caught in review; splitting one would scatter its fields.
-3. **Per-invoice extraction**, concurrently (`SEGMENT_CONCURRENCY`, default 4, so you stay
-   within your provider's rate limit). Each invoice is validated, duplicate-checked (including
-   against other invoices in the same batch) and saved as soon as it finishes.
-4. **Resumable.** If some invoices fail with a temporary error, the job's retry reuses the
-   saved page texts (no re-OCR) and the stored boundaries, and redoes only the unfinished
-   invoices.
-
-Re-processing is idempotent. Invoices whose page range is unchanged keep their row and their
-corrections. If the boundaries change, corrections move to the overlapping new invoice, which
-is flagged `SEGMENT_CHANGED` for review. Spreadsheets are one invoice per sheet.
-
-`GET /documents/{id}/result` returns `{"invoices": [...]}` in page order; the review page has
-an invoice switcher that jumps the page viewer to each invoice.
-
-**Measured** with `make batch-benchmark` on a synthetic 1000-page batch (502 invoices of 1-4
-pages, a fixed seed, and a fake LLM, so this is the pipeline's own cost without provider time):
-
-| Run | Invoices split exactly right | Total | Per page |
-|---|---|---|---|
-| 1000 text pages | 502 / 502 | 3.5 s | 0.004 s |
-| 1000 text pages + local embeddings | 502 / 502 | 25.2 s | 0.025 s |
-| 50 scanned pages (OCR) | 27 / 27 | 50-60 s | 1.0-1.2 s (≈ 17-20 min per 1000) |
-
-**Parallel OCR.** OCR pages run in a pool of worker processes (`OCR_WORKERS`, default CPU
-cores − 1). Each worker renders and OCRs its own page; at most 2 × workers pages are in
-flight, and results keep page order. If a job times out, the pool is terminated, so the
-work really stops. Measured on this laptop (alternating runs, same 24 scanned pages):
-
-| OCR | Seconds per page |
+| Document | What is in it |
 |---|---|
-| Sequential (before) | 1.14 |
-| Pool, 2 workers | 1.04 (−8%) |
-| Pool, 9 workers (default here) | 1.11 (−3%) |
+| [Architecture](docs/architecture.md) | Components, the document flow from upload to review, and the assistant's tool loop, as Mermaid diagrams with rendered images |
+| [Database schema](docs/schema.md) | Every table and why it exists |
+| [Guide](docs/guide.md) | Feature-by-feature reference: assistant, UI, worker, batches, cross-checks, search, OCR, providers, and the full API |
+| [Evaluation](docs/evaluation.md) | Dataset, metrics, results, failure examples and what was learned |
+| [Security](docs/security.md) | Threat model and the defence for each threat, linked to code and tests; audit reports |
+| [Test results](docs/test-results.md) | Counts, coverage per package and the slowest tests, with the raw JUnit and coverage files |
+| [Prompts](docs/prompts.md) | The prompts used to build the project, and the runtime prompts the system sends |
+| [AI usage](AI_USAGE.md) | Which AI tools were used, for what, and how their output was reviewed and tested |
+| [Project rules](CLAUDE.md) | The rules every change follows |
 
-The gain is small because OpenCV's denoising already spreads each page over every core,
-and this machine has about 4 cores' worth of real compute (one page takes 3.75 s on one
-thread and 0.94 s on all of them). Without splitting OpenCV's threads between workers, extra
-processes gave no gain at all. On a server with more real cores, try `OCR_WORKERS=2..4`
-with `make batch-benchmark ARGS=--scanned`. Machine drift between runs is ±10%, so
-compare runs made back to back.
+## Design decisions and trade-offs
 
-**Partly failed batches.** If some invoices fail for good while others succeed, the
-document is `partially_failed` and keeps the good invoices. "Retry all failed" (or
-`POST /documents/{id}/reprocess?only_failed=true`) continues the failed job: it reuses the
-page texts and boundaries and extracts only the invoices that failed.
+- **The LLM only extracts and quotes; code does the rest.** Values must be copied from the
+  document with a quote that is then found in the text. Parsing, arithmetic and validation
+  are plain, tested code. *Trade-off:* the model cannot "fix" a typo or fill an obvious gap,
+  so more invoices go to review. In return, a number never appears that the document doesn't
+  contain.
+- **Every field may be empty, and says why.** A missing or doubtful value is `missing` or
+  `uncertain` with a reason, never a guess. *Trade-off:* less "complete"-looking output.
+- **Second opinions, never silent replacements.** The vision reading of a page image can
+  raise confidence when it agrees, or send the invoice to review when it disagrees, but it
+  never swaps a value in. *Trade-off:* extra cost on scans (about +24% per document on the
+  hard set) for catching some confident OCR misreads.
+- **One database.** Postgres holds documents, results, full-text search and vectors
+  (pgvector), so there is one thing to back up and data stays consistent. *Trade-off:* a
+  dedicated search engine would scale further and rank better at very large volumes.
+- **Local embeddings.** all-MiniLM-L6-v2 runs on the CPU in the worker, so document text
+  isn't sent anywhere just for search. *Trade-off:* smaller-model quality; the similarity
+  threshold was calibrated by measurement.
+- **Rules first for batches.** Page-level rules split most batches, and the LLM only sees
+  short headers of unclear pages. *Trade-off:* unusual layouts may need a reviewer to fix a
+  boundary (corrections survive re-splitting).
+- **Killable process pools for CPU-heavy steps.** Parsing, OCR and embedding run in separate
+  processes with hard timeouts, so one hostile or huge file is killed instead of blocking
+  the worker. *Trade-off:* more complexity and process start-up cost.
+- **The assistant proposes; people decide.** Writes are proposals with an expiry, applied
+  through the same audited code as the UI. *Trade-off:* one extra click per change.
+- **A server-side proxy instead of user accounts.** The browser never holds the API key; the
+  web server adds it. *Trade-off:* it protects the API, not individual users. Exposing the
+  app beyond localhost needs real sign-in in front.
+- **Measure on synthetic data, tune only on dev.** The labelled dataset is generated with a
+  fixed seed, and held-out test files were never used for tuning. *Trade-off:* the clean
+  numbers are an upper bound for real-world documents.
 
-With a real LLM, add the provider's time: about one extraction call per invoice, run 4 at a
-time, plus about one classifier call per 20 unclear pages. On these synthetic pages the rules
-are exact; real scans are messier, so check the review queue.
+## Known limitations
 
-### Cross-verification (PDF vs Excel, PDF vs PDF)
-
-Open **Cross-check** in the UI (or `POST /cross-checks`), pick two documents, and the worker
-compares them in the background:
-
-- **Invoices vs a ledger.** A spreadsheet that lists many invoices (columns such as invoice
-  no, date, supplier/vendor, amount/total, tax, currency) is recognised as a *ledger*. Its
-  columns are mapped by header synonyms in plain code ("Inv #", "Vendor", "Amount (BDT)"),
-  and every row is stored with its sheet and row number. Ledgers are not sent to the LLM.
-  If a mapping is wrong, fix it with `PUT /documents/{id}/column-mapping`. The rows are
-  re-mapped at once and the fix is kept on re-processing.
-- **Invoices vs invoices**, e.g. an invoice against its purchase order, or two copies.
-  Header fields are compared, and line items are paired by description similarity and
-  amounts.
-
-Invoices are matched by normalised invoice number, then by supplier + date + total.
-Findings: matched, amount / date / currency / field mismatch, missing in the ledger or PDF
-(or in either PDF), duplicate ledger rows, and line items that differ or exist on one side
-only. Money is compared as Decimal within `MONEY_TOLERANCE` (a 0.004 difference matches; 0.02
-does not). Each finding links to its evidence on both sides: the invoice page, or the
-highlighted ledger row.
-
-Nothing is ever changed. A mismatch adds a `CROSS_CHECK_MISMATCH` issue (severity error) to
-the invoices involved, which sets `needs_review`. These issues survive re-validation and are
-replaced only when that cross-check runs again. Running a pair again replaces its findings
-(idempotent).
-
-### Search modes
-
-`GET /search?q=...&mode=hybrid` (default). Every mode returns **one hit per document** (its
-best page or chunk) with the page number, a snippet, a score and `matched_by`.
-
-| Mode | How | Good at | Weak at |
-|---|---|---|---|
-| `keyword` | Postgres full-text search on page text (`tsvector`, ranked by `ts_rank`) | exact things: invoice numbers, supplier names, codes | synonyms ("power" will not find "electricity") |
-| `semantic` | nearest text chunks by cosine distance of local sentence embeddings (all-MiniLM-L6-v2 + pgvector HNSW) | meaning: "power charges" finds an electricity bill | exact codes and numbers |
-| `hybrid` | both lists merged with **reciprocal rank fusion** (k=60) | both at once | nothing worth noting; the default |
-
-**Why hybrid by default:** invoice searches mix both kinds ("ACME electricity March",
-"INV-2041"). The two scores are on different scales, so RRF combines *ranks* instead of raw
-scores. A document near the top of both lists beats one that is first in only one.
-`matched_by` says which side found it (`keyword`, `semantic` or `both`). If embeddings are
-off or failing, hybrid falls back to keyword-only and `mode=semantic` returns 503.
-
-Keyword snippets highlight matches with `<mark>`; semantic snippets are plain text. Both are
-HTML-escaped. The embedding model runs locally (no API key). It downloads once (~90 MB) into
-the `models` Docker volume.
-
-**Photos and unreadable pages.** Before OCR, each image is checked: does it look like a
-phone photo (uneven light on the paper, or a page outline inside the frame) or a scan?
-Photos are flattened first: the paper's own brightness is estimated and divided out, which
-removes shadows and light fall-off. Scans skip this, so their output is unchanged.
-Measured on the hard dev set, this took phone photos from 11% and 0% to 89% and 100% field
-accuracy. A perspective warp (page edges plus a corner-based aspect-ratio estimate) and
-CLAHE contrast are built in but off by default (`OCR_PHOTO_STEPS`): CLAHE made results
-worse, and the synthetic photos give the warp nothing to correct. **Vision as a second opinion** (`VISION_FALLBACK_ENABLED`; OpenAI reads images). A
-scanned or photographed page is read again from its image when OCR confidence is below
-`OCR_MIN_CONFIDENCE`, an ID or amount contains a digit-like letter next to a digit (O/0,
-l/1, I/1, t/1, S/5, B/8, Z/2), a validation check fails, or a required field is uncertain.
-The two readings are compared field by field:
-- **They agree:** the OCR value is kept and its confidence rises slightly.
-- **They disagree:** the OCR value is still kept, but marked uncertain with both readings
-  in its reasons, an `OCR_VISION_DISAGREE` issue is raised, and the invoice goes to review.
-- **The OCR text gives nothing usable:** only then is the image reading used. It is marked
-  `source: "vision"`, capped at 0.5 confidence and always reviewed.
-
-Text-layer PDFs and spreadsheets are never re-read. Vision calls and tokens are counted
-separately.
-
-**Embedding model: eager attention, pinned versions.** The model is loaded with
-`attn_implementation="eager"`. With torch 2.15 on CPU (seen on aarch64), the default fused
-"SDPA" attention kernel never returned for inputs over about 128 tokens when it used more
-than one thread, and a long invoice page is about 500 tokens. The worker sat for 43 minutes
-with 40 jobs queued behind one page. Measured on that page: SDPA with 10 or 4 threads hung,
-SDPA with 1 thread took 0.17 s, and eager with 10 threads took 0.25 s. Eager attention gives
-the same vectors (cosine 1.0), so stored embeddings stay valid. `torch`, `transformers` and
-`sentence-transformers` are pinned to exact versions in `backend/pyproject.toml`. Upgrade
-them together, then run `pytest -m slow`, which times a 512-token page. Documents processed before semantic search existed can be
-indexed with:
-
-```bash
-make embed-backfill   # safe to re-run: skips documents that already have chunks
-```
-
-### OCR (scans and photos)
-
-Pages without a usable text layer (scanned PDFs, PNG/JPEG/TIFF) are OCR'd with Tesseract
-inside the container. English (`eng`) and Bengali (`ben`) are installed; choose with
-`OCR_LANGS` in `.env` (`eng`, `ben` or `eng+ben`; more languages = slower). Pages with a
-mean word confidence below `OCR_MIN_CONFIDENCE` (default 60) get a "low OCR confidence"
-warning.
-
-```bash
-# Inspect OCR text, confidence and timing for one of your sample files
-make ocr-sample FILE=samples/scanned-invoice.jpg LANGS=eng+ben
-```
-
-### LLM providers (bring your own key)
-
-The LLM only extracts and quotes text; code does all parsing, arithmetic and validation.
-Three providers are supported, all called over plain HTTPS with `httpx` (no vendor SDKs)
-with the same rules: temperature 0 (see the OpenAI note below), JSON-schema output for extraction, native tool calling
-for the assistant, `LLM_TIMEOUT_SECONDS` per request, and up to `LLM_MAX_ATTEMPTS` tries on
-rate limits (429), server errors and network errors, with exponential backoff and jitter
-(a provider's `Retry-After` is honoured). Bad keys and bad requests are not retried.
-
-| `LLM_PROVIDER` | Key variable | Default `LLM_MODEL` | Get a key |
-|----------------|--------------|---------------------|-----------|
-| `gemini` | `LLM_API_KEY` | `gemini-2.5-flash` | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
-| `groq` | `LLM_API_KEY` | `openai/gpt-oss-120b` | [console.groq.com](https://console.groq.com/keys) |
-| `openai` | `OPENAI_API_KEY` | `gpt-6-luna` | [platform.openai.com](https://platform.openai.com/api-keys) |
-| `none` (default) | none | none | The stack runs; extraction and chat report that no LLM is set |
-
-**To use your own key (reviewers):**
-
-1. `make env` (creates `.env` from `.env.example` if it doesn't exist; `.env` is git-ignored).
-2. Edit `.env`, for example:
-   ```bash
-   LLM_PROVIDER=openai
-   OPENAI_API_KEY=sk-...your key...
-   LLM_MODEL=            # empty = the default above (gpt-6-luna for OpenAI)
-   OPENAI_REASONING_EFFORT=none   # none | low
-   ```
-3. `make up` (restarts the api and worker with the new settings).
-4. Try it: `make extract-sample FILE=samples/<your file>` or ask a question on the home page.
-
-Notes:
-
-- Keep keys in `.env` only. Never put them in `.env.example`, code, commits or issue text.
-  The key travels in a request header, never in the URL, and prompts and replies are never logged.
-- OpenAI has its own `OPENAI_API_KEY`, so switching providers can't send one provider's key
-  to another. Your key must be in `OPENAI_API_KEY`, not `LLM_API_KEY`.
-- `gpt-6-luna` is a reasoning model. Extraction and the assistant send
-  `reasoning_effort: "none"` by default (`OPENAI_REASONING_EFFORT`), because copying text
-  and choosing a tool need no long reasoning, and at `none` the model still accepts
-  `temperature: 0`. At `low` it rejects temperature 0. When OpenAI rejects `temperature`
-  (or `reasoning_effort`, for non-reasoning models), the OpenAI client drops that one
-  parameter, resends once and remembers it for the run. It logs a warning, so you know the
-  output is less repeatable. Other providers never drop anything.
-- OpenAI uses strict structured output: its reply is guaranteed to match the schema.
-  Gemini and Groq use their JSON-schema modes. Invalid JSON from any provider gets one repair
-  call, then a clean failure.
-- **Cost:** every client counts input, output and prompt-cache-hit tokens from the
-  provider's own `usage` numbers. Each processing job stores them (shown in the document's
-  job), and `make extract-sample`, `make assistant-eval` and `make eval` print them. Set
-  `LLM_PRICE_INPUT_PER_MTOK` / `LLM_PRICE_OUTPUT_PER_MTOK` (USD per million tokens) to get
-  a cost estimate in `make eval`.
-- **Rate limits:** `LLM_MAX_CONCURRENT_REQUESTS` (default 4) caps the provider requests in
-  flight per process, over all jobs and invoices at once; a slot is held through retries.
-  Use 1-2 on free tiers.
-- **Real response fixtures:** `make capture-fixtures` records sanitised replies from your
-  provider on synthetic text (no headers, ids replaced) into `backend/tests/fixtures/llm/`.
-  The tests replay them, so the mocks match what the real API returns.
-
-### AI extraction (try it on a sample)
-
-With a provider configured (above):
-
-```bash
-make extract-sample FILE=samples/text-invoice.pdf   # prints fields, status, evidence, confidence, tokens
-```
-
-This sends the document's text to that provider, so only use invoices you may share.
-Tests never call a real provider: they use a fake client or a mock HTTP server.
-
-### Database
-
-`make up` applies the Alembic migrations automatically (`alembic upgrade head`). Uploading
-the same file twice stores it once: the response returns the existing `document_id` with
-`"duplicate": true`. Duplicate invoices are detected by supplier plus a normalised invoice
-number (`INV-001`, `inv 001` and `INV/001` match).
-
-### Run tests locally (optional, without Docker)
-
-```bash
-cd backend
-uv venv --python 3.12 .venv && uv pip install -e '.[dev]'
-.venv/bin/pytest            # fast tests (OCR and database tests skip without tesseract/Postgres)
-.venv/bin/pytest -m slow    # slow tests: 1000-page PDF memory, very noisy OCR
-```
-
-## API
-
-Interactive docs: http://localhost:8000/docs. Every error has the same shape:
-`{"error": {"code": "not_found", "message": "document not found"}}`. Lists use
-`limit`/`offset` and return `{"items": [...], "total": N, "limit": ..., "offset": ...}`.
-
-| Method | Path | What it does |
-|---|---|---|
-| `POST` | `/documents` | Upload one or more files → 202 with `document_id` + `job_id` per file (a repeat upload returns the existing id with `duplicate: true`) |
-| `GET` | `/documents` | List, newest first. Filters: `status`, `needs_review`, `supplier`, `date_from`, `date_to` |
-| `GET` | `/documents/{id}` | Metadata, invoice summary and the latest job |
-| `GET` | `/documents/{id}/status` | Light polling endpoint: status, stage, `pages_done`/`pages_total`, attempts, error |
-| `GET` | `/documents/{id}/result` | Every field with value, status, evidence quote, page, confidence and reasons; line items; validation issues; duplicate links |
-| `POST` | `/documents/{id}/reprocess` | Queue again (409 if a job is already queued or running). Human corrections are kept |
-| `PATCH` | `/invoices/{id}` | Correct header fields or line items. Audited in `corrections`, then re-validated |
-| `GET` | `/search?q=` | Keyword search over page text, ranked, with a `<mark>`-highlighted snippet and page number. Same filters as the list |
-| `GET` | `/documents/{id}/file` | The original file, inline, with the detected content type |
-| `GET` | `/documents/{id}/pages` | Pages (or sheets) with their text |
-| `GET` | `/documents/{id}/pages/{n}/image` | PNG preview of a page or frame (cached; 404 for spreadsheets) |
-| `GET` | `/invoices/{id}/corrections` | Audit history of human changes |
-| `POST` | `/invoices/{id}/approve` | Approve after review; 409 while errors remain unless `override_reason` is given |
-| `GET` | `/documents/{id}/ledger` | Ledger sheets of a spreadsheet: column mapping and rows (with sheet row numbers) |
-| `PUT` | `/documents/{id}/column-mapping` | Fix how a sheet's columns map to invoice fields; rows are re-mapped at once |
-| `POST` | `/cross-checks` | Compare two documents in the background → 202 |
-| `GET` | `/cross-checks`, `/cross-checks/{id}` | List checks; one check with summary and findings (evidence on both sides) |
-| `POST` | `/jobs/retry-failed` | Queue every document whose last job failed; returns how many |
-| `POST` | `/assistant/conversations` | Start a conversation (`GET` lists them; `GET /{id}` shows one) |
-| `POST` | `/assistant/conversations/{id}/messages` | Ask; the answer streams as Server-Sent Events (`token`, `tool_call`, `tool_result`, `pending_action`, `citations`, `done`) |
-| `POST` | `/assistant/actions/{id}/confirm` · `/cancel` | Run or drop a change the assistant proposed |
-| `GET` | `/stats` | Counts for the greeting and the dashboard |
-| `GET` | `/health` | App, database and Redis status |
-
-```bash
-# Upload, then poll until done
-curl -s -X POST http://localhost:8000/documents -F "files=@samples/invoice.pdf"
-curl -s http://localhost:8000/documents/<document_id>/status
-
-# Result with evidence, and documents that need a human
-curl -s http://localhost:8000/documents/<document_id>/result
-curl -s "http://localhost:8000/documents?needs_review=true&limit=10"
-
-# Correct a value (money as a string, dates as YYYY-MM-DD)
-curl -s -X PATCH http://localhost:8000/invoices/<invoice_id> \
-  -H "Content-Type: application/json" \
-  -d '{"corrected_by": "you@example.com", "total": "1320.00", "invoice_date": "2026-03-15"}'
-
-# Search, re-process, retry failures
-curl -s "http://localhost:8000/search?q=office%20chairs&supplier=acme"
-curl -s -X POST http://localhost:8000/documents/<document_id>/reprocess
-curl -s -X POST http://localhost:8000/jobs/retry-failed
-```
+- **Confident OCR misreads.** On heavily noisy scans Tesseract can read the wrong characters
+  with high confidence. Such values pass every check if the totals still add up. The vision
+  second opinion now sends most of these invoices to review (6 of 7 erroneous hard-test
+  invoices), but not all. Field accuracy on the heavy-noise group is the weak spot (56%).
+- **Missing currency is a warning, not a review trigger.** Currency is a *recommended*
+  field. When it isn't printed, or is unreadable (for example "BOT" for "BDT"), it is left
+  empty with a `MISSING_RECOMMENDED` warning; it is never guessed from the supplier or
+  country. Such an invoice can be marked processed without review. Totals are always
+  reported per currency, so a missing currency never gets mixed into another currency's
+  sum. This was a deliberate choice, because many invoices simply don't print one.
+- **A bare "$" is read as USD**, the most common meaning. Other dollar currencies need their
+  code printed.
+- **OCR languages** are English and Bengali (`OCR_LANGS`); handwriting is not a target.
+- **Synthetic evaluation.** The labelled set is generated. Real-world accuracy needs real
+  labelled invoices (a template is in `eval/dataset/real/`; `make eval ARGS=--real`).
+- **Single API key, no user accounts, localhost by default** (see
+  [security.md](docs/security.md)). Rate limits are per network address.
+- **Data goes to your LLM provider** when one is configured; their data terms apply.
 
 ## Tests
 
-_To be written._
+```bash
+make test           # backend: unit + integration tests on a throw-away Postgres (Docker)
+make lint           # backend: ruff check + format check
+make frontend-check # frontend: ESLint, TypeScript, Vitest
+make e2e            # browser smoke test against the running stack (upload, review, correct,
+                    # approve, search); needs `make up` and Node 22
+make test-report    # all of the above with coverage + JUnit -> docs/test-results.md
+```
+
+The latest results are in [docs/test-results.md](docs/test-results.md): backend 420 passed
+(including slow tests) with 91.5% line coverage, 72 frontend tests, and the end-to-end smoke
+test passed.
 
 ## Evaluation
 
@@ -498,11 +218,11 @@ is shown beside them, not instead of them (see docs/evaluation.md for why). The 
 also found real bugs that are now fixed: dates from Excel cells were lost, keyword search
 failed on natural questions, and embedding a long page hung the worker.
 
-The photo work (see "Photos and unreadable pages" below) was developed only on the hard
+The photo work (see "OCR" in the [guide](docs/guide.md)) was developed only on the hard
 **dev** set; the hard test files stayed held out, so the before/after is a fair measurement.
 Heavy noise is still the weak spot (56%): the OCR reads it with high confidence but the
 wrong characters. To catch such misreads, scans and photos now get a **second reading**
-from the page image when something looks off (see below). It never replaces a value: a
+from the page image when something looks off (see [docs/evaluation.md](docs/evaluation.md)). It never replaces a value: a
 disagreement sends the invoice to review. On the hard test subset, 6 of 7 invoices with an
 error now reach review, no fully correct clean invoice does, and cost goes from about $0.0010
 to $0.0013 per document.
@@ -521,14 +241,17 @@ make eval           # isolated stack -> eval/results/<timestamp>.json, docs/eval
 documents never affect the results and the eval never touches your data. The headline then
 appears on the dashboard under "Latest evaluation".
 
-## Design decisions
+## Security
 
-_To be written._
-
-## Limitations
-
-_To be written._
+Every API route except `/health` needs an API key, which only the web server holds. Uploads,
+the assistant and search are rate-limited, both servers send strict security headers, and
+the app containers run as non-root on read-only file systems. Dependency audits and a
+full-history secret scan are recorded. Details and the threat model:
+[docs/security.md](docs/security.md).
 
 ## AI usage
 
-See [AI_USAGE.md](AI_USAGE.md).
+This project was built with an AI coding assistant (Claude Code), step by step, with every
+change tested before it was committed. [AI_USAGE.md](AI_USAGE.md) says which tools were used,
+for what, and how their output was reviewed, and [docs/prompts.md](docs/prompts.md) lists
+the prompts.

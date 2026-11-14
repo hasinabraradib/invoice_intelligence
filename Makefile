@@ -1,7 +1,7 @@
 # Common commands. Run `make <target>` from the repository root.
 COMPOSE := docker compose
 
-.PHONY: up down test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
+.PHONY: up down demo test test-report prompts-doc lint env logs worker worker-logs ocr-sample extract-sample capture-fixtures eval-dataset eval hard-dev-bench embed-backfill frontend frontend-dev frontend-check e2e batch-benchmark assistant-eval
 
 # Create .env from the template the first time, so `make up` works out of the box.
 # It also adds a random API key (API_KEYS) if .env has none. The key stays in .env and in
@@ -64,6 +64,12 @@ frontend-check:  ## Lint, typecheck and unit tests for the frontend
 # Browser smoke test against the running stack; skips itself if the stack is down.
 e2e:
 	cd frontend && npx playwright install chromium && npm run e2e
+
+# Demo data: generate the synthetic dataset (fixed seed) and upload a varied set of it
+# through the API, then cross-check the batch PDF against its ledger. Needs `make up`.
+demo: eval-dataset
+	$(COMPOSE) run --rm --no-deps -v "$(CURDIR)/eval/dataset/files:/demo:ro" api \
+		python scripts/seed_demo.py /demo
 
 # Rewrite the "Runtime prompts" section of docs/prompts.md from the code.
 prompts-doc: env
