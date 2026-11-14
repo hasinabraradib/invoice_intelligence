@@ -717,6 +717,24 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
         };
+        /** DailyStats */
+        DailyStats: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Uploaded */
+            uploaded: number;
+            /** Processed */
+            processed: number;
+            /** Needs Review */
+            needs_review: number;
+            /** Failed */
+            failed: number;
+            /** Seconds Per Page */
+            seconds_per_page: number | null;
+        };
         /** DocumentDetail */
         DocumentDetail: {
             /**
@@ -1115,6 +1133,13 @@ export interface components {
             /** Needs Review */
             needs_review: boolean;
         };
+        /** IssueCount */
+        IssueCount: {
+            /** Code */
+            code: string;
+            /** Count */
+            count: number;
+        };
         /** IssueView */
         IssueView: {
             /** Code */
@@ -1434,6 +1459,51 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** QueueItem */
+        QueueItem: {
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            /** Segment Index */
+            segment_index: number;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Main Issue */
+            main_issue: string | null;
+            /** Main Issue Message */
+            main_issue_message: string | null;
+        };
+        /** RecentUpload */
+        RecentUpload: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Filename */
+            filename: string;
+            status: components["schemas"]["DocumentStatus"];
+            /** Mime Type */
+            mime_type: string;
+            /** Page Count */
+            page_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** RetryFailedResponse */
         RetryFailedResponse: {
             /** Requeued */
@@ -1509,6 +1579,18 @@ export interface components {
             spreadsheets: number;
             /** Cross Checks */
             cross_checks: number;
+            /** Daily */
+            daily?: components["schemas"]["DailyStats"][];
+            /** Avg Seconds Per Page */
+            avg_seconds_per_page?: number | null;
+            /** Avg Extraction Confidence */
+            avg_extraction_confidence?: number | null;
+            /** Top Issues */
+            top_issues?: components["schemas"]["IssueCount"][];
+            /** Review Queue */
+            review_queue?: components["schemas"]["QueueItem"][];
+            /** Recent Uploads */
+            recent_uploads?: components["schemas"]["RecentUpload"][];
         };
         /**
          * UploadResponse

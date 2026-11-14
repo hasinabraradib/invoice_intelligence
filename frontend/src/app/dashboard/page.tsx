@@ -1,77 +1,370 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { assistant } from "@/lib/assistant";
+import { ArrowUpRight, CheckCircle2, Clock, FlaskConical, Gauge, TriangleAlert, XCircle, type LucideIcon } from "lucide-react";
+import { assistant, type Stats } from "@/lib/assistant";
 import { api } from "@/lib/api";
 import { evaluationTiles } from "@/lib/evaluation";
-import { ErrorBox, SkeletonRows } from "@/components/Feedback";
+import { issueLabel } from "@/lib/issues";
+import { formatDateTime } from "@/lib/format";
+import { DOCUMENT_STATUS, StatusBadge, TONE } from "@/components/Badges";
+import { DailyBars, Donut, Sparkline, type Slice } from "@/components/charts";
+import { EmptyState, ErrorBox, Skeleton, SkeletonCards } from "@/components/Feedback";
 import { errorMessage } from "@/components/Toast";
+import { CountUp, FileTypeIcon, PageHeader } from "@/components/ui";
+import type { DocumentStatus } from "@/lib/api";
 
-const STATUS_LABELS: Record<string, string> = {
-  uploaded: "Queued", processing: "Processing", processed: "Processed", needs_review: "Needs review",
-  failed: "Failed", partially_failed: "Partly failed",
+const IN_FLIGHT = new Set(["uploaded", "processing"]);
+const DONUT_COLORS: Record<string, string> = {
+  processed: "var(--success-dot)",
+  needs_review: "var(--warning-dot)",
+  processing: "var(--info-dot)",
+  uploaded: "var(--neutral-dot)",
+  failed: "var(--danger-dot)",
+  partially_failed: "var(--orange-dot)",
 };
 
 /** The numbers behind the assistant's greeting, at a glance. */
 export default function DashboardPage() {
-  const stats = useQuery({ queryKey: ["stats"], queryFn: assistant.stats, refetchInterval: 10_000 });
+  const stats = useQuery({
+    queryKey: ["stats"],
+    queryFn: assistant.stats,
+    // Recent uploads show live status: poll faster while something is being processed.
+    refetchInterval: (query) =>
+      query.state.data?.recent_uploads?.some((u) => IN_FLIGHT.has(u.status)) ? 4_000 : 15_000,
+  });
   const evaluation = useQuery({ queryKey: ["evaluation"], queryFn: api.latestEvaluation });
-  if (stats.isPending) return <SkeletonRows />;
-  if (stats.isError) return <ErrorBox message={errorMessage(stats.error)} onRetry={() => void stats.refetch()} />;
-  const s = stats.data;
-  const tiles: [string, number, string][] = [
-    ["Documents", s.documents, "/documents"],
-    ["Invoices", s.invoices, "/documents"],
-    ["Need review", s.invoices_need_review, "/review"],
-    ["Jobs running", s.jobs_running + s.jobs_queued, "/documents"],
-    ["Failed", s.documents_failed, "/documents"],
-    ["Cross-checks", s.cross_checks, "/cross-check"],
-  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {tiles.map(([label, value, href]) => (
-          <Link key={label} href={href} className="card focus-ring block hover:bg-surface-2">
-            <dt className="text-sm text-muted">{label}</dt>
-            <dd className="text-3xl font-semibold tabular-nums">{value}</dd>
-          </Link>
-        ))}
-      </dl>
-      <section className="card" aria-labelledby="status-heading">
-        <h2 id="status-heading" className="mb-2 text-lg font-semibold">Documents by status</h2>
-        <ul className="grid gap-1 text-sm sm:grid-cols-2">
-          {Object.entries(s.documents_by_status).map(([status, count]) => (
-            <li key={status} className="flex justify-between border-b border-line py-1">
-              <Link className="btn-link" href={`/documents?status=${status}`}>{STATUS_LABELS[status] ?? status}</Link>
-              <span className="tabular-nums">{count}</span>
-            </li>
-          ))}
-        </ul>
+    <div>
+      <PageHeader
+        eyebrow="Overview"
+        title="Dashboard"
+        description="What came in, what needs a person, and how well extraction is doing."
+        actions={<Link href="/documents" className="btn-secondary">Upload invoices</Link>}
+      />
+      {stats.isPending ? (
+        <div className="space-y-6">
+          <SkeletonCards />
+          <Skeleton className="h-72 rounded-card" />
+        </div>
+      ) : stats.isError ? (
+        <ErrorBox message={errorMessage(stats.error)} onRetry={() => void stats.refetch()} />
+      ) : (
+        <Overview s={stats.data} evaluation={evaluation.data} evaluationPending={evaluation.isPending} />
+      )}
+    </div>
+  );
+}
+
+type Eval = Awaited<ReturnType<typeof api.latestEvaluation>>;
+
+function Overview({ s, evaluation, evaluationPending }: { s: Stats; evaluation: Eval | undefined; evaluationPending: boolean }) {
+  const daily = s.daily ?? [];
+  const seconds = s.avg_seconds_per_page;
+  return (
+    <div className="space-y-6">
+      <section aria-label="Key numbers" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi
+          label="Processed"
+          icon={CheckCircle2}
+          tone="success"
+          value={s.documents_by_status.processed ?? 0}
+          trend={daily.map((d) => d.processed)}
+          href="/documents?status=processed"
+          note="documents"
+        />
+        <Kpi
+          label="Needs review"
+          icon={TriangleAlert}
+          tone="warning"
+          value={s.invoices_need_review}
+          trend={daily.map((d) => d.needs_review)}
+          href="/review"
+          note="invoices"
+        />
+        <Kpi
+          label="Failed"
+          icon={XCircle}
+          tone="danger"
+          value={s.documents_failed}
+          trend={daily.map((d) => d.failed)}
+          href="/documents?status=failed"
+          note="documents"
+        />
+        <Kpi
+          label="Time per page"
+          icon={Clock}
+          tone="info"
+          value={seconds}
+          format={(n) => `${n.toFixed(1)} s`}
+          trend={daily.map((d) => d.seconds_per_page ?? null)}
+          note="average, last 14 days"
+          empty="No finished jobs in the last 14 days"
+        />
       </section>
-      <section className="card" aria-labelledby="eval-heading">
-        <h2 id="eval-heading" className="text-lg font-semibold">Latest evaluation</h2>
-        {evaluation.data ? (
-          <>
-            <p className="mb-3 text-sm text-muted">
-              {evaluation.data.dataset} data, {evaluation.data.split} split, {evaluation.data.model},{" "}
-              {new Date(evaluation.data.run_at).toLocaleString()}. Details in docs/evaluation.md.
-            </p>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {evaluationTiles(evaluation.data.headline).map((t) => (
-                <div key={t.label} title={t.hint}>
-                  <dt className="text-sm text-muted">{t.label}</dt>
-                  <dd className="text-2xl font-semibold tabular-nums">{t.value}</dd>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="card animate-fade-up lg:col-span-2" aria-labelledby="daily-heading">
+          <div className="mb-4 flex items-baseline justify-between gap-2">
+            <h2 id="daily-heading" className="font-semibold text-ink">Documents per day</h2>
+            <span className="text-xs text-muted">Last 14 days</span>
+          </div>
+          <DailyBars label="Documents uploaded per day" data={daily.map((d) => ({ date: d.date, value: d.uploaded }))} />
+        </section>
+        <EvaluationCard evaluation={evaluation} pending={evaluationPending} confidence={s.avg_extraction_confidence} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <StatusCard s={s} />
+        <IssuesCard s={s} />
+        <QueueCard s={s} />
+      </div>
+
+      <RecentCard s={s} />
+    </div>
+  );
+}
+
+function Kpi({
+  label,
+  icon: Icon,
+  tone,
+  value,
+  trend,
+  href,
+  note,
+  format,
+  empty,
+}: {
+  label: string;
+  icon: LucideIcon;
+  tone: keyof typeof TONE;
+  value: number | null | undefined;
+  trend: (number | null)[];
+  href?: string;
+  note: string;
+  format?: (n: number) => string;
+  empty?: string;
+}) {
+  const body = (
+    <>
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted">{label}</span>
+        <span className={`grid size-8 place-items-center rounded-xl ${TONE[tone].badge} border`} aria-hidden="true">
+          <Icon className="size-4" strokeWidth={1.75} />
+        </span>
+      </div>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <div className="num text-3xl font-semibold tracking-tight text-ink">
+            {value === null || value === undefined ? "–" : <CountUp value={value} format={format} />}
+          </div>
+          <div className="mt-0.5 truncate text-xs text-muted">{value === null || value === undefined ? empty : note}</div>
+        </div>
+        <div className="w-24 shrink-0">
+          <Sparkline data={trend} color={`var(--${tone}-dot)`} label={`${label} per day`} />
+        </div>
+      </div>
+    </>
+  );
+  return href ? (
+    <Link href={href} className="card card-hover focus-ring block animate-fade-up">
+      {body}
+    </Link>
+  ) : (
+    <div className="card animate-fade-up">{body}</div>
+  );
+}
+
+function pct(v: unknown): string {
+  return typeof v === "number" ? `${(v * 100).toFixed(1)}%` : "–";
+}
+
+function EvaluationCard({ evaluation, pending, confidence }: { evaluation: Eval | undefined; pending: boolean; confidence: number | null | undefined }) {
+  return (
+    <section className="card flex animate-fade-up flex-col" aria-labelledby="eval-heading">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="grid size-8 place-items-center rounded-xl border border-accent-line bg-accent-soft text-accent-ink" aria-hidden="true">
+          <FlaskConical className="size-4" strokeWidth={1.75} />
+        </span>
+        <h2 id="eval-heading" className="font-semibold text-ink">Latest evaluation</h2>
+      </div>
+      {pending ? (
+        <Skeleton className="h-32" />
+      ) : evaluation ? (
+        <>
+          <dl className="grid grid-cols-2 gap-4">
+            <div>
+              <dt className="text-xs text-muted">Field accuracy, clean test set</dt>
+              <dd className="num mt-1 text-3xl font-semibold tracking-tight text-ink">{pct(evaluation.headline.field_accuracy)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">Field accuracy, hard subset</dt>
+              <dd className="num mt-1 text-3xl font-semibold tracking-tight text-ink">{pct(evaluation.headline.hard_field_accuracy)}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs text-muted">
+            {evaluation.dataset} data, {evaluation.split} split, {evaluation.model}, {formatDateTime(evaluation.run_at)}.
+          </p>
+          <details className="group mt-auto pt-4">
+            <summary className="btn-link cursor-pointer text-xs">More from this run</summary>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+              {evaluationTiles(evaluation.headline).slice(2).map((t) => (
+                <div key={t.label} title={t.hint} className="flex justify-between gap-2 border-b border-line py-1">
+                  <dt className="text-muted">{t.label}</dt>
+                  <dd className="num font-medium text-ink">{t.value}</dd>
                 </div>
               ))}
             </dl>
-          </>
-        ) : (
-          <p className="text-sm text-muted">
-            {evaluation.isPending ? "Loading..." : "No evaluation stored yet. Run make eval to measure accuracy."}
+          </details>
+        </>
+      ) : confidence !== null && confidence !== undefined ? (
+        <>
+          <dl>
+            <dt className="text-xs text-muted">Average extraction confidence (no evaluation stored yet)</dt>
+            <dd className="num mt-1 text-3xl font-semibold tracking-tight text-ink">{pct(confidence)}</dd>
+          </dl>
+          <p className="mt-3 text-xs text-muted">
+            This is the model&apos;s own confidence, not measured accuracy. Run <code className="font-mono">make eval</code> for accuracy.
           </p>
-        )}
-      </section>
-    </div>
+        </>
+      ) : (
+        <p className="text-sm text-muted">
+          No evaluation yet and no extracted invoices. Run <code className="font-mono">make eval</code> to measure accuracy.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function StatusCard({ s }: { s: Stats }) {
+  const slices: Slice[] = (Object.keys(DOCUMENT_STATUS) as DocumentStatus[]).map((status) => ({
+    key: status,
+    label: DOCUMENT_STATUS[status].label,
+    value: s.documents_by_status[status] ?? 0,
+    color: DONUT_COLORS[status],
+  }));
+  return (
+    <section className="card animate-fade-up" aria-labelledby="status-heading">
+      <h2 id="status-heading" className="mb-4 font-semibold text-ink">Documents by status</h2>
+      {s.documents === 0 ? (
+        <p className="text-sm text-muted">No documents yet.</p>
+      ) : (
+        <div className="flex flex-col items-center gap-5 sm:flex-row lg:flex-col xl:flex-row">
+          <Donut data={slices} centerLabel="documents" centerValue={String(s.documents)} />
+          <ul className="w-full space-y-1.5 text-sm">
+            {slices.filter((d) => d.value > 0).map((d) => (
+              <li key={d.key}>
+                <Link href={`/documents?status=${d.key}`} className="focus-ring flex items-center justify-between gap-2 rounded-lg px-2 py-1 hover:bg-surface-2">
+                  <span className="flex items-center gap-2 text-ink-2">
+                    <span aria-hidden="true" className="size-2 rounded-full" style={{ background: d.color }} />
+                    {d.label}
+                  </span>
+                  <span className="num font-medium text-ink">{d.value}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function IssuesCard({ s }: { s: Stats }) {
+  const issues = s.top_issues ?? [];
+  const max = Math.max(1, ...issues.map((i) => i.count));
+  return (
+    <section className="card animate-fade-up" aria-labelledby="issues-heading">
+      <h2 id="issues-heading" className="mb-4 font-semibold text-ink">Most common issues</h2>
+      {issues.length === 0 ? (
+        <p className="text-sm text-muted">No issues found so far.</p>
+      ) : (
+        <ul className="space-y-3">
+          {issues.map((issue) => (
+            <li key={issue.code}>
+              <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+                <span className="truncate text-ink-2" title={issue.code}>{issueLabel(issue.code)}</span>
+                <span className="num font-medium text-ink">{issue.count}</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+                <div className="h-full rounded-full bg-accent/70 transition-[width] duration-500" style={{ width: `${(issue.count / max) * 100}%` }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function QueueCard({ s }: { s: Stats }) {
+  const queue = s.review_queue ?? [];
+  return (
+    <section className="card animate-fade-up" aria-labelledby="queue-heading">
+      <div className="mb-4 flex items-baseline justify-between gap-2">
+        <h2 id="queue-heading" className="font-semibold text-ink">Review queue</h2>
+        <Link href="/review" className="btn-link text-xs">See all</Link>
+      </div>
+      {queue.length === 0 ? (
+        <p className="text-sm text-muted">Nothing waiting for review.</p>
+      ) : (
+        <ol className="-mx-2 space-y-0.5">
+          {queue.map((item) => (
+            <li key={item.invoice_id}>
+              <Link
+                href={`/documents/${item.document_id}?invoice=${item.segment_index}`}
+                className="focus-ring group flex items-start justify-between gap-3 rounded-xl px-2 py-2 hover:bg-surface-2"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-ink">
+                    {item.supplier_name ?? item.filename}
+                    {item.invoice_number ? <span className="font-normal text-muted"> · {item.invoice_number}</span> : null}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-warning">{issueLabel(item.main_issue)}</span>
+                </span>
+                <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-faint group-hover:text-ink" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+function RecentCard({ s }: { s: Stats }) {
+  const recent = s.recent_uploads ?? [];
+  return (
+    <section className="card animate-fade-up" aria-labelledby="recent-heading">
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <h2 id="recent-heading" className="font-semibold text-ink">Recent uploads</h2>
+        <Link href="/documents" className="btn-link text-xs">All documents</Link>
+      </div>
+      {recent.length === 0 ? (
+        <EmptyState title="No uploads yet" icon={Gauge} action={<Link href="/documents" className="btn-primary">Upload invoices</Link>}>
+          Upload a PDF, photo or spreadsheet to get started.
+        </EmptyState>
+      ) : (
+        <ul className="divide-y divide-line" aria-live="polite">
+          {recent.map((doc) => (
+            <li key={doc.id}>
+              <Link href={`/documents/${doc.id}`} className="focus-ring -mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-surface-2">
+                <FileTypeIcon mime={doc.mime_type} filename={doc.filename} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-ink">{doc.filename}</span>
+                  <span className="block text-xs text-muted">
+                    {formatDateTime(doc.created_at)}
+                    {doc.page_count ? ` · ${doc.page_count} page${doc.page_count === 1 ? "" : "s"}` : ""}
+                  </span>
+                </span>
+                <StatusBadge status={doc.status} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
