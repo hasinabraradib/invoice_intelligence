@@ -54,6 +54,13 @@ def backend_coverage(path: Path) -> tuple[float, list[tuple[str, float, int]]]:
 
 def frontend_coverage(path: Path) -> tuple[float, list[tuple[str, float, int]]]:
     data = json.loads(path.read_text())
+    # Vitest writes absolute paths (they name the local machine's folders): store them
+    # relative to the repository instead, since this file is committed.
+    data = {
+        k if k == "total" or "/src/" not in k else "frontend/src/" + k.split("/src/", 1)[1]: v
+        for k, v in data.items()
+    }
+    path.write_text(json.dumps(data, indent=1) + "\n")
     groups = defaultdict(lambda: [0, 0])
     for filename, summary in data.items():
         if filename == "total":

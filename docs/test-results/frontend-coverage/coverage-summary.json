@@ -1,29 +1,736 @@
-{"total": {"lines":{"total":582,"covered":409,"skipped":0,"pct":70.27},"statements":{"total":690,"covered":481,"skipped":0,"pct":69.71},"functions":{"total":227,"covered":130,"skipped":0,"pct":57.26},"branches":{"total":569,"covered":376,"skipped":0,"pct":66.08},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/adib/invoice-intelligence/frontend/src/proxy.ts": {"lines":{"total":10,"covered":2,"skipped":0,"pct":20},"functions":{"total":2,"covered":1,"skipped":0,"pct":50},"statements":{"total":10,"covered":2,"skipped":0,"pct":20},"branches":{"total":4,"covered":4,"skipped":0,"pct":100}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/ApproveDialog.tsx": {"lines":{"total":9,"covered":8,"skipped":0,"pct":88.88},"functions":{"total":4,"covered":3,"skipped":0,"pct":75},"statements":{"total":10,"covered":9,"skipped":0,"pct":90},"branches":{"total":16,"covered":13,"skipped":0,"pct":81.25}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/Badges.tsx": {"lines":{"total":14,"covered":8,"skipped":0,"pct":57.14},"functions":{"total":6,"covered":3,"skipped":0,"pct":50},"statements":{"total":14,"covered":8,"skipped":0,"pct":57.14},"branches":{"total":12,"covered":1,"skipped":0,"pct":8.33}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/Filters.tsx": {"lines":{"total":26,"covered":17,"skipped":0,"pct":65.38},"functions":{"total":20,"covered":11,"skipped":0,"pct":55},"statements":{"total":38,"covered":23,"skipped":0,"pct":60.52},"branches":{"total":26,"covered":17,"skipped":0,"pct":65.38}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/Modal.tsx": {"lines":{"total":30,"covered":19,"skipped":0,"pct":63.33},"functions":{"total":7,"covered":6,"skipped":0,"pct":85.71},"statements":{"total":35,"covered":21,"skipped":0,"pct":60},"branches":{"total":22,"covered":6,"skipped":0,"pct":27.27}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/Snippet.tsx": {"lines":{"total":12,"covered":12,"skipped":0,"pct":100},"functions":{"total":5,"covered":5,"skipped":0,"pct":100},"statements":{"total":15,"covered":15,"skipped":0,"pct":100},"branches":{"total":10,"covered":9,"skipped":0,"pct":90}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/Toast.tsx": {"lines":{"total":17,"covered":14,"skipped":0,"pct":82.35},"functions":{"total":15,"covered":7,"skipped":0,"pct":46.66},"statements":{"total":25,"covered":16,"skipped":0,"pct":64},"branches":{"total":10,"covered":4,"skipped":0,"pct":40}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/ui.tsx": {"lines":{"total":36,"covered":8,"skipped":0,"pct":22.22},"functions":{"total":15,"covered":2,"skipped":0,"pct":13.33},"statements":{"total":42,"covered":9,"skipped":0,"pct":21.42},"branches":{"total":34,"covered":6,"skipped":0,"pct":17.64}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/chat/ActionCard.tsx": {"lines":{"total":20,"covered":18,"skipped":0,"pct":90},"functions":{"total":5,"covered":4,"skipped":0,"pct":80},"statements":{"total":21,"covered":19,"skipped":0,"pct":90.47},"branches":{"total":26,"covered":20,"skipped":0,"pct":76.92}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/chat/Markdown.tsx": {"lines":{"total":46,"covered":38,"skipped":0,"pct":82.6},"functions":{"total":6,"covered":6,"skipped":0,"pct":100},"statements":{"total":55,"covered":45,"skipped":0,"pct":81.81},"branches":{"total":55,"covered":42,"skipped":0,"pct":76.36}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/Calendar.tsx": {"lines":{"total":46,"covered":29,"skipped":0,"pct":63.04},"functions":{"total":20,"covered":8,"skipped":0,"pct":40},"statements":{"total":49,"covered":31,"skipped":0,"pct":63.26},"branches":{"total":32,"covered":27,"skipped":0,"pct":84.37}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/DateRange.tsx": {"lines":{"total":23,"covered":16,"skipped":0,"pct":69.56},"functions":{"total":12,"covered":7,"skipped":0,"pct":58.33},"statements":{"total":25,"covered":18,"skipped":0,"pct":72},"branches":{"total":25,"covered":20,"skipped":0,"pct":80}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/DocumentPicker.tsx": {"lines":{"total":38,"covered":31,"skipped":0,"pct":81.57},"functions":{"total":16,"covered":11,"skipped":0,"pct":68.75},"statements":{"total":41,"covered":32,"skipped":0,"pct":78.04},"branches":{"total":30,"covered":23,"skipped":0,"pct":76.66}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/Select.tsx": {"lines":{"total":6,"covered":6,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":7,"covered":7,"skipped":0,"pct":100},"branches":{"total":18,"covered":14,"skipped":0,"pct":77.77}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/dates.ts": {"lines":{"total":34,"covered":31,"skipped":0,"pct":91.17},"functions":{"total":15,"covered":12,"skipped":0,"pct":80},"statements":{"total":38,"covered":35,"skipped":0,"pct":92.1},"branches":{"total":16,"covered":16,"skipped":0,"pct":100}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/controls/misc.tsx": {"lines":{"total":15,"covered":7,"skipped":0,"pct":46.66},"functions":{"total":5,"covered":3,"skipped":0,"pct":60},"statements":{"total":15,"covered":7,"skipped":0,"pct":46.66},"branches":{"total":15,"covered":8,"skipped":0,"pct":53.33}}
-,"/Users/adib/invoice-intelligence/frontend/src/components/review/InvoiceSwitcher.tsx": {"lines":{"total":11,"covered":11,"skipped":0,"pct":100},"functions":{"total":8,"covered":8,"skipped":0,"pct":100},"statements":{"total":15,"covered":14,"skipped":0,"pct":93.33},"branches":{"total":14,"covered":10,"skipped":0,"pct":71.42}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/api.ts": {"lines":{"total":43,"covered":6,"skipped":0,"pct":13.95},"functions":{"total":23,"covered":0,"skipped":0,"pct":0},"statements":{"total":46,"covered":6,"skipped":0,"pct":13.04},"branches":{"total":24,"covered":0,"skipped":0,"pct":0}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/assistant.ts": {"lines":{"total":36,"covered":27,"skipped":0,"pct":75},"functions":{"total":13,"covered":7,"skipped":0,"pct":53.84},"statements":{"total":50,"covered":38,"skipped":0,"pct":76},"branches":{"total":52,"covered":42,"skipped":0,"pct":80.76}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/crosscheck.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":10,"covered":10,"skipped":0,"pct":100},"branches":{"total":28,"covered":17,"skipped":0,"pct":60.71}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/evaluation.ts": {"lines":{"total":6,"covered":6,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":8,"covered":8,"skipped":0,"pct":100},"branches":{"total":8,"covered":7,"skipped":0,"pct":87.5}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/fields.ts": {"lines":{"total":6,"covered":6,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":8,"covered":8,"skipped":0,"pct":100},"branches":{"total":6,"covered":5,"skipped":0,"pct":83.33}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/format.ts": {"lines":{"total":11,"covered":6,"skipped":0,"pct":54.54},"functions":{"total":4,"covered":1,"skipped":0,"pct":25},"statements":{"total":14,"covered":7,"skipped":0,"pct":50},"branches":{"total":17,"covered":10,"skipped":0,"pct":58.82}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/issues.ts": {"lines":{"total":3,"covered":3,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":5,"covered":5,"skipped":0,"pct":100},"branches":{"total":4,"covered":4,"skipped":0,"pct":100}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/proxy.ts": {"lines":{"total":22,"covered":22,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":27,"covered":27,"skipped":0,"pct":100},"branches":{"total":23,"covered":17,"skipped":0,"pct":73.91}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/sse.ts": {"lines":{"total":22,"covered":21,"skipped":0,"pct":95.45},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":27,"covered":26,"skipped":0,"pct":96.29},"branches":{"total":10,"covered":9,"skipped":0,"pct":90}}
-,"/Users/adib/invoice-intelligence/frontend/src/lib/validation.ts": {"lines":{"total":31,"covered":28,"skipped":0,"pct":90.32},"functions":{"total":7,"covered":6,"skipped":0,"pct":85.71},"statements":{"total":40,"covered":35,"skipped":0,"pct":87.5},"branches":{"total":32,"covered":25,"skipped":0,"pct":78.12}}
+{
+ "total": {
+  "lines": {
+   "total": 582,
+   "covered": 409,
+   "skipped": 0,
+   "pct": 70.27
+  },
+  "statements": {
+   "total": 690,
+   "covered": 481,
+   "skipped": 0,
+   "pct": 69.71
+  },
+  "functions": {
+   "total": 227,
+   "covered": 130,
+   "skipped": 0,
+   "pct": 57.26
+  },
+  "branches": {
+   "total": 569,
+   "covered": 376,
+   "skipped": 0,
+   "pct": 66.08
+  },
+  "branchesTrue": {
+   "total": 0,
+   "covered": 0,
+   "skipped": 0,
+   "pct": 100
+  }
+ },
+ "frontend/src/proxy.ts": {
+  "lines": {
+   "total": 10,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 20
+  },
+  "functions": {
+   "total": 2,
+   "covered": 1,
+   "skipped": 0,
+   "pct": 50
+  },
+  "statements": {
+   "total": 10,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 20
+  },
+  "branches": {
+   "total": 4,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 100
+  }
+ },
+ "frontend/src/components/ApproveDialog.tsx": {
+  "lines": {
+   "total": 9,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 88.88
+  },
+  "functions": {
+   "total": 4,
+   "covered": 3,
+   "skipped": 0,
+   "pct": 75
+  },
+  "statements": {
+   "total": 10,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 90
+  },
+  "branches": {
+   "total": 16,
+   "covered": 13,
+   "skipped": 0,
+   "pct": 81.25
+  }
+ },
+ "frontend/src/components/Badges.tsx": {
+  "lines": {
+   "total": 14,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 57.14
+  },
+  "functions": {
+   "total": 6,
+   "covered": 3,
+   "skipped": 0,
+   "pct": 50
+  },
+  "statements": {
+   "total": 14,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 57.14
+  },
+  "branches": {
+   "total": 12,
+   "covered": 1,
+   "skipped": 0,
+   "pct": 8.33
+  }
+ },
+ "frontend/src/components/Filters.tsx": {
+  "lines": {
+   "total": 26,
+   "covered": 17,
+   "skipped": 0,
+   "pct": 65.38
+  },
+  "functions": {
+   "total": 20,
+   "covered": 11,
+   "skipped": 0,
+   "pct": 55
+  },
+  "statements": {
+   "total": 38,
+   "covered": 23,
+   "skipped": 0,
+   "pct": 60.52
+  },
+  "branches": {
+   "total": 26,
+   "covered": 17,
+   "skipped": 0,
+   "pct": 65.38
+  }
+ },
+ "frontend/src/components/Modal.tsx": {
+  "lines": {
+   "total": 30,
+   "covered": 19,
+   "skipped": 0,
+   "pct": 63.33
+  },
+  "functions": {
+   "total": 7,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 85.71
+  },
+  "statements": {
+   "total": 35,
+   "covered": 21,
+   "skipped": 0,
+   "pct": 60
+  },
+  "branches": {
+   "total": 22,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 27.27
+  }
+ },
+ "frontend/src/components/Snippet.tsx": {
+  "lines": {
+   "total": 12,
+   "covered": 12,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 5,
+   "covered": 5,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 15,
+   "covered": 15,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 10,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 90
+  }
+ },
+ "frontend/src/components/Toast.tsx": {
+  "lines": {
+   "total": 17,
+   "covered": 14,
+   "skipped": 0,
+   "pct": 82.35
+  },
+  "functions": {
+   "total": 15,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 46.66
+  },
+  "statements": {
+   "total": 25,
+   "covered": 16,
+   "skipped": 0,
+   "pct": 64
+  },
+  "branches": {
+   "total": 10,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 40
+  }
+ },
+ "frontend/src/components/ui.tsx": {
+  "lines": {
+   "total": 36,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 22.22
+  },
+  "functions": {
+   "total": 15,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 13.33
+  },
+  "statements": {
+   "total": 42,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 21.42
+  },
+  "branches": {
+   "total": 34,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 17.64
+  }
+ },
+ "frontend/src/components/chat/ActionCard.tsx": {
+  "lines": {
+   "total": 20,
+   "covered": 18,
+   "skipped": 0,
+   "pct": 90
+  },
+  "functions": {
+   "total": 5,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 80
+  },
+  "statements": {
+   "total": 21,
+   "covered": 19,
+   "skipped": 0,
+   "pct": 90.47
+  },
+  "branches": {
+   "total": 26,
+   "covered": 20,
+   "skipped": 0,
+   "pct": 76.92
+  }
+ },
+ "frontend/src/components/chat/Markdown.tsx": {
+  "lines": {
+   "total": 46,
+   "covered": 38,
+   "skipped": 0,
+   "pct": 82.6
+  },
+  "functions": {
+   "total": 6,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 55,
+   "covered": 45,
+   "skipped": 0,
+   "pct": 81.81
+  },
+  "branches": {
+   "total": 55,
+   "covered": 42,
+   "skipped": 0,
+   "pct": 76.36
+  }
+ },
+ "frontend/src/components/controls/Calendar.tsx": {
+  "lines": {
+   "total": 46,
+   "covered": 29,
+   "skipped": 0,
+   "pct": 63.04
+  },
+  "functions": {
+   "total": 20,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 40
+  },
+  "statements": {
+   "total": 49,
+   "covered": 31,
+   "skipped": 0,
+   "pct": 63.26
+  },
+  "branches": {
+   "total": 32,
+   "covered": 27,
+   "skipped": 0,
+   "pct": 84.37
+  }
+ },
+ "frontend/src/components/controls/DateRange.tsx": {
+  "lines": {
+   "total": 23,
+   "covered": 16,
+   "skipped": 0,
+   "pct": 69.56
+  },
+  "functions": {
+   "total": 12,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 58.33
+  },
+  "statements": {
+   "total": 25,
+   "covered": 18,
+   "skipped": 0,
+   "pct": 72
+  },
+  "branches": {
+   "total": 25,
+   "covered": 20,
+   "skipped": 0,
+   "pct": 80
+  }
+ },
+ "frontend/src/components/controls/DocumentPicker.tsx": {
+  "lines": {
+   "total": 38,
+   "covered": 31,
+   "skipped": 0,
+   "pct": 81.57
+  },
+  "functions": {
+   "total": 16,
+   "covered": 11,
+   "skipped": 0,
+   "pct": 68.75
+  },
+  "statements": {
+   "total": 41,
+   "covered": 32,
+   "skipped": 0,
+   "pct": 78.04
+  },
+  "branches": {
+   "total": 30,
+   "covered": 23,
+   "skipped": 0,
+   "pct": 76.66
+  }
+ },
+ "frontend/src/components/controls/Select.tsx": {
+  "lines": {
+   "total": 6,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 4,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 7,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 18,
+   "covered": 14,
+   "skipped": 0,
+   "pct": 77.77
+  }
+ },
+ "frontend/src/components/controls/dates.ts": {
+  "lines": {
+   "total": 34,
+   "covered": 31,
+   "skipped": 0,
+   "pct": 91.17
+  },
+  "functions": {
+   "total": 15,
+   "covered": 12,
+   "skipped": 0,
+   "pct": 80
+  },
+  "statements": {
+   "total": 38,
+   "covered": 35,
+   "skipped": 0,
+   "pct": 92.1
+  },
+  "branches": {
+   "total": 16,
+   "covered": 16,
+   "skipped": 0,
+   "pct": 100
+  }
+ },
+ "frontend/src/components/controls/misc.tsx": {
+  "lines": {
+   "total": 15,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 46.66
+  },
+  "functions": {
+   "total": 5,
+   "covered": 3,
+   "skipped": 0,
+   "pct": 60
+  },
+  "statements": {
+   "total": 15,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 46.66
+  },
+  "branches": {
+   "total": 15,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 53.33
+  }
+ },
+ "frontend/src/components/review/InvoiceSwitcher.tsx": {
+  "lines": {
+   "total": 11,
+   "covered": 11,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 8,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 15,
+   "covered": 14,
+   "skipped": 0,
+   "pct": 93.33
+  },
+  "branches": {
+   "total": 14,
+   "covered": 10,
+   "skipped": 0,
+   "pct": 71.42
+  }
+ },
+ "frontend/src/lib/api.ts": {
+  "lines": {
+   "total": 43,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 13.95
+  },
+  "functions": {
+   "total": 23,
+   "covered": 0,
+   "skipped": 0,
+   "pct": 0
+  },
+  "statements": {
+   "total": 46,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 13.04
+  },
+  "branches": {
+   "total": 24,
+   "covered": 0,
+   "skipped": 0,
+   "pct": 0
+  }
+ },
+ "frontend/src/lib/assistant.ts": {
+  "lines": {
+   "total": 36,
+   "covered": 27,
+   "skipped": 0,
+   "pct": 75
+  },
+  "functions": {
+   "total": 13,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 53.84
+  },
+  "statements": {
+   "total": 50,
+   "covered": 38,
+   "skipped": 0,
+   "pct": 76
+  },
+  "branches": {
+   "total": 52,
+   "covered": 42,
+   "skipped": 0,
+   "pct": 80.76
+  }
+ },
+ "frontend/src/lib/crosscheck.ts": {
+  "lines": {
+   "total": 9,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 2,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 10,
+   "covered": 10,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 28,
+   "covered": 17,
+   "skipped": 0,
+   "pct": 60.71
+  }
+ },
+ "frontend/src/lib/evaluation.ts": {
+  "lines": {
+   "total": 6,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 4,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 8,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 8,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 87.5
+  }
+ },
+ "frontend/src/lib/fields.ts": {
+  "lines": {
+   "total": 6,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 1,
+   "covered": 1,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 8,
+   "covered": 8,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 6,
+   "covered": 5,
+   "skipped": 0,
+   "pct": 83.33
+  }
+ },
+ "frontend/src/lib/format.ts": {
+  "lines": {
+   "total": 11,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 54.54
+  },
+  "functions": {
+   "total": 4,
+   "covered": 1,
+   "skipped": 0,
+   "pct": 25
+  },
+  "statements": {
+   "total": 14,
+   "covered": 7,
+   "skipped": 0,
+   "pct": 50
+  },
+  "branches": {
+   "total": 17,
+   "covered": 10,
+   "skipped": 0,
+   "pct": 58.82
+  }
+ },
+ "frontend/src/lib/issues.ts": {
+  "lines": {
+   "total": 3,
+   "covered": 3,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 2,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 5,
+   "covered": 5,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 4,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 100
+  }
+ },
+ "frontend/src/lib/proxy.ts": {
+  "lines": {
+   "total": 22,
+   "covered": 22,
+   "skipped": 0,
+   "pct": 100
+  },
+  "functions": {
+   "total": 4,
+   "covered": 4,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 27,
+   "covered": 27,
+   "skipped": 0,
+   "pct": 100
+  },
+  "branches": {
+   "total": 23,
+   "covered": 17,
+   "skipped": 0,
+   "pct": 73.91
+  }
+ },
+ "frontend/src/lib/sse.ts": {
+  "lines": {
+   "total": 22,
+   "covered": 21,
+   "skipped": 0,
+   "pct": 95.45
+  },
+  "functions": {
+   "total": 2,
+   "covered": 2,
+   "skipped": 0,
+   "pct": 100
+  },
+  "statements": {
+   "total": 27,
+   "covered": 26,
+   "skipped": 0,
+   "pct": 96.29
+  },
+  "branches": {
+   "total": 10,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 90
+  }
+ },
+ "frontend/src/lib/validation.ts": {
+  "lines": {
+   "total": 31,
+   "covered": 28,
+   "skipped": 0,
+   "pct": 90.32
+  },
+  "functions": {
+   "total": 7,
+   "covered": 6,
+   "skipped": 0,
+   "pct": 85.71
+  },
+  "statements": {
+   "total": 40,
+   "covered": 35,
+   "skipped": 0,
+   "pct": 87.5
+  },
+  "branches": {
+   "total": 32,
+   "covered": 25,
+   "skipped": 0,
+   "pct": 78.12
+  }
+ }
 }
