@@ -75,9 +75,6 @@ class Repository:
     async def get_document_by_sha256(self, sha256: str) -> Document | None:
         return await self.session.scalar(select(Document).where(Document.sha256 == sha256))
 
-    async def find_document_id_by_sha256(self, sha256: str) -> uuid.UUID | None:
-        return await self.session.scalar(select(Document.id).where(Document.sha256 == sha256))
-
     async def create_document(
         self,
         *,
@@ -116,14 +113,6 @@ class Repository:
         )
 
     # ------------------------------------------------------------ jobs
-
-    async def start_job(self, document_id: uuid.UUID) -> uuid.UUID:
-        job = ProcessingJob(
-            document_id=document_id, status=JobStatus.RUNNING, attempts=1, started_at=_now()
-        )
-        self.session.add(job)
-        await self.session.flush()
-        return job.id
 
     async def update_job(self, job_id: uuid.UUID, **values: Any) -> None:
         await self.session.execute(

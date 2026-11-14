@@ -11,8 +11,6 @@ from app.validation.rules import ValidationIssue
 class DuplicateLookup(Protocol):
     """The repository methods this module needs (lets tests use a simple fake)."""
 
-    async def find_document_id_by_sha256(self, sha256: str) -> uuid.UUID | None: ...
-
     async def find_invoices_by_supplier_and_number(
         self, supplier_key: str, invoice_number: str, exclude_invoice_id: uuid.UUID | None
     ) -> list[uuid.UUID]: ...
@@ -26,11 +24,6 @@ class DuplicateLookup(Protocol):
     ) -> list[uuid.UUID]: ...
 
 
-async def find_exact_duplicate(repo: DuplicateLookup, sha256: str) -> uuid.UUID | None:
-    """(a) Same file bytes already uploaded: return that document's id."""
-    return await repo.find_document_id_by_sha256(sha256)
-
-
 async def find_duplicate_issues(
     repo: DuplicateLookup,
     *,
@@ -40,8 +33,8 @@ async def find_duplicate_issues(
     invoice_date: date | None,
     total: Decimal | None,
 ) -> list[ValidationIssue]:
-    """(b) same supplier + invoice number -> error; (c) same supplier, date and total
-    (but not already caught by b) -> warning. Results point at the other DOCUMENT ids;
+    """Same supplier + invoice number -> error; same supplier, date and total (not already
+    caught by the number check) -> warning. Results point at the other DOCUMENT ids;
     only the invoice itself is excluded, so a copy inside the same batch PDF is found too."""
     if not supplier_key:
         return []

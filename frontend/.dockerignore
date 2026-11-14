@@ -4,3 +4,5 @@ e2e
 playwright-report
 test-results
 .env*
+coverage
+*.tsbuildinfo

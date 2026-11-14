@@ -10,7 +10,7 @@ import uuid
 from collections import Counter
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
@@ -271,17 +271,6 @@ def _finding_row(check_id: uuid.UUID, position: int, f: Finding, mode: Mode) -> 
         row_b=f.b.row if f.b else None,
         segment_a=f.a.segment if f.a else None,
         segment_b=f.b.segment if f.b and not ledger else None,
-    )
-
-
-async def count_findings(session: AsyncSession, check_id: uuid.UUID) -> int:
-    return (
-        await session.scalar(
-            select(func.count())
-            .select_from(CrossCheckFinding)
-            .where(CrossCheckFinding.cross_check_id == check_id)
-        )
-        or 0
     )
 
 

@@ -231,7 +231,6 @@ async def test_repository_duplicate_lookups(db_session):
     await db_session.commit()
     other = uuid.uuid4()
 
-    assert await repo.find_document_id_by_sha256("a" * 64) == doc.id
     assert await repo.find_invoices_by_supplier_and_number("acme", "7", other) == [doc.id]
     # Only the invoice itself is excluded (returned ids are DOCUMENT ids).
     assert await repo.find_invoices_by_supplier_and_number("acme", "7", invoice_id) == []

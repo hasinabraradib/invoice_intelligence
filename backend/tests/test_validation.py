@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from app.extraction.service import ExtractionResult, FieldResult, LineItemResult
-from app.validation.duplicates import find_duplicate_issues, find_exact_duplicate
+from app.validation.duplicates import find_duplicate_issues
 from app.validation.rules import validate_invoice
 
 TODAY = date(2026, 11, 13)
@@ -215,11 +215,8 @@ def test_validation_never_changes_values():
 
 
 class FakeRepo:
-    def __init__(self, sha=None, by_number=(), by_date_total=()):
-        self.sha, self.by_number, self.by_date_total = sha, list(by_number), list(by_date_total)
-
-    async def find_document_id_by_sha256(self, sha256):
-        return self.sha
+    def __init__(self, by_number=(), by_date_total=()):
+        self.by_number, self.by_date_total = list(by_number), list(by_date_total)
 
     async def find_invoices_by_supplier_and_number(self, key, number, exclude_document_id):
         return self.by_number
@@ -236,12 +233,6 @@ ARGS = {
     "invoice_date": date(2026, 11, 1),
     "total": Decimal("115.00"),
 }
-
-
-@pytest.mark.anyio
-async def test_exact_duplicate_by_sha256():
-    assert await find_exact_duplicate(FakeRepo(sha=OTHER), "ab" * 32) == OTHER
-    assert await find_exact_duplicate(FakeRepo(), "ab" * 32) is None
 
 
 @pytest.mark.anyio
