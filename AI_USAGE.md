@@ -20,6 +20,7 @@ How AI tools were used to build this project. Each row is one step.
 | 2026-11-14 | 6a: Real-provider check + evaluation | Claude Code (Claude Opus 5.5) | Confirm 5d and parallel OCR are complete; real OpenAI runs on synthetic samples and one assistant conversation (question, sum, proposed correction) over SSE; fix what they find; sanitised real replies as fixtures; concurrency cap for rate limits; fixed-seed labelled synthetic dataset (41 invoices, 7 file types, planted defects, dev/test split) with a real-data template; make eval end to end through API and worker with field, line item, flag, duplicate, segmentation, cross-check, timing and cost metrics; docs/evaluation.md; latest accuracy on the dashboard. | _To fill in after review_ |
 | 2026-11-14 | 6a follow-ups: rule fix, assistant miss, hard subset | Claude Code (Claude Opus 5.5) | Fix the no-subtotal line-sum rule with unit tests and dev examples, reporting pre-fix test results as the headline; find and fix the root cause of the assistant's "no Umbrella Trading invoice" miss with a regression test; add a hard test subset (noise, blur, phone photos, 8-12° rotation, faint scans, crowded and two-column layouts) reported as its own row; re-run make eval. | _To fill in after review_ |
 | 2026-11-14 | 6b: Hardening the worker against hangs | Claude Code (Claude Opus 5.5) | After the embedding deadlock: run parsing, OCR and embedding in killable process pools with a hard timeout per call; embedding problems never block or fail a document; job heartbeats, a watchdog that retries or fails stuck jobs, and a worker that recycles itself; Docker healthchecks and restart policies; regression tests (512-token page within 5 s, a step that sleeps forever is killed and the next job runs, the watchdog picks up a stuck job); pin torch/transformers/sentence-transformers and document eager attention. | _To fill in after review_ |
+| 2026-11-14 | 6c: Photos and noisy scans | Claude Code (Claude Opus 5.5) | Generate a separate hard dev set (different seed) and work only on it; photo preprocessing (page edges and perspective warp, shadow/lighting removal, CLAHE) applied only to images that look like photos, each step kept only if measured to help; vision fallback below OCR_MIN_CONFIDENCE with fields marked "vision", lower confidence and always reviewed; tests; re-run make eval and report hard-test before/after rows. | _To fill in after review_ |
 
 ## Prompt design (step 3b)
 
@@ -154,3 +155,29 @@ Why the extraction prompt looks the way it does:
 - **Pinned and documented.** torch, transformers and sentence-transformers are pinned to
   the measured versions, with the reason (eager attention) in pyproject.toml and the
   README, and a slow test that times a 512-token page.
+
+## Photos and noisy scans (step 6c)
+
+- **A separate dev set for tuning.** A hard dev set (same kinds of damage, different seed,
+  its own invoice numbers so duplicate detection can't link it to test) was generated
+  first. `make hard-dev-bench` reads only those files. The hard test files were neither
+  looked at nor tuned on, so their before/after rows are a held-out measurement.
+- **Keep only what the measurements support.** Each photo step was measured on its own
+  and in combination (OCR confidence and field accuracy with the real LLM). Flatten
+  (dividing by the estimated paper brightness) was kept; CLAHE made things worse and was
+  dropped from the default. The perspective warp is correct on a camera-projected test
+  image, but never fired on the synthetic photos, so it stays off by default. That limit of
+  the dataset is reported rather than hidden.
+- **Testing found a wrong assumption.** The first warp sized the page from its edge lengths
+  in the photo, which perspective foreshortens (aspect 1.23 instead of 1.41). The fix
+  recovers the real aspect ratio from the four corners (Zhang & He's method). The first
+  test image also didn't come from a real camera model, so it was replaced with a page
+  projected through a pinhole camera.
+- **Vision values are never trusted like OCR values.** They can only be checked against
+  the model's own transcription, so they carry `source: "vision"`, a confidence cap below
+  the review threshold, and a mandatory review issue. The eval showed the fallback never
+  triggered: the remaining errors are confident misreads, which a confidence threshold
+  can't catch. That is reported as a finding, not tuned away on test.
+- **A small tooling bug.** The eval's "store the latest run" step picked the newest JSON
+  in the results folder, which was now a benchmark file. It now only picks timestamped run
+  files, with a test.

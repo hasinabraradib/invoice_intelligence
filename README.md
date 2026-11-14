@@ -253,6 +253,20 @@ Keyword snippets highlight matches with `<mark>`; semantic snippets are plain te
 HTML-escaped. The embedding model runs locally (no API key). It downloads once (~90 MB) into
 the `models` Docker volume.
 
+**Photos and unreadable pages.** Before OCR, each image is checked: does it look like a
+phone photo (uneven light on the paper, or a page outline inside the frame) or a scan?
+Photos are flattened first: the paper's own brightness is estimated and divided out, which
+removes shadows and light fall-off. Scans skip this, so their output is unchanged.
+Measured on the hard dev set, this took phone photos from 11% and 0% to 89% and 100% field
+accuracy. A perspective warp (page edges plus a corner-based aspect-ratio estimate) and
+CLAHE contrast are built in but off by default (`OCR_PHOTO_STEPS`): CLAHE made results
+worse, and the synthetic photos give the warp nothing to correct. If a page's OCR
+confidence is still below `OCR_MIN_CONFIDENCE`, the **vision fallback** sends the page
+image to the LLM (`VISION_FALLBACK_ENABLED`; OpenAI reads images) for the fields and a
+transcription. Those values are marked `source: "vision"`, capped at 0.5 confidence and
+the invoice always goes to review, because they can't be checked against OCR text. Vision
+calls and tokens are counted separately.
+
 **Embedding model: eager attention, pinned versions.** The model is loaded with
 `attn_implementation="eager"`. With torch 2.15 on CPU (seen on aarch64), the default fused
 "SDPA" attention kernel never returned for inputs over about 128 tokens when it used more
@@ -424,19 +438,19 @@ _To be written._
 ## Evaluation
 
 Measured end to end through the API and worker with the real provider (OpenAI
-`gpt-6-luna`), on 55 labelled **synthetic** invoices: digital and scanned PDFs, photos,
-XLSX, CSV, a 9-page batch, a ledger, a purchase order, and a "hard" subset of damaged and
-crowded documents. Full tables, failure examples and limitations are in
+`gpt-6-luna`), on 67 labelled **synthetic** invoices: digital and scanned PDFs, photos,
+XLSX, CSV, a 9-page batch, a ledger, a purchase order, and "hard" damaged and crowded
+documents (12 held out in test, 12 in dev for development). Full tables, failure examples and limitations are in
 [docs/evaluation.md](docs/evaluation.md).
 
-| | Clean test (26 invoices) | Hard subset (12, test) |
+| | Clean test (26 invoices) | Hard subset, test (12): before → after photo work |
 |---|---|---|
-| Field accuracy (9 header fields; correctly empty counts as right) | **100%** | **75.0%** |
-| Invented values / missing values | 0% / 0% | none invented / 13.9% (11.1% misread) |
-| Line items F1 | 100% | 85.9% |
-| Validation flags precision / recall | **93.8% / 100%** before the line-sum fix (headline); 100% / 100% after it | 7 of 7 invoices with an error flagged for review |
+| Field accuracy (9 header fields; correctly empty counts as right) | **100%** | **75.0% → 88.9%** (phone photos 11% → 94%) |
+| Invented values / missing values | 0% / 0% | none invented / 13.9% → 7.4% |
+| Line items F1 | 100% | 85.9% → 89.4% |
+| Validation flags precision / recall | **93.8% / 100%** before the line-sum fix (headline); 100% / 100% after it | invoices with an error flagged for review: 7 of 7 → 6 of 7 |
 | Batch segmentation, cross-check findings, duplicate pair | 6/6, 6/6, 1/1 | – |
-| Time per document p50 / p95 | 9.3 s / 15 s | 14 s / 47 s |
+| Time per document p50 / p95 | 8.5 s / 14 s | 12 s / 37 s |
 
 The assistant answers 15/15 questions with the right number and citation, and cost is
 about $0.001 per document at $0.10 / $0.50 per million tokens. The headline flag numbers
@@ -444,6 +458,12 @@ are from before a rule bug found on the held-out test split was fixed; the post-
 is shown beside them, not instead of them (see docs/evaluation.md for why). The evaluation
 also found real bugs that are now fixed: dates from Excel cells were lost, keyword search
 failed on natural questions, and embedding a long page hung the worker.
+
+The photo work (see "Photos and unreadable pages" below) was developed only on the hard
+**dev** set; the hard test files stayed held out, so the before/after is a fair measurement.
+Heavy noise is still the weak spot (56%): the OCR reads it with high confidence but the
+wrong characters, so the vision fallback, which only triggers on low confidence, never
+fired in the eval.
 
 The clean numbers are an **upper bound**. The hard subset shows the drop on bad images:
 phone photos and heavy noise cause misreads, though every one was flagged for review.
