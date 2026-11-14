@@ -9,6 +9,8 @@ import { formatDateTime } from "@/lib/format";
 import { EmptyState, ErrorBox, SkeletonRows } from "@/components/Feedback";
 import { errorMessage, useToast } from "@/components/Toast";
 import { PageHeader } from "@/components/ui";
+import { DocumentPicker } from "@/components/controls/DocumentPicker";
+import { DisabledHint, PastelCard, Switch, type Pastel } from "@/components/controls/misc";
 import { ArrowLeftRight, CheckCircle2, ChevronRight, CircleAlert, Copy, FileQuestion, GitCompareArrows } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -55,17 +57,22 @@ function CrossCheck() {
       />
       <form className="card animate-fade-up space-y-5" onSubmit={(e) => { e.preventDefault(); run.mutate(); }}>
         <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-          <DocumentSelect id="doc-a" label="Document A" value={documentA} onChange={setDocumentA} documents={choices} />
+          <DocumentSelect id="doc-a" label="Document A" prompt="Invoice PDF or batch" value={documentA} onChange={setDocumentA} documents={choices} exclude={documentB} />
           <span aria-hidden="true" className="mx-auto grid size-10 place-items-center rounded-full border border-line bg-surface-2 text-muted max-sm:rotate-90">
             <ArrowLeftRight className="size-4" />
           </span>
-          <DocumentSelect id="doc-b" label="Document B" value={documentB} onChange={setDocumentB} documents={choices} />
+          <DocumentSelect id="doc-b" label="Document B" prompt="Ledger spreadsheet or second PDF" value={documentB} onChange={setDocumentB} documents={choices} exclude={documentA} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="btn-primary" disabled={!documentA || !documentB || documentA === documentB || run.isPending}>
-            <GitCompareArrows className="size-4" aria-hidden="true" />
-            {run.isPending ? "Starting…" : "Run cross-check"}
-          </button>
+          <DisabledHint
+            disabled={!documentA || !documentB || documentA === documentB}
+            reason={documentA && documentA === documentB ? "Pick two different documents" : "Pick two documents to compare"}
+          >
+            <button type="submit" className="btn-primary" disabled={!documentA || !documentB || documentA === documentB || run.isPending}>
+              <GitCompareArrows className="size-4" aria-hidden="true" />
+              {run.isPending ? "Starting…" : "Run cross-check"}
+            </button>
+          </DisabledHint>
           {documents.isSuccess && choices.length < 2 ? (
             <p className="text-sm text-muted">
               Process at least two documents first. <Link href="/documents" className="btn-link">Upload documents</Link>
@@ -89,7 +96,7 @@ function CrossCheck() {
                 <Link
                   href={`/cross-check?id=${c.id}`}
                   aria-current={c.id === selected ? "page" : undefined}
-                  className="focus-ring group flex flex-wrap items-center justify-between gap-2 rounded-xl px-2 py-2.5 hover:bg-surface-2 aria-[current=page]:bg-accent-soft"
+                  className="focus-ring group flex flex-wrap items-center justify-between gap-2 rounded-xl px-2 py-2.5 hover:bg-surface-2 aria-[current=page]:bg-surface-2"
                 >
                   <span className="min-w-0 truncate font-medium text-ink">
                     {c.document_a.filename} <span className="text-faint">↔</span> {c.document_b.filename}
@@ -108,20 +115,13 @@ function CrossCheck() {
   );
 }
 
-function DocumentSelect({ id, label, value, onChange, documents }: {
-  id: string; label: string; value: string; onChange: (v: string) => void; documents: DocumentSummary[];
+function DocumentSelect({ id, label, prompt, value, onChange, documents, exclude }: {
+  id: string; label: string; prompt: string; value: string; onChange: (v: string) => void; documents: DocumentSummary[]; exclude?: string;
 }) {
   return (
     <div className="min-w-0">
       <label htmlFor={id} className="label">{label}</label>
-      <select id={id} className="input" value={value} onChange={(e) => onChange(e.target.value)} required>
-        <option value="">Choose a document…</option>
-        {documents.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.filename}{d.invoice_count > 1 ? ` (${d.invoice_count} invoices)` : d.invoice_count === 0 ? " (ledger / no invoices)" : ""}
-          </option>
-        ))}
-      </select>
+      <DocumentPicker id={id} value={value} onChange={onChange} documents={documents} prompt={prompt} exclude={exclude} />
     </div>
   );
 }
@@ -152,10 +152,7 @@ function CheckResult({ id }: { id: string }) {
       {c.status === "succeeded" ? (
         <>
           <Summary check={c} />
-          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-2">
-            <input type="checkbox" checked={showMatched} onChange={(e) => setShowMatched(e.target.checked)} className="focus-ring size-4 accent-[var(--accent)]" />
-            Show matched invoices too
-          </label>
+          <Switch checked={showMatched} onChange={setShowMatched} label="Show matched invoices too" />
           <Findings check={c} showMatched={showMatched} />
         </>
       ) : null}
@@ -166,24 +163,26 @@ function CheckResult({ id }: { id: string }) {
 function Summary({ check }: { check: CrossCheckDetail }) {
   const s = check.summary;
   const ledger = check.mode === "invoices_vs_ledger";
-  const tiles: [string, number, string, LucideIcon][] = [
-    ["Matched", s.matched ?? 0, "border-success-line bg-success-soft text-success", CheckCircle2],
-    ["Mismatched", s.mismatched ?? 0, "border-danger-line bg-danger-soft text-danger", CircleAlert],
-    [ledger ? "Not in ledger" : "Only in A", s.missing_in_b ?? 0, "border-warning-line bg-warning-soft text-warning", FileQuestion],
-    [ledger ? "Not in PDF" : "Only in B", s.missing_in_a ?? 0, "border-warning-line bg-warning-soft text-warning", FileQuestion],
-    ...(ledger ? [["Ledger duplicates", s.duplicates_in_b ?? 0, "border-orange-line bg-orange-soft text-orange", Copy] as [string, number, string, LucideIcon]] : []),
+  const tiles: [string, number, Pastel, LucideIcon][] = [
+    ["Matched", s.matched ?? 0, "sage", CheckCircle2],
+    ["Mismatched", s.mismatched ?? 0, "pink", CircleAlert],
+    [ledger ? "Not in ledger" : "Only in A", s.missing_in_b ?? 0, "butter", FileQuestion],
+    [ledger ? "Not in PDF" : "Only in B", s.missing_in_a ?? 0, "butter", FileQuestion],
+    ...(ledger ? [["Ledger duplicates", s.duplicates_in_b ?? 0, "peach", Copy] as [string, number, Pastel, LucideIcon]] : []),
   ];
   return (
-    <dl className={`grid grid-cols-2 gap-3 ${ledger ? "sm:grid-cols-3 xl:grid-cols-5" : "sm:grid-cols-4"}`}>
+    <ul aria-label="Summary" className={`grid grid-cols-2 gap-3 ${ledger ? "sm:grid-cols-3 xl:grid-cols-5" : "sm:grid-cols-4"}`}>
       {tiles.map(([label, value, tone, Icon]) => (
-        <div key={label} className={`rounded-2xl border p-4 ${value ? tone : "border-line bg-surface-2 text-muted"}`}>
-          <dt className="flex items-center gap-1.5 text-xs font-medium">
-            <Icon className="size-3.5" aria-hidden="true" /> {label}
-          </dt>
-          <dd className="num mt-1 text-2xl font-semibold">{value}</dd>
-        </div>
+        <li key={label}>
+          <PastelCard tone={tone} className="h-full p-4">
+            <p className="flex items-center gap-1.5 text-xs font-medium">
+              <Icon className="size-3.5" aria-hidden="true" /> {label}
+            </p>
+            <p className="num mt-2 text-3xl font-semibold tracking-tight">{value}</p>
+          </PastelCard>
+        </li>
       ))}
-    </dl>
+    </ul>
   );
 }
 

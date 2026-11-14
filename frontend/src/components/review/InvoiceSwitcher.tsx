@@ -1,6 +1,7 @@
 "use client";
 import type { InvoiceResult } from "@/lib/api";
 import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { Select } from "@/components/controls/Select";
 
 type Props = { invoices: InvoiceResult[]; selected: number; onSelect: (segmentIndex: number) => void };
 
@@ -15,9 +16,9 @@ export function InvoiceSwitcher({ invoices, selected, onSelect }: Props) {
   const index = invoices.findIndex((i) => i.segment_index === selected);
   const reviewCount = invoices.filter((i) => i.needs_review).length;
   return (
-    <div className="card space-y-3 border-accent-line bg-accent-soft/40">
+    <div className="card space-y-3 border-peri-deep/60 bg-info-soft">
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-xl bg-surface text-accent-ink shadow-soft">
+        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-peri text-on-pastel">
           <Layers className="size-4" strokeWidth={1.75} />
         </span>
         <label htmlFor="invoice-select" className="text-sm font-medium text-ink">
@@ -25,13 +26,13 @@ export function InvoiceSwitcher({ invoices, selected, onSelect }: Props) {
         </label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <select id="invoice-select" className="input min-w-[12rem] flex-1" value={selected} onChange={(e) => onSelect(Number(e.target.value))}>
-          {invoices.map((invoice, i) => (
-            <option key={invoice.invoice_id} value={invoice.segment_index}>
-              {`${i + 1} of ${invoices.length} · ${pages(invoice)} · ${String(invoice.fields.invoice_number?.value ?? "no number")}${invoice.needs_review ? " · needs review" : ""}${invoice.extracted ? "" : " · not extracted yet"}`}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[12rem] flex-1">
+          <Select id="invoice-select" value={String(selected)} onChange={(v) => onSelect(Number(v))}
+            options={invoices.map((invoice, i) => ({
+              value: String(invoice.segment_index),
+              label: `${i + 1} of ${invoices.length} · ${pages(invoice)} · ${String(invoice.fields.invoice_number?.value ?? "no number")}${invoice.needs_review ? " · needs review" : ""}${invoice.extracted ? "" : " · not extracted yet"}`,
+            }))} />
+        </div>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary px-3" disabled={index <= 0}
             onClick={() => onSelect(invoices[index - 1].segment_index)}>

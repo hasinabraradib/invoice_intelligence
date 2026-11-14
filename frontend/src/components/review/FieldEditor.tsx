@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { CURRENCIES, type FieldKind } from "@/lib/fields";
+import { Select } from "@/components/controls/Select";
+import { DateField } from "@/components/controls/DateRange";
 import { checkDate, checkMoney, checkQuantity, checkText, type Check } from "@/lib/validation";
 
 export function checkByKind(kind: FieldKind | "quantity", input: string): Check {
@@ -49,27 +51,28 @@ export function FieldEditor({ id, label, kind, initial, busy, onSave, onCancel }
         if (check.ok) onSave(check.value);
       }}
       onKeyDown={(e) => {
-        if (e.key === "Escape") onCancel();
+        // Escape inside an open menu or calendar closes only that popup (portals still bubble here).
+        const inPopup = (e.target as HTMLElement).closest?.("[role=listbox],[role=grid],[data-radix-popper-content-wrapper]");
+        if (e.key === "Escape" && !inPopup) onCancel();
       }}
     >
       <label htmlFor={id} className="sr-only">{label}</label>
       {kind === "currency" ? (
-        <select {...common} value={text} onChange={(e) => setText(e.target.value)} autoFocus>
-          <option value="">(none)</option>
-          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <Select id={id} aria-label={label} value={text} onChange={setText}
+          options={[{ value: "", label: "No currency" }, ...CURRENCIES.map((c) => ({ value: c, label: c }))]} />
       ) : kind === "date" ? (
-        <input {...common} type="date" value={text} onChange={(e) => setText(e.target.value)} autoFocus />
+        <DateField id={id} value={text} onChange={setText}
+          inputProps={{ "aria-invalid": !check.ok, "aria-describedby": !check.ok ? errorId : undefined, autoFocus: true }} />
       ) : (
         <input {...common} type="text" inputMode={kind === "money" || kind === "quantity" ? "decimal" : undefined}
           value={text} onChange={(e) => setText(e.target.value)} autoFocus />
       )}
       {!check.ok ? <p id={errorId} className="text-xs text-danger">{check.error}</p> : null}
       <div className="flex gap-2">
-        <button type="submit" className="btn-primary px-2 py-1 text-xs" disabled={!check.ok || busy}>
+        <button type="submit" className="btn-primary btn-sm" disabled={!check.ok || busy}>
           {busy ? "Saving…" : "Save"}
         </button>
-        <button type="button" className="btn-secondary px-2 py-1 text-xs" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn-secondary btn-sm" onClick={onCancel}>Cancel</button>
       </div>
     </form>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { Select } from "@/components/controls/Select";
 import { forwardRef } from "react";
 import { fileUrl, pageImageUrl, type PageInfo } from "@/lib/api";
 import { EmptyState } from "../Feedback";
@@ -28,18 +29,13 @@ export const PageViewer = forwardRef<HTMLElement, Props>(function PageViewer(
     <section ref={ref} aria-label="Document pages" className="card space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <button type="button" className="btn-secondary size-9 p-0" disabled={index <= 0}
+          <button type="button" className="btn-secondary size-10 p-0" disabled={index <= 0}
             onClick={() => onPage(numbers[index - 1])} aria-label="Previous page"><ChevronLeft className="size-4" aria-hidden="true" /></button>
           <label htmlFor="page-select" className="sr-only">Page</label>
-          <select id="page-select" className="input w-auto py-1.5" value={current.page_number}
-            onChange={(e) => onPage(Number(e.target.value))}>
-            {pages.map((p) => (
-              <option key={p.page_number} value={p.page_number}>
-                {p.source === "sheet" ? `Sheet ${p.page_number}` : `Page ${p.page_number}`} of {pages.length}
-              </option>
-            ))}
-          </select>
-          <button type="button" className="btn-secondary size-9 p-0" disabled={index >= pages.length - 1}
+          <Select id="page-select" className="w-36" value={String(current.page_number)}
+            onChange={(v) => onPage(Number(v))}
+            options={pages.map((p) => ({ value: String(p.page_number), label: `${p.source === "sheet" ? "Sheet" : "Page"} ${p.page_number} of ${pages.length}` }))} />
+          <button type="button" className="btn-secondary size-10 p-0" disabled={index >= pages.length - 1}
             onClick={() => onPage(numbers[index + 1])} aria-label="Next page"><ChevronRight className="size-4" aria-hidden="true" /></button>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted">

@@ -69,10 +69,10 @@ export function Uploader() {
           start(e.dataTransfer.files);
         }}
         className={`flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-10 text-center transition-colors ${
-          dragging ? "border-accent bg-accent-soft" : "border-line-strong bg-surface-2/50 hover:border-accent-line"
+          dragging ? "border-ink bg-butter text-on-pastel" : "border-line-strong bg-surface hover:border-ink"
         }`}
       >
-        <span aria-hidden="true" className="grid size-12 place-items-center rounded-2xl border border-line bg-surface text-accent-ink shadow-soft">
+        <span aria-hidden="true" className="grid size-12 place-items-center rounded-full bg-butter text-on-pastel">
           <UploadCloud className="size-5" strokeWidth={1.75} />
         </span>
         <div>

@@ -56,7 +56,7 @@ export function LineItems({ items, canEdit, busy, onSave }: Props) {
                     {editing === item.position ? (
                       <>
                         <label htmlFor={cellId} className="sr-only">{c.label}, line {item.position}</label>
-                        <input id={cellId} className="input py-1" value={draft[c.name] ?? ""}
+                        <input id={cellId} className="input h-8" value={draft[c.name] ?? ""}
                           inputMode={c.kind === "text" ? undefined : "decimal"}
                           aria-invalid={!check.ok}
                           onChange={(e) => setDraft({ ...draft, [c.name]: e.target.value })} />

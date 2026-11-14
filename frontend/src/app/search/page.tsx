@@ -59,20 +59,20 @@ function Search() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
-              <input id="search-q" type="search" className="input rounded-full py-2.5 pl-10" value={text} maxLength={200}
-                placeholder='e.g. electricity, INV-2041, "office chairs"' onChange={(e) => setText(e.target.value)} />
+              <input id="search-q" type="search" className="input h-11 rounded-full pl-10" value={text} maxLength={200}
+                placeholder="Supplier, invoice number or any words in the document" onChange={(e) => setText(e.target.value)} />
             </div>
-            <button type="submit" className="btn-primary rounded-full px-5">Search</button>
+            <button type="submit" className="btn-primary h-11 px-6">Search</button>
           </div>
         </div>
         <fieldset>
           <legend className="label">Mode</legend>
-          <div className="inline-flex flex-wrap gap-1 rounded-2xl border border-line bg-surface-2 p-1">
+          <div className="grid w-full grid-cols-1 gap-1 rounded-2xl border border-line bg-surface-2 p-1 sm:inline-flex sm:w-auto sm:rounded-full">
             {MODES.map((m) => (
-              <label key={m.value} className={`cursor-pointer rounded-xl px-3 py-1.5 text-sm transition-colors focus-within:ring-2 focus-within:ring-accent ${mode === m.value ? "bg-surface font-medium text-ink shadow-soft" : "text-muted hover:text-ink"}`}>
+              <label key={m.value} className={`cursor-pointer rounded-full px-3.5 py-1.5 text-sm transition-colors focus-within:ring-2 focus-within:ring-accent ${mode === m.value ? "bg-accent font-medium text-on-accent" : "text-ink-2 hover:text-ink"}`}>
                 <input type="radio" name="mode" value={m.value} checked={mode === m.value} className="sr-only"
                   onChange={() => go(text || q, m.value)} />
-                {m.label} <span className="text-faint">· {m.hint}</span>
+                {m.label} <span className={mode === m.value ? "opacity-75" : "text-muted"}>· {m.hint}</span>
               </label>
             ))}
           </div>
@@ -109,7 +109,7 @@ function Search() {
                     <div className="flex min-w-0 items-center gap-3">
                       <FileTypeIcon filename={hit.filename} />
                       <div className="min-w-0">
-                        <Link href={`/documents/${hit.document_id}?invoice=${hit.segment_index ?? 0}&page=${hit.page_number}`} className="focus-ring block truncate rounded font-medium text-ink hover:text-accent-ink">
+                        <Link href={`/documents/${hit.document_id}?invoice=${hit.segment_index ?? 0}&page=${hit.page_number}`} className="focus-ring block truncate rounded font-medium text-ink hover:underline underline-offset-4">
                           {hit.filename} · page {hit.page_number}
                         </Link>
                         <p className="truncate text-xs text-muted">

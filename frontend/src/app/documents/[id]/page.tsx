@@ -18,6 +18,7 @@ import { LineItems } from "@/components/review/LineItems";
 import { PageViewer } from "@/components/review/PageViewer";
 import { useReviewer } from "@/components/review/useReviewer";
 import { FileTypeIcon } from "@/components/ui";
+import { DisabledHint } from "@/components/controls/misc";
 import { ArrowRight, BadgeCheck, Check, ChevronLeft, RotateCcw } from "lucide-react";
 
 export default function ReviewPage() {
@@ -193,13 +194,17 @@ function Review() {
           <button type="button" className="btn-ghost" onClick={() => next.mutate()} disabled={next.isPending}>
             Next in queue <ArrowRight className="size-4" aria-hidden="true" />
           </button>
-          <button type="button" className="btn-secondary" onClick={() => setReprocessOpen(true)} disabled={busy}>
-            <RotateCcw className="size-4" aria-hidden="true" /> Reprocess
-          </button>
-          {invoice ? (
-            <button type="button" className="btn-primary" onClick={() => setApproveOpen(true)} disabled={busy}>
-              <Check className="size-4" aria-hidden="true" /> Approve
+          <DisabledHint disabled={busy} reason="Wait until processing finishes">
+            <button type="button" className="btn-secondary" onClick={() => setReprocessOpen(true)} disabled={busy}>
+              <RotateCcw className="size-4" aria-hidden="true" /> Reprocess
             </button>
+          </DisabledHint>
+          {invoice ? (
+            <DisabledHint disabled={busy} reason="Wait until processing finishes">
+              <button type="button" className="btn-primary" onClick={() => setApproveOpen(true)} disabled={busy}>
+                <Check className="size-4" aria-hidden="true" /> Approve
+              </button>
+            </DisabledHint>
           ) : null}
         </div>
       </div>
@@ -246,8 +251,8 @@ function Review() {
                   <h2 id="fields-heading" className="font-semibold text-ink">Fields</h2>
                   <div className="w-full sm:w-56">
                     <label htmlFor="reviewer-name" className="label text-xs">Your name (for the audit trail)</label>
-                    <input id="reviewer-name" className="input py-1.5" value={reviewer}
-                      onChange={(e) => setReviewer(e.target.value)} autoComplete="name" placeholder="e.g. Ayesha" />
+                    <input id="reviewer-name" className="input" value={reviewer}
+                      onChange={(e) => setReviewer(e.target.value)} autoComplete="name" />
                   </div>
                 </div>
                 {reviewer.trim() === "" ? <p className="mt-2 text-xs text-muted">Enter your name to edit fields.</p> : null}

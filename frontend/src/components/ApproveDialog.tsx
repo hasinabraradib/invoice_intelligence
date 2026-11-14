@@ -1,4 +1,5 @@
 "use client";
+import { DisabledHint } from "./controls/misc";
 import { useState } from "react";
 import { canApprove } from "@/lib/validation";
 import { Modal } from "./Modal";
@@ -51,7 +52,7 @@ export function ApproveDialog({ open, errorCount, defaultReviewer, busy, onAppro
             </label>
             <textarea
               id="approve-reason"
-              className="input min-h-24"
+              className="input h-auto min-h-24 py-2.5"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               maxLength={2000}
@@ -65,9 +66,14 @@ export function ApproveDialog({ open, errorCount, defaultReviewer, busy, onAppro
           <button type="button" className="btn-secondary" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn-primary" disabled={!allowed || busy}>
-            {busy ? "Approving…" : "Approve"}
-          </button>
+          <DisabledHint
+            disabled={!allowed && !busy}
+            reason={!reviewer.trim() ? "Enter your name first" : "Explain why the invoice is correct despite the open errors"}
+          >
+            <button type="submit" className="btn-primary" disabled={!allowed || busy}>
+              {busy ? "Approving…" : "Approve"}
+            </button>
+          </DisabledHint>
         </div>
       </form>
     </Modal>

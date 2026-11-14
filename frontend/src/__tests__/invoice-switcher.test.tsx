@@ -24,13 +24,16 @@ describe("invoice switcher", () => {
     const invoices = [invoice(0, 1, 1, "A-1"), invoice(1, 2, 3, "B-2", true), invoice(2, 4, 4, "C-3")];
     render(<InvoiceSwitcher invoices={invoices} selected={1} onSelect={onSelect} />);
 
-    expect(screen.getByLabelText(/3 found, 1 need review/)).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /2 of 3 · pages 2–3 · B-2 · needs review/ })).toBeInTheDocument();
+    const select = screen.getByLabelText(/3 found, 1 need review/);
+    expect(select).toHaveTextContent("2 of 3 · pages 2–3 · B-2 · needs review");
     await userEvent.click(screen.getByRole("button", { name: "Next invoice" }));
     expect(onSelect).toHaveBeenLastCalledWith(2);
     await userEvent.click(screen.getByRole("button", { name: "Previous invoice" }));
     expect(onSelect).toHaveBeenLastCalledWith(0);
-    await userEvent.selectOptions(screen.getByLabelText(/Invoice in this document/), "2");
+    // The custom select opens a themed menu with the same options.
+    await userEvent.click(select);
+    expect(screen.getByRole("option", { name: /1 of 3 · page 1 · A-1/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("option", { name: /3 of 3 · page 4 · C-3/ }));
     expect(onSelect).toHaveBeenLastCalledWith(2);
   });
 });

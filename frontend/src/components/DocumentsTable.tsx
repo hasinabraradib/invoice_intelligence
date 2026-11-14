@@ -122,7 +122,7 @@ export function DocumentsTable() {
                 <DocThumb id={doc.id} mime={doc.mime_type} filename={doc.filename} pageCount={doc.page_count} status={doc.status} />
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
-                    <Link href={`/documents/${doc.id}`} className="focus-ring min-w-0 truncate rounded text-sm font-medium text-ink hover:text-accent-ink">{doc.filename}</Link>
+                    <Link href={`/documents/${doc.id}`} className="focus-ring min-w-0 truncate rounded text-sm font-medium text-ink hover:underline underline-offset-4">{doc.filename}</Link>
                     <StatusBadge status={doc.status} />
                   </div>
                   <p className="truncate text-xs text-muted">
@@ -158,7 +158,7 @@ export function DocumentsTable() {
                       <div className="flex max-w-72 items-center gap-3">
                         <DocThumb id={doc.id} mime={doc.mime_type} filename={doc.filename} pageCount={doc.page_count} status={doc.status} />
                         <div className="min-w-0">
-                          <Link href={`/documents/${doc.id}`} className="focus-ring block truncate rounded font-medium text-ink hover:text-accent-ink">{doc.filename}</Link>
+                          <Link href={`/documents/${doc.id}`} className="focus-ring block truncate rounded font-medium text-ink hover:underline underline-offset-4">{doc.filename}</Link>
                           <span className="num text-xs text-muted">
                             {pagesLabel(doc)}
                           </span>
